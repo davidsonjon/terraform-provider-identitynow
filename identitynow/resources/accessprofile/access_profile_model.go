@@ -3,7 +3,8 @@ package accessprofile
 import (
 	"log"
 
-	v3 "github.com/davidsonjon/golang-sdk/v3"
+	v3 "github.com/davidsonjon/golang-sdk/v2/api_v3"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -73,54 +74,34 @@ func (ap *AccessProfile) parseConfiguredAttributes(v3ap *v3.AccessProfile) {
 
 	ap.Requestable = types.BoolPointerValue(v3ap.Requestable)
 
-	if v3ap.AccessRequestConfig != nil {
+	if v3ap.AccessRequestConfig.Get() == nil {
+		ap.AccessRequestConfig = nil
+	} else {
 		ap.AccessRequestConfig = &Requestability{}
-		ap.AccessRequestConfig.CommentsRequired = types.BoolPointerValue(v3ap.AccessRequestConfig.CommentsRequired)
-		ap.AccessRequestConfig.DenialCommentsRequired = types.BoolPointerValue(v3ap.AccessRequestConfig.DenialCommentsRequired)
+		ap.AccessRequestConfig.CommentsRequired = types.BoolPointerValue(v3ap.AccessRequestConfig.Get().CommentsRequired.Get())
+		ap.AccessRequestConfig.DenialCommentsRequired = types.BoolPointerValue(v3ap.AccessRequestConfig.Get().DenialCommentsRequired.Get())
 
-		for _, a := range v3ap.AccessRequestConfig.ApprovalSchemes {
+		for _, a := range v3ap.AccessRequestConfig.Get().ApprovalSchemes {
 			approval := AccessProfileApprovalScheme{
 				ApproverType: types.StringPointerValue(a.ApproverType),
-				// ApproverId:   types.StringPointerValue(a.ApproverId.Get()),
+				ApproverId:   types.StringPointerValue(a.ApproverId.Get()),
 			}
-			appId, err := a.ApproverId.MarshalJSON()
-			if err != nil {
-				log.Printf("error ApproverId.MarshalJSON: %+v\n", a.ApproverId)
-			}
-			if appId != nil {
-				approval.ApproverId = types.StringPointerValue(a.ApproverId.Get())
-			} else {
-				approval.ApproverId = types.StringNull()
-			}
-
 			ap.AccessRequestConfig.ApprovalSchemes = append(ap.AccessRequestConfig.ApprovalSchemes, approval)
 		}
 	}
-	//  else {
-	// 	ap.AccessRequestConfig = nil
-	// }
 
-	log.Printf("v3ap.RevocationRequestConfig: %+v\n", v3ap.RevocationRequestConfig)
-
-	if v3ap.RevocationRequestConfig != nil {
+	if v3ap.RevocationRequestConfig.Get() == nil || len(v3ap.RevocationRequestConfig.Get().ApprovalSchemes) == 0 {
+		ap.RevocationRequestConfig = nil
+	} else {
 		ap.RevocationRequestConfig = &Revocability{}
-		ap.RevocationRequestConfig.CommentsRequired = types.BoolPointerValue(v3ap.RevocationRequestConfig.CommentsRequired.Get())
-		ap.RevocationRequestConfig.DenialCommentsRequired = types.BoolPointerValue(v3ap.RevocationRequestConfig.DenialCommentsRequired.Get())
 
-		for _, a := range v3ap.RevocationRequestConfig.ApprovalSchemes {
+		for _, a := range v3ap.RevocationRequestConfig.Get().ApprovalSchemes {
 			approval := AccessProfileApprovalScheme{
 				ApproverType: types.StringPointerValue(a.ApproverType),
-				// ApproverId:   types.StringPointerValue(a.ApproverId.Get()),
-			}
-			if *a.ApproverId.Get() == "" {
-				approval.ApproverId = types.StringNull()
-			} else {
-				approval.ApproverId = types.StringPointerValue(a.ApproverId.Get())
+				ApproverId:   types.StringPointerValue(a.ApproverId.Get()),
 			}
 			ap.RevocationRequestConfig.ApprovalSchemes = append(ap.RevocationRequestConfig.ApprovalSchemes, approval)
 		}
-	} else {
-		ap.RevocationRequestConfig = nil
 	}
 }
 
@@ -174,12 +155,19 @@ type Requestability struct {
 	// AdditionalProperties map[string]interface{}
 }
 
+var AccessProfileApprovalSchemeObject = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"approver_type": types.StringType,
+		"approver_id":   types.StringType,
+	},
+}
+
+var RevocabilityType = map[string]attr.Type{
+	"approval_schemes": types.ListType{ElemType: AccessProfileApprovalSchemeObject},
+}
+
 // Revocability struct for Revocability
 type Revocability struct {
-	// Whether the requester of the containing object must provide comments justifying the request
-	CommentsRequired types.Bool `tfsdk:"comments_required"`
-	// Whether an approver must provide comments when denying the request
-	DenialCommentsRequired types.Bool `tfsdk:"denial_comments_required"`
 	// List describing the steps in approving the revocation request
 	ApprovalSchemes []AccessProfileApprovalScheme `tfsdk:"approval_schemes"`
 	// AdditionalProperties map[string]interface{}
@@ -224,44 +212,43 @@ func convertAccessProfileV3(ap *AccessProfile) *v3.AccessProfile {
 
 	if ap.AccessRequestConfig != nil {
 		accessRequest := v3.NewRequestability()
-		accessRequest.CommentsRequired = ap.AccessRequestConfig.CommentsRequired.ValueBoolPointer()
-		accessRequest.DenialCommentsRequired = ap.AccessRequestConfig.DenialCommentsRequired.ValueBoolPointer()
+		commentsRequired := v3.NullableBool{}
+		commentsRequired.Set(ap.AccessRequestConfig.CommentsRequired.ValueBoolPointer())
+		denialCommentsRequired := v3.NullableBool{}
+		denialCommentsRequired.Set(ap.AccessRequestConfig.DenialCommentsRequired.ValueBoolPointer())
+		accessRequest.CommentsRequired = commentsRequired
+		accessRequest.DenialCommentsRequired = denialCommentsRequired
 
 		accessRequestSchema := []v3.AccessProfileApprovalScheme{}
 		for _, ar := range ap.AccessRequestConfig.ApprovalSchemes {
 			as := v3.AccessProfileApprovalScheme{}
 			as.SetApproverType(ar.ApproverType.ValueString())
-			if ar.ApproverId.IsNull() {
-				as.SetApproverId("")
-			} else {
+			if !ar.ApproverId.IsNull() {
 				as.SetApproverId(ar.ApproverId.ValueString())
 			}
 
 			accessRequestSchema = append(accessRequestSchema, as)
 		}
 		accessRequest.ApprovalSchemes = accessRequestSchema
-		accessProfile.AccessRequestConfig = accessRequest
+		nullableRequestability := *v3.NewNullableRequestability(accessRequest)
+		accessProfile.AccessRequestConfig = nullableRequestability
 	}
 
 	if ap.RevocationRequestConfig != nil {
 		accessRevoke := v3.NewRevocability()
-		accessRevoke.CommentsRequired.Set(ap.RevocationRequestConfig.CommentsRequired.ValueBoolPointer())
-		accessRevoke.DenialCommentsRequired.Set(ap.RevocationRequestConfig.DenialCommentsRequired.ValueBoolPointer())
 
 		accessRevokeSchema := []v3.AccessProfileApprovalScheme{}
 		for _, ar := range ap.RevocationRequestConfig.ApprovalSchemes {
 			as := v3.AccessProfileApprovalScheme{}
 			as.SetApproverType(ar.ApproverType.ValueString())
-			if ar.ApproverId.IsNull() {
-				as.SetApproverId("")
-			} else {
+			if !ar.ApproverId.IsNull() {
 				as.SetApproverId(ar.ApproverId.ValueString())
 			}
 
 			accessRevokeSchema = append(accessRevokeSchema, as)
 		}
 		accessRevoke.ApprovalSchemes = accessRevokeSchema
-		accessProfile.RevocationRequestConfig = accessRevoke
+		accessProfile.RevocationRequestConfig = *v3.NewNullableRevocability(accessRevoke)
 	}
 
 	return &accessProfile

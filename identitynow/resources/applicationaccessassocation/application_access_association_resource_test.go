@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/davidsonjon/terraform-provider-identitynow/identitynow"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/davidsonjon/terraform-provider-identitynow/identitynow"
 )
 
 func TestAccApplicationAccessAssociationResource(t *testing.T) {
@@ -160,9 +160,7 @@ func testAccApplicationAccessAssociationResourceConfig(userId, sourceId, entitle
 resource "identitynow_application" "application" {
 	name = %q
 	description = "new test application"
-	owner = {
-		id = data.identitynow_identity.test.cc_id
-	}
+	owner_external_id = data.identitynow_identity.test.id
 	account_service_id = data.identitynow_source.source.connector_attributes.cloud_external_id
 	launchpad_enabled = false
 	provision_request_enabled = false
@@ -175,7 +173,7 @@ resource "identitynow_application" "application" {
 }
 
 resource "identitynow_application_access_association" "application_access_association" {
-	id = identitynow_application.application.id
+	application_id = identitynow_application.application.id
 	access_profile_ids = [%v]
 }
 `, userId, sourceId, entitlementId, accessProfileName, (accessProfileName + "2"), appName, strings.Join(configurableAttribute, ", "))

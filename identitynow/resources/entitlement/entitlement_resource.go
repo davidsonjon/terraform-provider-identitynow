@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
-	beta "github.com/davidsonjon/golang-sdk/beta"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
+	beta "github.com/davidsonjon/golang-sdk/v2/api_beta"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/wI2L/jsondiff"
@@ -73,6 +76,7 @@ func (r *EntitlementResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"privileged": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "True if the entitlement is privileged",
 			},
 			"cloud_governed": schema.BoolAttribute{
@@ -84,6 +88,7 @@ func (r *EntitlementResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The description of the entitlement",
 			},
 			"requestable": schema.BoolAttribute{
+				Optional:            true,
 				Computed:            true,
 				MarkdownDescription: "True if the entitlement is requestable",
 			},
@@ -92,9 +97,30 @@ func (r *EntitlementResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:            true,
 				MarkdownDescription: "The Source ID of the entitlement",
 			},
-			"owner_id": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The Owner ID of the entitlement",
+			"owner": schema.SingleNestedAttribute{
+				Attributes: map[string]schema.Attribute{
+					"id": schema.StringAttribute{
+						Required:            true,
+						MarkdownDescription: "Identity id",
+					},
+					"name": schema.StringAttribute{
+						Optional:            true,
+						Computed:            true,
+						MarkdownDescription: "Human-readable display name of the owner. It may be left null or omitted in a POST or PATCH. If set, it must match the current value of the owner's display name, otherwise a 400 Bad Request error will result.",
+					},
+					"type": schema.StringAttribute{
+						Required: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("IDENTITY"),
+						},
+						MarkdownDescription: "The type of the Source, will always be `IDENTITY`",
+					},
+				},
+				Optional: true,
+				Computed: true,
+				Default: objectdefault.StaticValue(
+					types.ObjectNull(OwnerSchemeObject),
+				),
 			},
 		},
 	}
@@ -147,13 +173,13 @@ func (r *EntitlementResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 	if data.Id.IsNull() || data.Id.IsUnknown() {
-		source, httpResp, err := r.client.V3.SourcesApi.GetSource(ctx, data.SourceID.ValueString()).Execute()
+		source, httpResp, err := r.client.V3.SourcesAPI.GetSource(ctx, data.SourceID.ValueString()).Execute()
 		if err != nil {
 			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 			if isSailpointError {
 				resp.Diagnostics.AddError(
 					"Error when calling V3.SourcesApi.GetSource",
-					fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 				)
 			} else {
 				resp.Diagnostics.AddError(
@@ -167,17 +193,17 @@ func (r *EntitlementResource) Create(ctx context.Context, req resource.CreateReq
 
 		filters := "source.id eq \"" + *source.Id + "\" and value eq \"" + data.Value.ValueString() + "\""
 
-		entitlements, httpResp, err := r.client.Beta.EntitlementsApi.ListEntitlements(ctx).Filters(filters).Limit(1).Execute()
+		entitlements, httpResp, err := r.client.Beta.EntitlementsAPI.ListEntitlements(ctx).Filters(filters).Limit(1).Execute()
 		if err != nil {
 			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 			if isSailpointError {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.EntitlementsApi.ListEntitlements",
-					fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+					"Error when calling Beta.EntitlementsAPI.ListEntitlements",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 				)
 			} else {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.EntitlementsApi.ListEntitlements",
+					"Error when calling Beta.EntitlementsAPI.ListEntitlements",
 					fmt.Sprintf("Error: %s, see debug info for more information", err),
 				)
 			}
@@ -198,17 +224,17 @@ func (r *EntitlementResource) Create(ctx context.Context, req resource.CreateReq
 
 	}
 
-	entitlement, httpResp, err := r.client.Beta.EntitlementsApi.GetEntitlement(ctx, data.Id.ValueString()).Execute()
+	entitlement, httpResp, err := r.client.Beta.EntitlementsAPI.GetEntitlement(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.EntitlementsApi.GetEntitlement",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.EntitlementsAPI.GetEntitlement",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.EntitlementsApi.GetEntitlement",
+				"Error when calling Beta.EntitlementsAPI.GetEntitlement",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -230,12 +256,23 @@ func (r *EntitlementResource) Create(ctx context.Context, req resource.CreateReq
 	newEntitlement.SetPrivileged(data.Privileged.ValueBool())
 	newEntitlement.SetRequestable(data.Requestable.ValueBool())
 
+	if data.Owner != nil {
+		owner := beta.EntitlementOwner{
+			Id:   data.Owner.Id.ValueStringPointer(),
+			Name: data.Owner.Name.ValueStringPointer(),
+			Type: data.Owner.Type.ValueStringPointer(),
+		}
+		newEntitlement.SetOwner(owner)
+	} else {
+		newEntitlement.Owner = nil
+	}
+
 	patch, err := jsondiff.Compare(entitlement, newEntitlement)
 	if err != nil {
 		// handle error
 		resp.Diagnostics.AddError(
 			"Error when calling PatchAccessProfile",
-			fmt.Sprintf("Error: %T, see debug info for more information", err),
+			fmt.Sprintf("Error: %v, see debug info for more information", err),
 		)
 
 		return
@@ -249,7 +286,7 @@ func (r *EntitlementResource) Create(ctx context.Context, req resource.CreateReq
 			// handle error
 			resp.Diagnostics.AddError(
 				"Error when calling Marshalling patch operation",
-				fmt.Sprintf("Error: %T, see debug info for more information", err),
+				fmt.Sprintf("Error: %v, see debug info for more information", err),
 			)
 
 			return
@@ -259,17 +296,17 @@ func (r *EntitlementResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	if patch != nil {
-		patchEnt, httpResp, err := r.client.Beta.EntitlementsApi.PatchEntitlement(ctx, data.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
+		patchEnt, httpResp, err := r.client.Beta.EntitlementsAPI.PatchEntitlement(ctx, data.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
 		if err != nil {
 			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 			if isSailpointError {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.EntitlementsApi.PatchEntitlement",
-					fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+					"Error when calling Beta.EntitlementsAPI.PatchEntitlement",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 				)
 			} else {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.EntitlementsApi.PatchEntitlement",
+					"Error when calling Beta.EntitlementsAPI.PatchEntitlement",
 					fmt.Sprintf("Error: %s, see debug info for more information", err),
 				)
 			}
@@ -295,17 +332,17 @@ func (r *EntitlementResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	entitlement, httpResp, err := r.client.Beta.EntitlementsApi.GetEntitlement(ctx, data.Id.ValueString()).Execute()
+	entitlement, httpResp, err := r.client.Beta.EntitlementsAPI.GetEntitlement(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.EntitlementsApi.GetEntitlement",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.EntitlementsAPI.GetEntitlement",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.EntitlementsApi.GetEntitlement",
+				"Error when calling Beta.EntitlementsAPI.GetEntitlement",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -332,6 +369,17 @@ func (r *EntitlementResource) Update(ctx context.Context, req resource.UpdateReq
 	planEnt := convertEntitlementBeta(&plan)
 	stateEnt := convertEntitlementBeta(&state)
 
+	if update.Owner != nil {
+		owner := beta.EntitlementOwner{
+			Id:   update.Owner.Id.ValueStringPointer(),
+			Name: update.Owner.Name.ValueStringPointer(),
+			Type: update.Owner.Type.ValueStringPointer(),
+		}
+		stateEnt.SetOwner(owner)
+	} else {
+		stateEnt.Owner = nil
+	}
+
 	jsonPatchOperation := []beta.JsonPatchOperation{} // []JsonPatchOperation |
 
 	patch, err := jsondiff.Compare(stateEnt, planEnt)
@@ -339,7 +387,7 @@ func (r *EntitlementResource) Update(ctx context.Context, req resource.UpdateReq
 		// handle error
 		resp.Diagnostics.AddError(
 			"Error when calling PatchAccessProfile",
-			fmt.Sprintf("Error: %T, see debug info for more information", err),
+			fmt.Sprintf("Error: %v, see debug info for more information", err),
 		)
 
 		return
@@ -353,7 +401,7 @@ func (r *EntitlementResource) Update(ctx context.Context, req resource.UpdateReq
 			// handle error
 			resp.Diagnostics.AddError(
 				"Error when calling Marshalling patch operation",
-				fmt.Sprintf("Error: %T, see debug info for more information", err),
+				fmt.Sprintf("Error: %v, see debug info for more information", err),
 			)
 
 			return
@@ -364,17 +412,17 @@ func (r *EntitlementResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	if patch != nil {
-		patchEnt, httpResp, err := r.client.Beta.EntitlementsApi.PatchEntitlement(ctx, state.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
+		patchEnt, httpResp, err := r.client.Beta.EntitlementsAPI.PatchEntitlement(ctx, state.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
 		if err != nil {
 			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 			if isSailpointError {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.EntitlementsApi.PatchEntitlement",
-					fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+					"Error when calling Beta.EntitlementsAPI.PatchEntitlement",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 				)
 			} else {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.EntitlementsApi.PatchEntitlement",
+					"Error when calling Beta.EntitlementsAPI.PatchEntitlement",
 					fmt.Sprintf("Error: %s, see debug info for more information", err),
 				)
 			}

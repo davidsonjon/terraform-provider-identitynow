@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -14,6 +13,7 @@ import (
 	"regexp"
 	"time"
 
+	beta "github.com/davidsonjon/golang-sdk/v2/api_beta"
 	"github.com/hashicorp/go-retryablehttp"
 )
 
@@ -94,16 +94,6 @@ func baseRetryPolicy(resp *http.Response, err error) (bool, error) {
 		return true, nil
 	}
 
-	// Check if the response is in sailpoint error format
-	sailpointError, isSailpointError := SailpointErrorFromHTTPBody(resp)
-	if isSailpointError {
-		fmt.Fprintf(os.Stderr, "sailpointError: %v\n", sailpointError)
-		if sailpointError.SlptErrorCode == "SLPT-1211" {
-			fmt.Fprintf(os.Stderr, "Sync going!: %v\n", sailpointError.MessageTemplate)
-			return true, nil
-		}
-	}
-
 	// Check the response code. We retry on 500-range responses to allow
 	// the server time to recover, as 500's are typically not permanent
 	// errors and may relate to outages on the server side. This will catch
@@ -115,39 +105,19 @@ func baseRetryPolicy(resp *http.Response, err error) (bool, error) {
 	return false, nil
 }
 
-type SailpointError struct {
-	Response         string
-	MessageTemplate  string `json:"msg_template,omitempty"`
-	Message          string `json:"message,omitempty"`
-	FormattedMessage string `json:"formatted_msg,omitempty"`
-
-	Code           int    `json:"code,omitempty"`
-	ErrorCode      int    `json:"error_code,omitempty"`
-	SlptErrorCode  string `json:"slpt_error_code,omitempty"`
-	ExceptionClass string `json:"exception_class,omitempty"`
-}
-
-func (s *SailpointError) Error() string {
-	// return s.Response
-	return s.Response
-}
-
-func SailpointErrorFromHTTPBody(resp *http.Response) (*SailpointError, bool) {
+func SailpointErrorFromHTTPBody(resp *http.Response) (*beta.ErrorResponseDto, bool) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "err: %v\n", err)
+		return nil, false
 	}
 	// response := string(body)
 	resp.Body = io.NopCloser(bytes.NewBuffer(body))
 
-	s := &SailpointError{}
-	err = json.Unmarshal(body, s)
+	spError := beta.NewErrorResponseDto()
+
+	err = spError.UnmarshalJSON(body)
 	if err != nil {
 		return nil, false
 	}
-	if s.ErrorCode == 0 && s.Code == 0 {
-		return nil, false
-	}
-	s.Response = string(body)
-	return s, true
+	return spError, true
 }

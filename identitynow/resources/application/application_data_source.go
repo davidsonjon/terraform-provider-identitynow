@@ -2,20 +2,20 @@ package application
 
 import (
 	"context"
-	"encoding/json"
 
 	"fmt"
 
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
 )
 
 var _ datasource.DataSource = &ApplicationDataSource{}
@@ -34,46 +34,53 @@ func (d *ApplicationDataSource) Metadata(ctx context.Context, req datasource.Met
 
 func (d *ApplicationDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Application data source",
-
+		MarkdownDescription: "Source Application data source",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
 				MarkdownDescription: "id of the application",
 			},
-			"app_id": schema.StringAttribute{
+			"cloud_app_id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "app_id of the application",
-			},
-			"service_id": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "service_id of the application",
-			},
-			"service_app_id": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "service_app_id of the application",
+				MarkdownDescription: "The deprecated source app id",
 			},
 			"name": schema.StringAttribute{
+				Computed:            true,
 				Optional:            true,
-				Computed:            true,
-				MarkdownDescription: "Name of the application",
+				MarkdownDescription: "The source app name",
 			},
-			"description": schema.StringAttribute{
+			"created": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Description of the application",
+				MarkdownDescription: "Time when the source app was created",
 			},
-			"app_center_enabled": schema.BoolAttribute{
+			"modified": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Determines if application is enabled in app center",
+				MarkdownDescription: "Time when the source app was last modified",
+			},
+			"enabled": schema.BoolAttribute{
+				Computed:            true,
+				MarkdownDescription: "True if the source app is enabled",
 			},
 			"provision_request_enabled": schema.BoolAttribute{
 				Computed:            true,
-				MarkdownDescription: "Determines if application is requestable in app center",
+				MarkdownDescription: "True if the source app is provision request enabled",
 			},
-			"launchpad_enabled": schema.BoolAttribute{
+			"description": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Launchpad enabled",
+				MarkdownDescription: "The description of the source app",
+			},
+			"match_all_accounts": schema.BoolAttribute{
+				Computed:            true,
+				MarkdownDescription: "True if the source app match all accounts",
+			},
+			"appcenter_enabled": schema.BoolAttribute{
+				Computed:            true,
+				MarkdownDescription: "True if the source app is shown in the app center",
+			},
+			"account_source_id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "Source ID of the source app",
 			},
 			"owner": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
@@ -85,26 +92,18 @@ func (d *ApplicationDataSource) Schema(ctx context.Context, req datasource.Schem
 						Computed:            true,
 						MarkdownDescription: "Owner id",
 					},
+					"type": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "Owner type",
+					},
 				},
 				Computed:            true,
 				MarkdownDescription: "Owner information",
 			},
-			"date_created": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "date created",
-			},
-			// "last_updated": schema.StringAttribute{
-			// 	Computed:            true,
-			// 	MarkdownDescription: "",
-			// },
-			"access_profile_ids": schema.ListAttribute{
+			"access_profile_ids": schema.SetAttribute{
 				ElementType:         types.StringType,
 				Computed:            true,
-				MarkdownDescription: "List of access profile id's",
-			},
-			"account_service_id": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "account_service_id of application",
+				MarkdownDescription: "Set of access profile ids",
 			},
 		},
 	}
@@ -140,7 +139,7 @@ func (d *ApplicationDataSource) ConfigValidators(ctx context.Context) []datasour
 }
 
 func (d *ApplicationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ListApplications200ResponseInner
+	var data SourceApp
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -149,17 +148,17 @@ func (d *ApplicationDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	if !data.Name.IsNull() {
-		apps, httpResp, err := d.client.CC.ApplicationsApi.ListApplications(context.Background()).Filter("org").Execute()
+		apps, httpResp, err := d.client.Beta.AppsAPI.ListAllSourceApp(context.Background()).Filters("name eq \"" + data.Name.ValueString() + "\"").Execute()
 		if err != nil {
 			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 			if isSailpointError {
 				resp.Diagnostics.AddError(
-					"Error when calling GetApplication",
-					fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+					"Error when calling Beta.AppsAPI.ListAllSourceApp",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 				)
 			} else {
 				resp.Diagnostics.AddError(
-					"Error when calling GetApplication",
+					"Error when calling Beta.AppsAPI.ListAllSourceApp",
 					fmt.Sprintf("Error: %s, see debug info for more information", err),
 				)
 			}
@@ -167,49 +166,76 @@ func (d *ApplicationDataSource) Read(ctx context.Context, req datasource.ReadReq
 		}
 
 		for _, a := range apps {
-			tflog.Info(ctx, fmt.Sprintf("a.Name: %v", *a.Name))
-
 			if *a.Name == data.Name.ValueString() {
-				tflog.Info(ctx, fmt.Sprintf("a.Name: %v", *a.Name))
 				data.Id = types.StringPointerValue(a.Id)
 			}
 		}
 
+		if data.Id.IsNull() {
+			resp.Diagnostics.AddError(
+				"Error when calling Looking up SourceApp by name",
+				fmt.Sprintf("Error finding SourceApp name: %s", data.Name.ValueString()),
+			)
+			return
+		}
+
 	}
 
-	app, httpResp, err := d.client.CC.ApplicationsApi.GetApplication(ctx, data.Id.ValueString()).Execute()
+	app, httpResp, err := d.client.Beta.AppsAPI.GetSourceApp(context.Background(), data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling GetApplication",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.AppsAPI.GetSourceApp",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling GetApplication",
+				"Error when calling Beta.AppsAPI.GetSourceApp",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
 
 		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
-
 		return
 	}
 
-	parseAttributesApplication(&data, app, &resp.Diagnostics)
+	data.Id = types.StringPointerValue(app.Id)
+	data.CloudAppId = types.StringPointerValue(app.CloudAppId)
+	data.Name = types.StringPointerValue(app.Name)
+	data.Created = types.StringValue(app.Created.String())
+	data.Modified = types.StringValue(app.Modified.String())
+	data.Enabled = types.BoolPointerValue(app.Enabled)
+	data.ProvisionRequestEnabled = types.BoolPointerValue(app.ProvisionRequestEnabled)
+	data.Description = types.StringPointerValue(app.Description)
+	data.MatchAllAccounts = types.BoolPointerValue(app.MatchAllAccounts)
+	data.AppCenterEnabled = types.BoolPointerValue(app.AppCenterEnabled)
 
-	appAccessProfiles, httpResp, err := d.client.CC.ApplicationsApi.GetApplicationAccessProfiles(ctx, data.Id.ValueString()).Execute()
+	owner, ok := types.ObjectValue(listApplications200ResponseInnerOwnerTypes, map[string]attr.Value{
+		"name": types.StringPointerValue(app.Owner.Get().Name),
+		"id":   types.StringPointerValue(app.Owner.Get().Id),
+		"type": types.StringPointerValue((*string)(app.Owner.Get().Type)),
+	})
+
+	if ok.HasError() {
+		resp.Diagnostics.Append(ok...)
+	}
+
+	data.Owner = owner
+
+	data.AccountSourceId = types.StringPointerValue(app.AccountSource.Get().Id)
+
+	appAccessProfiles, httpResp, err := d.client.Beta.AppsAPI.ListAccessProfilesForSourceApp(context.Background(), data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling GetApplication",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling eta.AppsAPI.ListAccessProfilesForSourceApp",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling GetApplication",
+				"Error when calling eta.AppsAPI.ListAccessProfilesForSourceApp",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -217,26 +243,16 @@ func (d *ApplicationDataSource) Read(ctx context.Context, req datasource.ReadReq
 		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
 	}
 
-	jsonAppAccessProfiles, err := json.Marshal(appAccessProfiles)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error when calling json.Marshal",
-			fmt.Sprintf("Error: %T, see debug info for more information", err),
-		)
-		return
+	elements := []attr.Value{}
+
+	for _, v := range appAccessProfiles {
+		elements = append(elements, types.StringPointerValue(v.Id))
 	}
 
-	respAccessProfile := SailApplicationAccessProfiles{}
-	err = json.Unmarshal(jsonAppAccessProfiles, &respAccessProfile)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error when calling json.Unmarshal",
-			fmt.Sprintf("Error: %T, see debug info for more information", err),
-		)
-		return
-	}
+	setValue, diags := types.SetValueFrom(ctx, types.StringType, elements)
+	resp.Diagnostics.Append(diags...)
 
-	parseAccessProfiles(&data, respAccessProfile, &resp.Diagnostics)
+	data.AccessProfileIds = setValue
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -8,8 +8,6 @@ import (
 type Identity struct {
 	// System-generated unique ID of the Object
 	Id types.String `tfsdk:"id"`
-	// System-generated unique ID of the Object from /cc API endpoint
-	CcId types.String `tfsdk:"cc_id"`
 	// Name of the Object
 	Name types.String `tfsdk:"name"`
 	// Creation date of the Object
@@ -23,7 +21,9 @@ type Identity struct {
 	// The processing state of the identity
 	ProcessingState types.String `tfsdk:"processing_state"`
 	// The identity's status in the system
-	IdentityStatus types.String `tfsdk:"identity_status"`
+	IdentityStatus     types.String `tfsdk:"identity_status"`
+	UseCallerIdentity  types.Bool   `tfsdk:"use_caller_identity"`
+	CallerIdentityUsed types.Bool   `tfsdk:"caller_identity_used"`
 
 	// ManagerRef *BaseReferenceDto1 `json:"managerRef"`
 	// // Whether this identity is a manager of another identity

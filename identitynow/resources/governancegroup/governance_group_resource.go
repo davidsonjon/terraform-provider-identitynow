@@ -4,20 +4,22 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
+	"github.com/davidsonjon/golang-sdk/v2/api_beta"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/wI2L/jsondiff"
-
-	"github.com/davidsonjon/golang-sdk/beta"
 )
 
 var _ resource.Resource = &GovernanceGroupResource{}
@@ -44,6 +46,9 @@ func (r *GovernanceGroupResource) Schema(ctx context.Context, req resource.Schem
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Governance group ID.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -133,7 +138,7 @@ func (r *GovernanceGroupResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	workgroupDto := *beta.NewWorkgroupDto() // WorkgroupDto |
+	workgroupDto := *api_beta.NewWorkgroupDto() // WorkgroupDto |
 	workgroupDto.Name = data.Name.ValueStringPointer()
 	workgroupDto.Description = data.Description.ValueStringPointer()
 
@@ -143,23 +148,23 @@ func (r *GovernanceGroupResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	workgroupDto.Owner = &beta.OwnerDto{
+	workgroupDto.Owner = &api_beta.WorkgroupDtoOwner{
 		Name: propsState.Name.ValueStringPointer(),
 		Id:   propsState.Id.ValueStringPointer(),
 		Type: propsState.Type.ValueStringPointer(),
 	}
 
-	workgroup, httpResp, err := r.client.Beta.GovernanceGroupsApi.CreateWorkgroup(ctx).WorkgroupDto(workgroupDto).Execute()
+	workgroup, httpResp, err := r.client.Beta.GovernanceGroupsAPI.CreateWorkgroup(ctx).WorkgroupDto(workgroupDto).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.CreateWorkgroup",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.GovernanceGroupsAPI.CreateWorkgroup",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.CreateWorkgroup",
+				"Error when calling Beta.GovernanceGroupsAPI.CreateWorkgroup",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -167,12 +172,12 @@ func (r *GovernanceGroupResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	bulkWorkgroupMembersRequestInner := []beta.BulkWorkgroupMembersRequestInner{}
+	bulkWorkgroupMembersRequestInner := []api_beta.BulkWorkgroupMembersRequestInner{}
 	base := []BaseReferenceDto1{}
 	data.Membership.ElementsAs(ctx, &base, false)
 
 	for _, m := range base {
-		member := beta.BulkWorkgroupMembersRequestInner{
+		member := api_beta.BulkWorkgroupMembersRequestInner{
 			Id:   m.Id.ValueStringPointer(),
 			Name: m.Name.ValueStringPointer(),
 			Type: m.Id.ValueStringPointer(),
@@ -180,17 +185,17 @@ func (r *GovernanceGroupResource) Create(ctx context.Context, req resource.Creat
 		bulkWorkgroupMembersRequestInner = append(bulkWorkgroupMembersRequestInner, member)
 	}
 
-	_, httpResp, err = r.client.Beta.GovernanceGroupsApi.UpdateWorkgroupMembers(ctx, *workgroup.Id).BulkWorkgroupMembersRequestInner(bulkWorkgroupMembersRequestInner).Execute()
+	_, httpResp, err = r.client.Beta.GovernanceGroupsAPI.UpdateWorkgroupMembers(ctx, *workgroup.Id).BulkWorkgroupMembersRequestInner(bulkWorkgroupMembersRequestInner).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.UpdateWorkgroupMembers",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.GovernanceGroupsAPI.UpdateWorkgroupMembers",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.UpdateWorkgroupMembers",
+				"Error when calling Beta.GovernanceGroupsAPI.UpdateWorkgroupMembers",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -204,17 +209,17 @@ func (r *GovernanceGroupResource) Create(ctx context.Context, req resource.Creat
 	data.MemberCount = types.Int64PointerValue(workgroup.MemberCount)
 	data.ConnectionCount = types.Int64PointerValue(workgroup.ConnectionCount)
 
-	workgroupMembers, httpResp, err := r.client.Beta.GovernanceGroupsApi.ListWorkgroupMembers(ctx, data.Id.ValueString()).Execute()
+	workgroupMembers, httpResp, err := r.client.Beta.GovernanceGroupsAPI.ListWorkgroupMembers(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.ListWorkgroupMembers",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroupMembers",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.ListWorkgroupMembers",
+				"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroupMembers",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -263,12 +268,12 @@ func (r *GovernanceGroupResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	workgroup, httpResp, err := r.client.Beta.GovernanceGroupsApi.GetWorkgroup(ctx, data.Id.ValueString()).Execute()
+	workgroup, httpResp, err := r.client.Beta.GovernanceGroupsAPI.GetWorkgroup(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
 			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
 			resp.Diagnostics.AddWarning(
-				"Error when calling Beta.GovernanceGroupsApi.GetWorkgroup",
+				"Error when calling Beta.GovernanceGroupsAPI.GetWorkgroup",
 				fmt.Sprintf("GovernanceGroup with id:%s is not found. Removing from state.",
 					data.Id.ValueString()))
 			resp.State.RemoveResource(ctx)
@@ -276,12 +281,12 @@ func (r *GovernanceGroupResource) Read(ctx context.Context, req resource.ReadReq
 			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 			if isSailpointError {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.GovernanceGroupsApi.GetWorkgroup",
-					fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+					"Error when calling Beta.GovernanceGroupsAPI.GetWorkgroup",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 				)
 			} else {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.GovernanceGroupsApi.GetWorkgroup",
+					"Error when calling Beta.GovernanceGroupsAPI.GetWorkgroup",
 					fmt.Sprintf("Error: %s, see debug info for more information", err),
 				)
 			}
@@ -296,17 +301,17 @@ func (r *GovernanceGroupResource) Read(ctx context.Context, req resource.ReadReq
 	data.MemberCount = types.Int64PointerValue(workgroup.MemberCount)
 	data.ConnectionCount = types.Int64PointerValue(workgroup.ConnectionCount)
 
-	workgroupMembers, httpResp, err := r.client.Beta.GovernanceGroupsApi.ListWorkgroupMembers(ctx, data.Id.ValueString()).Execute()
+	workgroupMembers, httpResp, err := r.client.Beta.GovernanceGroupsAPI.ListWorkgroupMembers(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.ListWorkgroupMembers",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroupMembers",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.ListWorkgroupMembers",
+				"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroupMembers",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -360,27 +365,27 @@ func (r *GovernanceGroupResource) Update(ctx context.Context, req resource.Updat
 	planEnt := convertWorkgroupBeta(ctx, &plan)
 	stateEnt := convertWorkgroupBeta(ctx, &state)
 
-	jsonPatchOperation := []beta.JsonPatchOperation{}
+	jsonPatchOperation := []api_beta.JsonPatchOperation{}
 
 	patch, err := jsondiff.Compare(stateEnt, planEnt)
 	if err != nil {
 		// handle error
 		resp.Diagnostics.AddError(
 			"Error when calling PatchAccessProfile",
-			fmt.Sprintf("Error: %T, see debug info for more information", err),
+			fmt.Sprintf("Error: %v, see debug info for more information", err),
 		)
 
 		return
 	}
 
 	for _, p := range patch {
-		patch := *beta.NewJsonPatchOperationWithDefaults()
+		patch := *api_beta.NewJsonPatchOperationWithDefaults()
 
 		op, err := p.MarshalJSON()
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error when calling Marshalling patch operation",
-				fmt.Sprintf("Error: %T, see debug info for more information", err),
+				fmt.Sprintf("Error: %v, see debug info for more information", err),
 			)
 
 			return
@@ -391,17 +396,17 @@ func (r *GovernanceGroupResource) Update(ctx context.Context, req resource.Updat
 		jsonPatchOperation = append(jsonPatchOperation, patch)
 	}
 
-	workgroup, httpResp, err := r.client.Beta.GovernanceGroupsApi.PatchWorkgroup(ctx, state.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
+	workgroup, httpResp, err := r.client.Beta.GovernanceGroupsAPI.PatchWorkgroup(ctx, state.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.PatchWorkgroup",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.GovernanceGroupsAPI.PatchWorkgroup",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.PatchWorkgroup",
+				"Error when calling Beta.GovernanceGroupsAPI.PatchWorkgroup",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -409,35 +414,73 @@ func (r *GovernanceGroupResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	bulkWorkgroupMembersRequestInner := []beta.BulkWorkgroupMembersRequestInner{}
-	base := []BaseReferenceDto1{}
-	update.Membership.ElementsAs(ctx, &base, false)
+	bulkWorkgroupMembersRequestInner := []api_beta.BulkWorkgroupMembersRequestInner{}
+	bulkWorkgroupMembersRequestInnerRemove := []api_beta.BulkWorkgroupMembersRequestInner{}
+	stateMembership := []BaseReferenceDto1{}
+	state.Membership.ElementsAs(ctx, &stateMembership, false)
+	planMembership := []BaseReferenceDto1{}
+	plan.Membership.ElementsAs(ctx, &planMembership, false)
 
-	for _, m := range base {
-		member := beta.BulkWorkgroupMembersRequestInner{
+	for _, m := range planMembership {
+		member := api_beta.BulkWorkgroupMembersRequestInner{
 			Id:   m.Id.ValueStringPointer(),
 			Name: m.Name.ValueStringPointer(),
 			Type: m.Id.ValueStringPointer(),
 		}
-		bulkWorkgroupMembersRequestInner = append(bulkWorkgroupMembersRequestInner, member)
+		if !slices.Contains(stateMembership, m) {
+			bulkWorkgroupMembersRequestInner = append(bulkWorkgroupMembersRequestInner, member)
+		}
 	}
 
-	_, httpResp, err = r.client.Beta.GovernanceGroupsApi.UpdateWorkgroupMembers(ctx, *workgroup.Id).BulkWorkgroupMembersRequestInner(bulkWorkgroupMembersRequestInner).Execute()
-	if err != nil {
-		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
-		if isSailpointError {
-			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.UpdateWorkgroupMembers",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
-			)
-		} else {
-			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.UpdateWorkgroupMembers",
-				fmt.Sprintf("Error: %s, see debug info for more information", err),
-			)
+	if len(bulkWorkgroupMembersRequestInner) > 0 {
+		_, httpResp, err = r.client.Beta.GovernanceGroupsAPI.UpdateWorkgroupMembers(ctx, *workgroup.Id).BulkWorkgroupMembersRequestInner(bulkWorkgroupMembersRequestInner).Execute()
+		if err != nil {
+			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
+			if isSailpointError {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.GovernanceGroupsAPI.UpdateWorkgroupMembers",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+				)
+			} else {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.GovernanceGroupsAPI.UpdateWorkgroupMembers",
+					fmt.Sprintf("Error: %s, see debug info for more information", err),
+				)
+			}
+			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
+			return
 		}
-		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
-		return
+	}
+
+	for _, m := range stateMembership {
+		member := api_beta.BulkWorkgroupMembersRequestInner{
+			Id:   m.Id.ValueStringPointer(),
+			Name: m.Name.ValueStringPointer(),
+			Type: m.Id.ValueStringPointer(),
+		}
+		if !slices.Contains(planMembership, m) {
+			bulkWorkgroupMembersRequestInnerRemove = append(bulkWorkgroupMembersRequestInnerRemove, member)
+		}
+	}
+
+	if len(bulkWorkgroupMembersRequestInnerRemove) > 0 {
+		_, httpResp, err = r.client.Beta.GovernanceGroupsAPI.DeleteWorkgroupMembers(ctx, *workgroup.Id).BulkWorkgroupMembersRequestInner(bulkWorkgroupMembersRequestInnerRemove).Execute()
+		if err != nil {
+			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
+			if isSailpointError {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.GovernanceGroupsAPI.DeleteWorkgroupMembers",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+				)
+			} else {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.GovernanceGroupsAPI.DeleteWorkgroupMembers",
+					fmt.Sprintf("Error: %s, see debug info for more information", err),
+				)
+			}
+			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
+			return
+		}
 	}
 
 	update.Id = types.StringPointerValue(workgroup.Id)
@@ -446,17 +489,17 @@ func (r *GovernanceGroupResource) Update(ctx context.Context, req resource.Updat
 	update.MemberCount = types.Int64PointerValue(workgroup.MemberCount)
 	update.ConnectionCount = types.Int64PointerValue(workgroup.ConnectionCount)
 
-	workgroupMembers, httpResp, err := r.client.Beta.GovernanceGroupsApi.ListWorkgroupMembers(ctx, state.Id.ValueString()).Execute()
+	workgroupMembers, httpResp, err := r.client.Beta.GovernanceGroupsAPI.ListWorkgroupMembers(ctx, state.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.ListWorkgroupMembers",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroupMembers",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.ListWorkgroupMembers",
+				"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroupMembers",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -505,20 +548,20 @@ func (r *GovernanceGroupResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	workgroupBulkDeleteRequest := *beta.NewWorkgroupBulkDeleteRequest()
+	workgroupBulkDeleteRequest := *api_beta.NewWorkgroupBulkDeleteRequest()
 	workgroupBulkDeleteRequest.Ids = []string{state.Id.ValueString()}
 
-	_, httpResp, err := r.client.Beta.GovernanceGroupsApi.DeleteWorkgroupsInBulk(ctx).WorkgroupBulkDeleteRequest(workgroupBulkDeleteRequest).Execute()
+	_, httpResp, err := r.client.Beta.GovernanceGroupsAPI.DeleteWorkgroupsInBulk(ctx).WorkgroupBulkDeleteRequest(workgroupBulkDeleteRequest).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.DeleteWorkgroupsInBulk",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.GovernanceGroupsAPI.DeleteWorkgroupsInBulk",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.DeleteWorkgroupsInBulk",
+				"Error when calling Beta.GovernanceGroupsAPI.DeleteWorkgroupsInBulk",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}

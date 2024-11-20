@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -123,7 +123,7 @@ func (d *AccessProfileDataSource) Schema(ctx context.Context, req datasource.Sch
 						Computed:            true,
 						MarkdownDescription: "Whether an approver must provide comments when denying the request",
 					},
-					"approval_schemes": schema.SetNestedAttribute{
+					"approval_schemes": schema.ListNestedAttribute{
 						NestedObject: schema.NestedAttributeObject{
 							Attributes: map[string]schema.Attribute{
 								"approver_type": schema.StringAttribute{
@@ -144,15 +144,7 @@ func (d *AccessProfileDataSource) Schema(ctx context.Context, req datasource.Sch
 			},
 			"revocation_request_config": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
-					"comments_required": schema.BoolAttribute{
-						Computed:            true,
-						MarkdownDescription: "Whether the requester of the containing object must provide comments justifying the request",
-					},
-					"denial_comments_required": schema.BoolAttribute{
-						Computed:            true,
-						MarkdownDescription: "Whether an approver must provide comments when denying the request",
-					},
-					"approval_schemes": schema.SetNestedAttribute{
+					"approval_schemes": schema.ListNestedAttribute{
 						NestedObject: schema.NestedAttributeObject{
 							Attributes: map[string]schema.Attribute{
 								"approver_type": schema.StringAttribute{
@@ -204,13 +196,13 @@ func (d *AccessProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	ap, httpResp, err := d.client.V3.AccessProfilesApi.GetAccessProfile(ctx, data.Id.ValueString()).Execute()
+	ap, httpResp, err := d.client.V3.AccessProfilesAPI.GetAccessProfile(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
 				"Error when calling V3.AccessProfilesApi.GetAccessProfile",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(

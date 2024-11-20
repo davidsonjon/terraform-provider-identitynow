@@ -44,6 +44,7 @@ func TestAccAccessProfileResource(t *testing.T) {
 				Config: configAccessProfileResource(accessProfileName, identityId, sourceId, entitlementId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("identitynow_access_profile.access_profile", "name", accessProfileName),
+					// resource.TestCheckResourceAttr("identitynow_access_profile.test", "id", "example-id"),
 				),
 			},
 			// ImportState testing

@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
-	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -39,10 +38,6 @@ func (d *IdentityDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				Computed:            true,
 				MarkdownDescription: "System-generated unique ID of the Object",
 			},
-			"cc_id": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "System-generated unique ID of the Object from /cc API endpoint",
-			},
 			"name": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Name of the Object",
@@ -72,6 +67,14 @@ func (d *IdentityDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 			"identity_status": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The identity's status in the system",
+			},
+			"use_caller_identity": schema.BoolAttribute{
+				Optional:            true,
+				MarkdownDescription: "**beware** user with caution. Use the caller's identity if no user is found, to support lifecycle outside of terraform",
+			},
+			"caller_identity_used": schema.BoolAttribute{
+				Computed:            true,
+				MarkdownDescription: "Helper flag to indicate if the caller's identity is being used",
 			},
 		},
 	}
@@ -116,6 +119,8 @@ func (d *IdentityDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
+	data.CallerIdentityUsed = types.BoolValue(false)
+
 	if !data.Alias.IsNull() || !data.EmailAddress.IsNull() {
 
 		var filter string
@@ -128,24 +133,27 @@ func (d *IdentityDataSource) Read(ctx context.Context, req datasource.ReadReques
 			filter = fmt.Sprintf(`email eq "%v"`, data.EmailAddress.ValueString())
 		}
 
-		users, httpResp, err := d.client.Beta.IdentitiesApi.ListIdentities(context.Background()).Filters(filter).Execute()
+		users, httpResp, err := d.client.Beta.IdentitiesAPI.ListIdentities(context.Background()).Filters(filter).Execute()
 		if err != nil {
 			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v\n", httpResp))
 
 			resp.Diagnostics.AddError(
 				"Error when calling ListIdentities",
-				fmt.Sprintf("Error: %T, see debug info for more information", err),
+				fmt.Sprintf("Error: %v, see debug info for more information", err),
 			)
 
 			return
 		}
 		switch len(users) {
 		case 0:
-			resp.Diagnostics.AddError(
-				"No identities found",
-				fmt.Sprint("Error: No users found for value"),
-			)
-			return
+			if !data.UseCallerIdentity.ValueBool() {
+				resp.Diagnostics.AddError(
+					"No identities found",
+					fmt.Sprint("Error: No users found for value"),
+				)
+				return
+			}
+			data.Id = types.StringValue("2c000000000000000000000000000000")
 		case 1:
 			data.Id = types.StringValue(*users[0].Id)
 		default:
@@ -157,49 +165,52 @@ func (d *IdentityDataSource) Read(ctx context.Context, req datasource.ReadReques
 		}
 	}
 
-	user, httpResp, err := d.client.Beta.IdentitiesApi.GetIdentity(ctx, data.Id.ValueString()).Execute()
-	if err != nil {
+	user, httpResp, err := d.client.Beta.IdentitiesAPI.GetIdentity(ctx, data.Id.ValueString()).Execute()
+	if err != nil && !data.UseCallerIdentity.ValueBool() {
 		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v\n", httpResp))
 
 		resp.Diagnostics.AddError(
 			"Error when calling GetIdentity",
-			fmt.Sprintf("Error: %T, see debug info for more information", err),
+			fmt.Sprintf("Error: %v, see debug info for more information", err),
 		)
 
 		return
 	}
 
-	data.Id = types.StringPointerValue(user.Id)
-	data.Name = types.StringValue(user.Name)
-	data.Created = types.StringValue(user.Created.String())
-	data.Modified = types.StringValue(user.Modified.String())
-	data.Alias = types.StringPointerValue(user.Alias)
-	data.EmailAddress = types.StringPointerValue(user.EmailAddress)
-	data.ProcessingState = types.StringPointerValue(user.ProcessingState.Get())
-	data.IdentityStatus = types.StringPointerValue(user.IdentityStatus)
-
-	filters := fmt.Sprintf(`{"filter":[{"property":"id","value":"%v"}],"joinOperator":"OR"}`, *user.Id)
-
-	userList, httpResp, err := d.client.CC.UserApi.ListUsers(context.TODO()).Filters(filters).Execute()
-	if err != nil {
-		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
-		if isSailpointError {
+	if data.UseCallerIdentity.ValueBool() && httpResp.StatusCode == 404 {
+		userTokens, httpResp, err := d.client.Beta.PersonalAccessTokensAPI.ListPersonalAccessTokens(context.Background()).OwnerId("me").Execute()
+		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error when calling CC.UserApi.ListUsers",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				fmt.Sprintf("Error when calling `PersonalAccessTokensAPI.ListPersonalAccessTokens``:%v", err),
+				fmt.Sprintf("Full HTTP response:%v", httpResp),
 			)
-		} else {
-			resp.Diagnostics.AddError(
-				"Error when calling CC.UserApi.ListUsers",
-				fmt.Sprintf("Error: %s, see debug info for more information", err),
-			)
+			return
 		}
-		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
 
-		return
+		data.Id = types.StringPointerValue(userTokens[0].Owner.Id)
+
+		user, httpResp, err = d.client.Beta.IdentitiesAPI.GetIdentity(ctx, data.Id.ValueString()).Execute()
+		if err != nil {
+			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v\n", httpResp))
+
+			resp.Diagnostics.AddError(
+				"Error when calling GetIdentity for Caller",
+				fmt.Sprintf("Error: %v, see debug info for more information", err),
+			)
+
+			return
+		}
+		data.CallerIdentityUsed = types.BoolValue(true)
 	}
 
-	data.CcId = types.StringPointerValue((*userList.Items)[0].Id)
+	data.Id = types.StringPointerValue(user.Id)
+	data.Name = types.StringValue(user.Name)
+	data.Created = types.StringPointerValue(user.Created)
+	data.Modified = types.StringPointerValue(user.Modified)
+	data.Alias = types.StringPointerValue(user.Alias)
+	data.EmailAddress = types.StringPointerValue(user.EmailAddress.Get())
+	data.ProcessingState = types.StringPointerValue(user.ProcessingState.Get())
+	data.IdentityStatus = types.StringPointerValue(user.IdentityStatus)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

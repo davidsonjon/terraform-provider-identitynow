@@ -2,26 +2,25 @@ package applicationaccessassocation
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"regexp"
 	"strings"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
+	beta "github.com/davidsonjon/golang-sdk/v2/api_beta"
+	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
+	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
-	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/application"
-	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 )
 
 var _ resource.Resource = &AccessProfileAssociationResource{}
@@ -51,18 +50,21 @@ func (r *AccessProfileAssociationResource) Schema(ctx context.Context, req resou
 			"application_id": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Application ID",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(5, 5),
+					stringvalidator.LengthBetween(32, 32),
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[0-9]+$`),
-						"must contain only numeric characters",
+						regexp.MustCompile(`^[a-z0-9]+$`),
+						"must contain only lowercase alphanumeric characters of length 32",
 					),
 				},
 			},
-			"access_profile_ids": schema.ListAttribute{
+			"access_profile_ids": schema.SetAttribute{
 				ElementType:         types.StringType,
 				Required:            true,
-				MarkdownDescription: "List of Access Profile(s)",
+				MarkdownDescription: "Set of Access Profile(s)",
 			},
 		},
 	}
@@ -88,46 +90,199 @@ func (r *AccessProfileAssociationResource) Configure(ctx context.Context, req re
 	r.client = config.APIClient
 }
 
-func readAppAssociation(r *AccessProfileAssociationResource, id string) (*application.SailApplicationAccessProfiles, *http.Response, error) {
-	_, httpResp, err := r.client.CC.ApplicationsApi.GetApplicationAccessProfiles(context.Background(), id).Execute()
-	if err != nil {
-		tflog.Info(context.Background(), fmt.Sprintf("Full HTTP response: %v", httpResp))
-		return nil, httpResp, err
+func (r *AccessProfileAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data ApplicationAccessAssociation
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	body, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	respAccessProfile := application.SailApplicationAccessProfiles{}
-	err = json.Unmarshal(body, &respAccessProfile)
-	if err != nil {
-		return nil, nil, err
-	}
-	return &respAccessProfile, httpResp, nil
-}
-
-func updateAppAssociation(r *AccessProfileAssociationResource, plan application.ApplicationAccessAssociation, state application.ApplicationAccessAssociation) (*http.Response, error) {
-	id := state.ApplicationId.ValueString()
+	data.Id = data.ApplicationId
 
 	planProfiles := make(map[string]struct{})
 
-	for _, v := range plan.AccessProfileIds.Elements() {
+	for _, v := range data.AccessProfileIds.Elements() {
 		planProfiles[v.(types.String).ValueString()] = struct{}{}
 	}
 
-	appAcessProfiles, httpResp, err := readAppAssociation(r, id)
+	appAccessProfiles, httpResp, err := r.client.Beta.AppsAPI.ListAccessProfilesForSourceApp(context.Background(), data.Id.ValueString()).Execute()
 	if err != nil {
-		log.Printf("Error when calling `ApplicationsApi.UpdateApplication``: %v\n", err)
-		return httpResp, err
+		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
+		if isSailpointError {
+			resp.Diagnostics.AddError(
+				"Error when calling Beta.AppsAPI.ListAccessProfilesForSourceApp",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Error when calling Beta.AppsAPI.ListAccessProfilesForSourceApp",
+				fmt.Sprintf("Error: %s, see debug info for more information", err),
+			)
+		}
+
+		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
+		return
 	}
 
 	var accessProfileIds []string
-	for _, v := range appAcessProfiles.Items {
-		accessProfileIds = append(accessProfileIds, v.Id)
+	for _, v := range appAccessProfiles {
+		accessProfileIds = append(accessProfileIds, *v.Id)
 	}
-	for _, v := range plan.AccessProfileIds.Elements() {
+	for _, v := range data.AccessProfileIds.Elements() {
+		accessProfileIds = append(accessProfileIds, v.(types.String).ValueString())
+	}
+
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range accessProfileIds {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+
+	jsonPatchOperation := []beta.JsonPatchOperation{}
+
+	accessProfiles := make([]types.String, 0, len(data.AccessProfileIds.Elements()))
+	diags := data.AccessProfileIds.ElementsAs(ctx, &accessProfiles, false)
+	resp.Diagnostics.Append(diags...)
+
+	aps := []beta.ArrayInner{}
+	for _, v := range list {
+		aps = append(aps, beta.ArrayInner{String: &v})
+	}
+	patchInnerValue := beta.UpdateMultiHostSourcesRequestInnerValue{
+		ArrayOfArrayInner: &aps,
+	}
+	patch := *beta.NewJsonPatchOperationWithDefaults()
+	patch.Op = "add"
+	patch.Path = "/accessProfiles"
+	patch.Value = &patchInnerValue
+	jsonPatchOperation = append(jsonPatchOperation, patch)
+
+	_, httpResp, err = r.client.Beta.AppsAPI.PatchSourceApp(context.Background(), data.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
+	if err != nil {
+		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
+		if isSailpointError {
+			resp.Diagnostics.AddError(
+				"Error when calling .Beta.AppsAPI.PatchSourceAp",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Error when calling .Beta.AppsAPI.PatchSourceAp",
+				fmt.Sprintf("Error: %s, see debug info for more information", err),
+			)
+		}
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *AccessProfileAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data ApplicationAccessAssociation
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	id := data.ApplicationId.ValueString() // string |
+	data.Id = data.ApplicationId
+
+	appAccessProfiles, httpResp, err := r.client.Beta.AppsAPI.ListAccessProfilesForSourceApp(context.Background(), data.Id.ValueString()).Execute()
+	if err != nil {
+		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
+		if isSailpointError {
+			resp.Diagnostics.AddError(
+				"Error when calling Beta.AppsAPI.ListAccessProfilesForSourceApp",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Error when calling Beta.AppsAPI.ListAccessProfilesForSourceApp",
+				fmt.Sprintf("Error: %s, see debug info for more information", err),
+			)
+		}
+
+		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
+		return
+	}
+
+	currentAssocProfiles := make(map[string]bool)
+
+	for _, v := range appAccessProfiles {
+		currentAssocProfiles[*v.Id] = true
+	}
+
+	resourceProfilesFound := true
+
+	for _, v := range data.AccessProfileIds.Elements() {
+		if !currentAssocProfiles[v.(types.String).ValueString()] {
+			log.Printf("AccessProfile: %+v not found in application", v.(types.String).ValueString())
+			resourceProfilesFound = false
+		}
+	}
+
+	if !resourceProfilesFound {
+		resp.Diagnostics.AddWarning(
+			"AccessProfile associations not found",
+			fmt.Sprintf("AccessProfile associations in application %s is not found. Removing from state.",
+				id))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *AccessProfileAssociationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state, update ApplicationAccessAssociation
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &update)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	update.Id = update.ApplicationId
+
+	planProfiles := make(map[string]struct{})
+
+	for _, v := range update.AccessProfileIds.Elements() {
+		planProfiles[v.(types.String).ValueString()] = struct{}{}
+	}
+
+	appAccessProfiles, httpResp, err := r.client.Beta.AppsAPI.ListAccessProfilesForSourceApp(context.Background(), update.Id.ValueString()).Execute()
+	if err != nil {
+		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
+		if isSailpointError {
+			resp.Diagnostics.AddError(
+				"Error when calling Beta.AppsAPI.ListAccessProfilesForSourceApp",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Error when calling Beta.AppsAPI.ListAccessProfilesForSourceApp",
+				fmt.Sprintf("Error: %s, see debug info for more information", err),
+			)
+		}
+
+		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
+		return
+	}
+
+	var accessProfileIds []string
+	for _, v := range appAccessProfiles {
+		accessProfileIds = append(accessProfileIds, *v.Id)
+	}
+	for _, v := range update.AccessProfileIds.Elements() {
 		accessProfileIds = append(accessProfileIds, v.(types.String).ValueString())
 	}
 	for i, v := range state.AccessProfileIds.Elements() {
@@ -146,75 +301,36 @@ func updateAppAssociation(r *AccessProfileAssociationResource, plan application.
 		}
 	}
 
-	newItems := map[string]interface{}{
-		"accessProfileIds": list,
+	jsonPatchOperation := []beta.JsonPatchOperation{}
+
+	accessProfiles := make([]types.String, 0, len(update.AccessProfileIds.Elements()))
+	diags := update.AccessProfileIds.ElementsAs(ctx, &accessProfiles, false)
+	resp.Diagnostics.Append(diags...)
+
+	aps := []beta.ArrayInner{}
+	for _, v := range list {
+		aps = append(aps, beta.ArrayInner{String: &v})
 	}
-
-	_, httpResp, err = r.client.CC.ApplicationsApi.UpdateApplication(context.Background(), id).RequestBody(newItems).Execute()
-	if err != nil {
-		log.Printf("Error when calling `ApplicationsApi.UpdateApplication``: %v\n", err)
-		return httpResp, err
+	patchInnerValue := beta.UpdateMultiHostSourcesRequestInnerValue{
+		ArrayOfArrayInner: &aps,
 	}
+	patch := *beta.NewJsonPatchOperationWithDefaults()
+	patch.Op = "add"
+	patch.Path = "/accessProfiles"
+	patch.Value = &patchInnerValue
+	jsonPatchOperation = append(jsonPatchOperation, patch)
 
-	return httpResp, nil
-}
-
-func (r *AccessProfileAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data application.ApplicationAccessAssociation
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	data.Id = data.ApplicationId
-
-	httpResp, err := updateAppAssociation(r, data, data)
+	appAccessProfilesPatch, httpResp, err := r.client.Beta.AppsAPI.PatchSourceApp(context.Background(), update.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling updateAppAssociation",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.AppsAPI.PatchSourceApp",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling updateAppAssociation",
-				fmt.Sprintf("Error: %s, see debug info for more information", err),
-			)
-		}
-		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
-
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *AccessProfileAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data application.ApplicationAccessAssociation
-
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	id := data.ApplicationId.ValueString() // string |
-	data.Id = data.ApplicationId
-
-	appAccessProfiles, httpResp, err := readAppAssociation(r, id)
-	if err != nil {
-		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
-		if isSailpointError {
-			resp.Diagnostics.AddError(
-				"Error when calling readAppAssociation",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
-			)
-		} else {
-			resp.Diagnostics.AddError(
-				"Error when calling readAppAssociation",
+				"Error when calling Beta.AppsAPI.PatchSourceApp",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -222,69 +338,22 @@ func (r *AccessProfileAssociationResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	currentAssocProfiles := make(map[string]bool)
+	elements := []attr.Value{}
 
-	for _, v := range appAccessProfiles.Items {
-		currentAssocProfiles[v.Id] = true
+	for _, v := range appAccessProfilesPatch.AccessProfiles {
+		elements = append(elements, types.StringPointerValue(&v))
 	}
 
-	resourceProfilesFound := true
+	setValue, diags := types.SetValueFrom(ctx, types.StringType, elements)
+	resp.Diagnostics.Append(diags...)
 
-	for _, v := range data.AccessProfileIds.Elements() {
-		if !currentAssocProfiles[v.(types.String).ValueString()] {
-			log.Printf("User roles differ updating user: %+v", v.(types.String).ValueString())
-			resourceProfilesFound = false
-		}
-	}
-
-	if !resourceProfilesFound {
-		resp.Diagnostics.AddWarning(
-			"AccessProfile associations not found",
-			fmt.Sprintf("SQL User's parent cluster with clusterID %s is not found. Removing from state.",
-				id))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *AccessProfileAssociationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state, update application.ApplicationAccessAssociation
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &update)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	update.Id = update.ApplicationId
-
-	httpResp, err := updateAppAssociation(r, update, state)
-	if err != nil {
-		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
-		if isSailpointError {
-			resp.Diagnostics.AddError(
-				"Error when calling updateAppAssociation",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
-			)
-		} else {
-			resp.Diagnostics.AddError(
-				"Error when calling updateAppAssociation",
-				fmt.Sprintf("Error: %s, see debug info for more information", err),
-			)
-		}
-		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
-		return
-	}
+	update.AccessProfileIds = setValue
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &update)...)
 }
 
 func (r *AccessProfileAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state application.ApplicationAccessAssociation
+	var state ApplicationAccessAssociation
 
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -292,22 +361,21 @@ func (r *AccessProfileAssociationResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	id := state.ApplicationId.ValueString()
-
-	appAccessProfiles, httpResp, err := readAppAssociation(r, id)
+	appAccessProfiles, httpResp, err := r.client.Beta.AppsAPI.ListAccessProfilesForSourceApp(context.Background(), state.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling readAppAssociation",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.AppsAPI.ListAccessProfilesForSourceApp",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling readAppAssociation",
+				"Error when calling Beta.AppsAPI.ListAccessProfilesForSourceApp",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
+
 		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
 		return
 	}
@@ -318,39 +386,48 @@ func (r *AccessProfileAssociationResource) Delete(ctx context.Context, req resou
 		list[s.(types.String).ValueString()] = struct{}{}
 	}
 
-	for i := len(appAccessProfiles.Items) - 1; i >= 0; i-- {
-		_, ok := list[appAccessProfiles.Items[i].Id]
+	for i := len(appAccessProfiles) - 1; i >= 0; i-- {
+		_, ok := list[*appAccessProfiles[i].Id]
 		if ok {
-			appAccessProfiles.Items = append(appAccessProfiles.Items[:i], appAccessProfiles.Items[i+1:]...)
+			appAccessProfiles = append(appAccessProfiles[:i], appAccessProfiles[i+1:]...)
 		}
 	}
 
 	remainingAccessProfiles := []string{}
 
-	for _, v := range appAccessProfiles.Items {
-		remainingAccessProfiles = append(remainingAccessProfiles, v.Id)
+	for _, v := range appAccessProfiles {
+		remainingAccessProfiles = append(remainingAccessProfiles, *v.Id)
 	}
 
-	newItems := map[string]interface{}{
-		"accessProfileIds": remainingAccessProfiles,
-	}
-	log.Printf("remainingAccessProfiles: %v\n", remainingAccessProfiles)
+	jsonPatchOperation := []beta.JsonPatchOperation{}
 
-	_, httpResp, err = r.client.CC.ApplicationsApi.UpdateApplication(ctx, id).RequestBody(newItems).Execute()
+	aps := []beta.ArrayInner{}
+	for _, v := range remainingAccessProfiles {
+		aps = append(aps, beta.ArrayInner{String: &v})
+	}
+	patchInnerValue := beta.UpdateMultiHostSourcesRequestInnerValue{
+		ArrayOfArrayInner: &aps,
+	}
+	patch := *beta.NewJsonPatchOperationWithDefaults()
+	patch.Op = "add"
+	patch.Path = "/accessProfiles"
+	patch.Value = &patchInnerValue
+	jsonPatchOperation = append(jsonPatchOperation, patch)
+
+	_, httpResp, err = r.client.Beta.AppsAPI.PatchSourceApp(context.Background(), state.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling CC.ApplicationsApi.UpdateApplication",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.AppsAPI.PatchSourceApp",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling CC.ApplicationsApi.UpdateApplication",
+				"Error when calling Beta.AppsAPI.PatchSourceApp",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
-		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
 		return
 	}
 
@@ -372,11 +449,11 @@ func (r *AccessProfileAssociationResource) ImportState(ctx context.Context, req 
 	for _, v := range accessProfiles {
 		elements = append(elements, types.StringValue(v))
 	}
-	listValue, ok := types.ListValue(types.StringType, elements)
+	setValue, ok := types.SetValue(types.StringType, elements)
 	if ok.HasError() {
 		resp.Diagnostics.Append(ok...)
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("application_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("access_profile_ids"), listValue)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("access_profile_ids"), setValue)...)
 }

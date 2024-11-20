@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -21,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	v3 "github.com/davidsonjon/golang-sdk/v3"
+	v3 "github.com/davidsonjon/golang-sdk/v2/api_v3"
 	"github.com/wI2L/jsondiff"
 )
 
@@ -41,8 +40,6 @@ func (r *AccessProfileResource) Metadata(ctx context.Context, req resource.Metad
 }
 
 func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attr := map[string]attr.Type{}
-
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Access Profile resource",
 
@@ -157,7 +154,7 @@ func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 						Required:            true,
 						MarkdownDescription: "Whether an approver must provide comments when denying the request",
 					},
-					"approval_schemes": schema.SetNestedAttribute{
+					"approval_schemes": schema.ListNestedAttribute{
 						NestedObject: schema.NestedAttributeObject{
 							Attributes: map[string]schema.Attribute{
 								"approver_type": schema.StringAttribute{
@@ -169,7 +166,6 @@ func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 								},
 								"approver_id": schema.StringAttribute{
 									Optional:            true,
-									Computed:            true,
 									MarkdownDescription: "Id of the specific approver, used only when approverType is GOVERNANCE_GROUP",
 								},
 							},
@@ -178,19 +174,11 @@ func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 						MarkdownDescription: "List describing the steps in approving the request",
 					},
 				},
-				Required: true,
+				Optional: true,
 			},
 			"revocation_request_config": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
-					"comments_required": schema.BoolAttribute{
-						Optional:            true,
-						MarkdownDescription: "Whether the requester of the containing object must provide comments justifying the request",
-					},
-					"denial_comments_required": schema.BoolAttribute{
-						Optional:            true,
-						MarkdownDescription: "Whether an approver must provide comments when denying the request",
-					},
-					"approval_schemes": schema.SetNestedAttribute{
+					"approval_schemes": schema.ListNestedAttribute{
 						NestedObject: schema.NestedAttributeObject{
 							Attributes: map[string]schema.Attribute{
 								"approver_type": schema.StringAttribute{
@@ -213,7 +201,7 @@ func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 				Default: objectdefault.StaticValue(
-					types.ObjectNull(attr),
+					types.ObjectNull(RevocabilityType),
 				),
 			},
 		},
@@ -251,17 +239,17 @@ func (r *AccessProfileResource) Create(ctx context.Context, req resource.CreateR
 
 	accessProfile := convertAccessProfileV3(&data)
 
-	ap, httpResp, err := r.client.V3.AccessProfilesApi.CreateAccessProfile(ctx).AccessProfile(*accessProfile).Execute()
+	ap, httpResp, err := r.client.V3.AccessProfilesAPI.CreateAccessProfile(ctx).AccessProfile(*accessProfile).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling V3.AccessProfilesApi.CreateAccessProfile",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling V3.AccessProfilesAPI.CreateAccessProfile",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling V3.AccessProfilesApi.CreateAccessProfile",
+				"Error when calling V3.AccessProfilesAPI.CreateAccessProfile",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -285,7 +273,7 @@ func (r *AccessProfileResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	ap, httpResp, err := r.client.V3.AccessProfilesApi.GetAccessProfile(ctx, data.Id.ValueString()).Execute()
+	ap, httpResp, err := r.client.V3.AccessProfilesAPI.GetAccessProfile(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
 			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
@@ -298,12 +286,12 @@ func (r *AccessProfileResource) Read(ctx context.Context, req resource.ReadReque
 			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 			if isSailpointError {
 				resp.Diagnostics.AddError(
-					"Error when calling V3.AccessProfilesApi.GetAccessProfile",
-					fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+					"Error when calling V3.AccessProfilesAPI.GetAccessProfile",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 				)
 			} else {
 				resp.Diagnostics.AddError(
-					"Error when calling V3.AccessProfilesApi.GetAccessProfile",
+					"Error when calling V3.AccessProfilesAPI.GetAccessProfile",
 					fmt.Sprintf("Error: %s, see debug info for more information", err),
 				)
 			}
@@ -338,7 +326,7 @@ func (r *AccessProfileResource) Update(ctx context.Context, req resource.UpdateR
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error when calling PatchAccessProfile",
-			fmt.Sprintf("Error: %T, see debug info for more information", err),
+			fmt.Sprintf("Error: %v, see debug info for more information", err),
 		)
 
 		return
@@ -351,7 +339,7 @@ func (r *AccessProfileResource) Update(ctx context.Context, req resource.UpdateR
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error when calling Marshalling patch operation",
-				fmt.Sprintf("Error: %T, see debug info for more information", err),
+				fmt.Sprintf("Error: %v, see debug info for more information", err),
 			)
 
 			return
@@ -360,17 +348,17 @@ func (r *AccessProfileResource) Update(ctx context.Context, req resource.UpdateR
 		jsonPatchOperation = append(jsonPatchOperation, patch)
 	}
 
-	ap, httpResp, err := r.client.V3.AccessProfilesApi.PatchAccessProfile(ctx, state.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
+	ap, httpResp, err := r.client.V3.AccessProfilesAPI.PatchAccessProfile(ctx, state.Id.ValueString()).JsonPatchOperation(jsonPatchOperation).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling V3.AccessProfilesApi.PatchAccessProfile",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling V3.AccessProfilesAPI.PatchAccessProfile",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling V3.AccessProfilesApi.PatchAccessProfile",
+				"Error when calling V3.AccessProfilesAPI.PatchAccessProfile",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -381,6 +369,7 @@ func (r *AccessProfileResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	update.parseComputedAttributes(ap)
+	update.parseConfiguredAttributes(ap)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &update)...)
 }
@@ -398,17 +387,17 @@ func (r *AccessProfileResource) Delete(ctx context.Context, req resource.DeleteR
 	accessProfileBulkDeleteRequest.BestEffortOnly = v3.PtrBool(false)
 	accessProfileBulkDeleteRequest.AccessProfileIds = append(accessProfileBulkDeleteRequest.AccessProfileIds, state.Id.ValueString())
 
-	_, httpResp, err := r.client.V3.AccessProfilesApi.DeleteAccessProfilesInBulk(ctx).AccessProfileBulkDeleteRequest(accessProfileBulkDeleteRequest).Execute()
+	_, httpResp, err := r.client.V3.AccessProfilesAPI.DeleteAccessProfilesInBulk(ctx).AccessProfileBulkDeleteRequest(accessProfileBulkDeleteRequest).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling V3.AccessProfilesApi.DeleteAccessProfilesInBulk",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling V3.AccessProfilesAPI.DeleteAccessProfilesInBulk",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling V3.AccessProfilesApi.DeleteAccessProfilesInBulk",
+				"Error when calling V3.AccessProfilesAPI.DeleteAccessProfilesInBulk",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}

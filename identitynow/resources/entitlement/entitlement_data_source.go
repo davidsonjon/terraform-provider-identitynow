@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
-	beta "github.com/davidsonjon/golang-sdk/beta"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
+	beta "github.com/davidsonjon/golang-sdk/v2/api_beta"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -82,9 +82,23 @@ func (d *EntitlementDataSource) Schema(ctx context.Context, req datasource.Schem
 				Computed:            true,
 				MarkdownDescription: "The Source ID of the entitlement",
 			},
-			"owner_id": schema.StringAttribute{
+			"owner": schema.SingleNestedAttribute{
+				Attributes: map[string]schema.Attribute{
+					"id": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "Identity id",
+					},
+					"name": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "Human-readable display name of the owner. It may be left null or omitted in a POST or PATCH. If set, it must match the current value of the owner's display name, otherwise a 400 Bad Request error will result.",
+					},
+					"type": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "The type of the Source, will always be `IDENTITY`",
+					},
+				},
 				Computed:            true,
-				MarkdownDescription: "The Owner ID of the entitlement",
+				MarkdownDescription: "The Owner of the entitlement",
 			},
 		},
 	}
@@ -119,13 +133,13 @@ func (d *EntitlementDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	entitlement, httpResp, err := d.client.Beta.EntitlementsApi.GetEntitlement(ctx, data.Id.ValueString()).Execute()
+	entitlement, httpResp, err := d.client.Beta.EntitlementsAPI.GetEntitlement(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
 				"Error when calling Beta.EntitlementsApi.GetEntitlement",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
@@ -147,22 +161,23 @@ func parseAttributes(ent *Entitlement, betaEnt *beta.Entitlement, diags *diag.Di
 	ent.Name = types.StringPointerValue(betaEnt.Name)
 	ent.Created = types.StringValue(betaEnt.Created.String())
 	ent.Modified = types.StringValue(betaEnt.Modified.String())
-	ent.Attribute = types.StringPointerValue(betaEnt.Attribute)
+	ent.Attribute = types.StringPointerValue(betaEnt.Attribute.Get())
 	ent.Value = types.StringPointerValue(betaEnt.Value)
 	ent.SourceSchemaObjectType = types.StringPointerValue(betaEnt.SourceSchemaObjectType)
 	ent.Privileged = types.BoolPointerValue(betaEnt.Privileged)
 	ent.CloudGoverned = types.BoolPointerValue(betaEnt.CloudGoverned)
-	ent.Description = types.StringPointerValue(betaEnt.Description)
+	ent.Description = types.StringPointerValue(betaEnt.Description.Get())
 	ent.Requestable = types.BoolPointerValue(betaEnt.Requestable)
 
 	ent.SourceID = types.StringPointerValue(betaEnt.Source.Id)
 
 	if betaEnt.Owner != nil {
-		if betaEnt.Owner.Id != nil {
-			ent.OwnerID = types.StringPointerValue(betaEnt.Owner.Id)
-		}
-	} else {
-		ent.OwnerID = types.StringNull()
+		owner := &OwnerReference{}
+		owner.Id = types.StringPointerValue(betaEnt.Owner.Id)
+		owner.Name = types.StringPointerValue(betaEnt.Owner.Name)
+		owner.Type = types.StringPointerValue(betaEnt.Owner.Type)
+
+		ent.Owner = owner
 	}
 
 }

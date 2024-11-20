@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
 
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/accessprofile"
@@ -13,8 +13,8 @@ import (
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/entitlement"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/governancegroup"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/identity"
+	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/segment"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/source"
-	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -44,11 +44,10 @@ type Provider struct {
 
 // ProviderModel can be used to store data from the Terraform configuration.
 type ProviderModel struct {
-	SailBaseUrl          types.String `tfsdk:"sail_base_url"`
-	SailClientId         types.String `tfsdk:"sail_client_id"`
-	SailClientSecret     types.String `tfsdk:"sail_client_secret"`
-	HttpRetryMax         types.Int64  `tfsdk:"http_retry_max"`
-	HttpRetryRelatedTask types.Bool   `tfsdk:"http_retry_related_task"`
+	SailBaseUrl      types.String `tfsdk:"sail_base_url"`
+	SailClientId     types.String `tfsdk:"sail_client_id"`
+	SailClientSecret types.String `tfsdk:"sail_client_secret"`
+	HttpRetryMax     types.Int64  `tfsdk:"http_retry_max"`
 }
 
 func (p *Provider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -68,13 +67,9 @@ func (p *Provider) Schema(ctx context.Context, req provider.SchemaRequest, resp 
 			"sail_client_secret": schema.StringAttribute{
 				Optional: true,
 			},
-			"http_retry_related_task": schema.BoolAttribute{
-				Optional: true,
-				Description: "Used to retry when `related_task` error is returned by the API",
-			},
 			"http_retry_max": schema.Int64Attribute{
-				Optional: true,
-				Description: "Number of retries for the retryablehttp client. Defaults to 240",
+				Optional:    true,
+				Description: "Override number of retries for the retryablehttp client - default is 20",
 			},
 		},
 	}
@@ -113,17 +108,11 @@ func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest,
 
 	configuration := sailpoint.NewDefaultConfiguration()
 	httpClient := retryablehttp.NewClient()
-	// ~2hours of retrying by default
-	retryMax := 240
+
+	httpClient.RetryMax = 20
 
 	if !provider.HttpRetryMax.IsNull() {
-		retryMax = int(provider.HttpRetryMax.ValueInt64())
-	}
-
-	httpClient.RetryMax = retryMax
-
-	if provider.HttpRetryRelatedTask.IsNull() || provider.HttpRetryRelatedTask.ValueBool() {
-		httpClient.CheckRetry = util.Retry
+		httpClient.RetryMax = int(provider.HttpRetryMax.ValueInt64())
 	}
 
 	configuration.HTTPClient = httpClient
@@ -144,8 +133,11 @@ func (p *Provider) Resources(ctx context.Context) []func() resource.Resource {
 		applicationaccessassocation.NewAccessProfileAssociationResource,
 		application.NewApplicationResource,
 		entitlement.NewEntitlementResource,
+		entitlement.NewEntitlementRequestConfigResource,
 		governancegroup.NewGovernanceGroupResource,
 		source.NewSourceLoadWaitResource,
+		segment.NewSegmentResource,
+		segment.NewSegmentAccessResource,
 	}
 }
 
@@ -157,6 +149,7 @@ func (p *Provider) DataSources(ctx context.Context) []func() datasource.DataSour
 		accessprofile.NewAccessProfileDataSource,
 		application.NewApplicationDataSource,
 		governancegroup.NewGovernanceGroupDataSource,
+		segment.NewSegmentDataSource,
 	}
 }
 

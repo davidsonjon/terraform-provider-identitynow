@@ -60,9 +60,7 @@ func configApplicationData(name, sourceId, enabled, userId string) string {
 		name        = "%s"
 		description = "new test application"
 	  
-		owner = {
-		  id = data.identitynow_identity.test.cc_id
-		}
+		owner_external_id = data.identitynow_identity.test.id
 	  
 		account_service_id = data.identitynow_source.source.connector_attributes.cloud_external_id
 		launchpad_enabled  = %s

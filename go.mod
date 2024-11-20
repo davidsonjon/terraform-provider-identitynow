@@ -1,9 +1,9 @@
 module github.com/davidsonjon/terraform-provider-identitynow
 
-go 1.21
+go 1.22
 
 require (
-	github.com/davidsonjon/golang-sdk v0.0.0-20231215222444-34c2a6fb45d1
+	github.com/davidsonjon/golang-sdk/v2 v2.0.0-20241031132108-c55d5d659048
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
 	github.com/hashicorp/terraform-plugin-framework v1.4.2
@@ -90,6 +90,7 @@ require (
 	google.golang.org/grpc v1.60.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/validator.v2 v2.0.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

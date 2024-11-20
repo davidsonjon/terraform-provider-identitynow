@@ -1,13 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
 package source
 
 import (
 	"context"
 	"fmt"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
@@ -107,17 +104,17 @@ func (d *SourceDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	if !data.Name.IsNull() {
 		filter := fmt.Sprintf(`name eq "%v"`, data.Name.ValueString())
 
-		sources, httpResp, err := d.client.V3.SourcesApi.ListSources(context.Background()).Filters(filter).Execute()
+		sources, httpResp, err := d.client.V3.SourcesAPI.ListSources(context.Background()).Filters(filter).Execute()
 		if err != nil {
 			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 			if isSailpointError {
 				resp.Diagnostics.AddError(
-					"Error when calling V3.SourcesApi.ListSources",
-					fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+					"Error when calling V3.SourcesAPI.ListSources",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 				)
 			} else {
 				resp.Diagnostics.AddError(
-					"Error when calling V3.SourcesApi.ListSources",
+					"Error when calling V3.SourcesAPI.ListSources",
 					fmt.Sprintf("Error: %s, see debug info for more information", err),
 				)
 			}
@@ -137,23 +134,23 @@ func (d *SourceDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		default:
 			resp.Diagnostics.AddError(
 				"More than one identity found",
-				fmt.Sprintf("Error: %T sources found with query, only results with 1 will return data", len(sources)),
+				fmt.Sprintf("Error: %v sources found with query, only results with 1 will return data", len(sources)),
 			)
 			return
 		}
 	}
 
-	source, httpResp, err := d.client.V3.SourcesApi.GetSource(ctx, data.Id.ValueString()).Execute()
+	source, httpResp, err := d.client.V3.SourcesAPI.GetSource(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling V3.SourcesApi.GetSource",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling V3.SourcesAPI.GetSource",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling V3.SourcesApi.GetSource",
+				"Error when calling V3.SourcesAPI.GetSource",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}

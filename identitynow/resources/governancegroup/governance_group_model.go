@@ -3,7 +3,7 @@ package governancegroup
 import (
 	"context"
 
-	"github.com/davidsonjon/golang-sdk/beta"
+	"github.com/davidsonjon/golang-sdk/v2/api_beta"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -41,9 +41,9 @@ var baseReferenceDto1Types = map[string]attr.Type{
 	"type": types.StringType,
 }
 
-func convertWorkgroupBeta(ctx context.Context, wg *WorkgroupDto) *beta.WorkgroupDto {
+func convertWorkgroupBeta(ctx context.Context, wg *WorkgroupDto) *api_beta.WorkgroupDto {
 
-	betaWg := beta.WorkgroupDto{}
+	betaWg := api_beta.WorkgroupDto{}
 
 	betaWg.Name = wg.Name.ValueStringPointer()
 	betaWg.Description = wg.Description.ValueStringPointer()
@@ -52,7 +52,7 @@ func convertWorkgroupBeta(ctx context.Context, wg *WorkgroupDto) *beta.Workgroup
 
 	wg.Owner.As(ctx, &wgOwner, basetypes.ObjectAsOptions{})
 
-	betaWgOwner := beta.OwnerDto{}
+	betaWgOwner := api_beta.WorkgroupDtoOwner{}
 	betaWgOwner.Id = wgOwner.Id.ValueStringPointer()
 
 	betaWg.Owner = &betaWgOwner

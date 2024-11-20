@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	sailpoint "github.com/davidsonjon/golang-sdk"
+	sailpoint "github.com/davidsonjon/golang-sdk/v2"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
@@ -142,17 +142,17 @@ func (d *GovernanceGroupDataSource) Read(ctx context.Context, req datasource.Rea
 
 		filters := fmt.Sprintf(`name eq "%v"`, data.Name.ValueString())
 
-		workgroups, httpResp, err := d.client.Beta.GovernanceGroupsApi.ListWorkgroups(context.Background()).Filters(filters).Execute()
+		workgroups, httpResp, err := d.client.Beta.GovernanceGroupsAPI.ListWorkgroups(context.Background()).Filters(filters).Execute()
 		if err != nil {
 			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 			if isSailpointError {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.GovernanceGroupsApi.ListWorkgroups",
-					fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+					"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroups",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 				)
 			} else {
 				resp.Diagnostics.AddError(
-					"Error when calling Beta.GovernanceGroupsApi.ListWorkgroups",
+					"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroups",
 					fmt.Sprintf("Error: %s, see debug info for more information", err),
 				)
 			}
@@ -172,24 +172,24 @@ func (d *GovernanceGroupDataSource) Read(ctx context.Context, req datasource.Rea
 		default:
 			resp.Diagnostics.AddError(
 				"More than one workgroup found",
-				fmt.Sprintf("Error: %T workgroups found with query, only results with 1 will return data", len(workgroups)),
+				fmt.Sprintf("Error: %v workgroups found with query, only results with 1 will return data", len(workgroups)),
 			)
 			return
 		}
 
 	}
 
-	workgroup, httpResp, err := d.client.Beta.GovernanceGroupsApi.GetWorkgroup(ctx, data.Id.ValueString()).Execute()
+	workgroup, httpResp, err := d.client.Beta.GovernanceGroupsAPI.GetWorkgroup(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.GetWorkgroup",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.GovernanceGroupsAPI.GetWorkgroup",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.GetWorkgroup",
+				"Error when calling Beta.GovernanceGroupsAPI.GetWorkgroup",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
@@ -203,17 +203,17 @@ func (d *GovernanceGroupDataSource) Read(ctx context.Context, req datasource.Rea
 	data.MemberCount = types.Int64PointerValue(workgroup.MemberCount)
 	data.ConnectionCount = types.Int64PointerValue(workgroup.ConnectionCount)
 
-	workgroupMembers, httpResp, err := d.client.Beta.GovernanceGroupsApi.ListWorkgroupMembers(ctx, data.Id.ValueString()).Execute()
+	workgroupMembers, httpResp, err := d.client.Beta.GovernanceGroupsAPI.ListWorkgroupMembers(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
 		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
 		if isSailpointError {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.ListWorkgroupMembers",
-				fmt.Sprintf("Error: %s", sailpointError.FormattedMessage),
+				"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroupMembers",
+				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
 			)
 		} else {
 			resp.Diagnostics.AddError(
-				"Error when calling Beta.GovernanceGroupsApi.ListWorkgroupMembers",
+				"Error when calling Beta.GovernanceGroupsAPI.ListWorkgroupMembers",
 				fmt.Sprintf("Error: %s, see debug info for more information", err),
 			)
 		}
