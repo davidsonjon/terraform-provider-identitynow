@@ -8,7 +8,7 @@ description: |-
 
 # IdentityNow Provider
 
-The IdentityNow provider provides the resources to interact with Elastic stack products.
+The IdentityNow provider provides the resources to interact with [SailPoint IdentityNow](https://www.sailpoint.com/products/identitynow).
 
 The provider uses Terraform [protocol version 6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) that is compatible with Terraform CLI version 1.0 and later.
 
@@ -23,12 +23,12 @@ The provider can leverage the [SailPoint CLI](https://github.com/sailpoint-oss/s
 ## Example Usage
 
 ```terraform
-# Terraform 0.13+ uses the Terraform Registry:
+# Terraform 1.+ uses the Terraform Registry:
 
 terraform {
   required_providers {
     identitynow = {
-      version = "0.3.1"
+      version = "0.1.0"
       source  = "davidsonjon/identitynow"
     }
   }
