@@ -1,7 +1,10 @@
 package entitlement
 
 import (
+	"context"
+
 	beta "github.com/davidsonjon/golang-sdk/v2/api_beta"
+	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/metadataattribute"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -42,6 +45,7 @@ type Entitlement struct {
 	// Segments []string `tfsdk:"segments"`
 	// ManuallyUpdatedFields *ManuallyUpdatedFieldsDTO `tfsdk:"manuallyUpdatedFields"`
 	// AdditionalProperties map[string]interface{}
+	AccessModelMetadata []metadataattribute.AttributeDTO `tfsdk:"access_model_metadata"`
 }
 
 // EntitlementSource struct for EntitlementSource
@@ -66,8 +70,10 @@ type OwnerReferenceDto struct {
 	// AdditionalProperties map[string]interface{}
 }
 
-func convertEntitlementBeta(ent *Entitlement) *beta.Entitlement {
+func convertEntitlementBeta(ent *Entitlement) beta.Entitlement {
 	betaEnt := beta.Entitlement{}
+
+	betaEnt.Description = *beta.NewNullableString(ent.Description.ValueStringPointer())
 
 	betaEnt.Privileged = ent.Privileged.ValueBoolPointer()
 	if ent.Requestable.IsNull() {
@@ -76,13 +82,49 @@ func convertEntitlementBeta(ent *Entitlement) *beta.Entitlement {
 		betaEnt.Requestable = ent.Requestable.ValueBoolPointer()
 	}
 	owner := beta.EntitlementOwner{}
-	owner.Id = betaEnt.Owner.Id
-	owner.Name = betaEnt.Owner.Name
-	owner.Type = betaEnt.Owner.Type
+	if betaEnt.Owner.HasId() {
+		owner.Id = betaEnt.Owner.Id
+		owner.Name = betaEnt.Owner.Name
+		owner.Type = betaEnt.Owner.Type
 
-	betaEnt.Owner = &owner
+		betaEnt.Owner = &owner
+	}
 
-	return &betaEnt
+	accessmodelmetadata := beta.EntitlementAccessModelMetadata{}
+	accessmodelmetadata.Attributes = []beta.AttributeDTO{}
+
+	for _, att := range ent.AccessModelMetadata {
+		metatdataAtts := beta.AttributeDTO{}
+		metatdataAtts.Key = att.Key.ValueStringPointer()
+		metatdataAtts.Name = att.Name.ValueStringPointer()
+		metatdataAtts.Multiselect = att.Multiselect.ValueBoolPointer()
+		metatdataAtts.Status = att.Status.ValueStringPointer()
+		metatdataAtts.Type = att.Type.ValueStringPointer()
+		metatdataAtts.Description = att.Description.ValueStringPointer()
+
+		elements := make([]types.String, 0, len(att.ObjectTypes.Elements()))
+		_ = att.ObjectTypes.ElementsAs(context.Background(), &elements, false)
+
+		for _, v := range elements {
+			metatdataAtts.ObjectTypes = append(metatdataAtts.ObjectTypes, v.ValueString())
+		}
+
+		for _, v := range att.Values {
+			value := &beta.AttributeValueDTO{
+				Value:  v.Value.ValueStringPointer(),
+				Name:   v.Name.ValueStringPointer(),
+				Status: v.Status.ValueStringPointer(),
+			}
+			metatdataAtts.Values = append(metatdataAtts.Values, *value)
+
+		}
+
+		accessmodelmetadata.Attributes = append(accessmodelmetadata.Attributes, metatdataAtts)
+	}
+
+	betaEnt.AccessModelMetadata = &accessmodelmetadata
+
+	return betaEnt
 }
 
 // Entitlement struct for Entitlement
@@ -125,4 +167,25 @@ var OwnerSchemeObject = map[string]attr.Type{
 	"type": types.StringType,
 	"id":   types.StringType,
 	"name": types.StringType,
+}
+
+var AttributeDTOObject = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"key":          types.StringType,
+		"name":         types.StringType,
+		"multiselect":  types.BoolType,
+		"status":       types.StringType,
+		"type":         types.StringType,
+		"object_types": types.ListType{ElemType: types.StringType},
+		"description":  types.StringType,
+		"values":       types.ListType{ElemType: ValuesObject},
+	},
+}
+
+var ValuesObject = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"value":  types.StringType,
+		"name":   types.StringType,
+		"status": types.StringType,
+	},
 }

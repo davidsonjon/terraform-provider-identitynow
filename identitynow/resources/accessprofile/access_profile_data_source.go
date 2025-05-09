@@ -49,10 +49,6 @@ func (d *AccessProfileDataSource) Schema(ctx context.Context, req datasource.Sch
 				Computed:            true,
 				MarkdownDescription: "Date the Access Profile was created",
 			},
-			// "modified": schema.StringAttribute{
-			// 	Computed:            true,
-			// 	MarkdownDescription: "Date the Access Profile was last modified",
-			// },
 			"enabled": schema.BoolAttribute{
 				Computed:            true,
 				MarkdownDescription: "Whether the Access Profile is enabled. If the Access Profile is enabled then you must include at least one Entitlement.",
@@ -65,7 +61,7 @@ func (d *AccessProfileDataSource) Schema(ctx context.Context, req datasource.Sch
 					},
 					"type": schema.StringAttribute{
 						Computed:            true,
-						MarkdownDescription: "THe type of the owner, will always be `IDENTITY`",
+						MarkdownDescription: "The type of the owner, will always be `IDENTITY`",
 					},
 					"name": schema.StringAttribute{
 						Computed:            true,
@@ -111,7 +107,7 @@ func (d *AccessProfileDataSource) Schema(ctx context.Context, req datasource.Sch
 			},
 			"requestable": schema.BoolAttribute{
 				Computed:            true,
-				MarkdownDescription: "Whether the Access Profile is requestable via access request. Currently, making an Access Profile non-requestable is only supported  for customers enabled with the new Request Center. Otherwise, attempting to create an Access Profile with a value  **false** in this field results in a 400 error.",
+				MarkdownDescription: "Whether the Access Profile is requestable via access request. Currently, making an Access Profile non-requestable is only supported for customers enabled with the new Request Center. Otherwise, attempting to create an Access Profile with a value **false** in this field results in a 400 error.",
 			},
 			"access_request_config": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
@@ -128,7 +124,7 @@ func (d *AccessProfileDataSource) Schema(ctx context.Context, req datasource.Sch
 							Attributes: map[string]schema.Attribute{
 								"approver_type": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "Describes the individual or group that is responsible for an approval step. Values are as follows. **APP_OWNER**: The owner of the Application  **OWNER**: Owner of the associated Access Profile or Role  **SOURCE_OWNER**: Owner of the Source associated with an Access Profile  **MANAGER**: Manager of the Identity making the request  **GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field",
+									MarkdownDescription: "Describes the individual or group that is responsible for an approval step. Values are as follows. **APP_OWNER**: The owner of the Application **OWNER**: Owner of the associated Access Profile or Role **SOURCE_OWNER**: Owner of the Source associated with an Access Profile **MANAGER**: Manager of the Identity making the request **GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field",
 								},
 								"approver_id": schema.StringAttribute{
 									Computed:            true,
@@ -149,7 +145,7 @@ func (d *AccessProfileDataSource) Schema(ctx context.Context, req datasource.Sch
 							Attributes: map[string]schema.Attribute{
 								"approver_type": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "Describes the individual or group that is responsible for an approval step. Values are as follows. **APP_OWNER**: The owner of the Application  **OWNER**: Owner of the associated Access Profile or Role  **SOURCE_OWNER**: Owner of the Source associated with an Access Profile  **MANAGER**: Manager of the Identity making the request  **GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field",
+									MarkdownDescription: "Describes the individual or group that is responsible for an approval step. Values are as follows. **APP_OWNER**: The owner of the Application **OWNER**: Owner of the associated Access Profile or Role **SOURCE_OWNER**: Owner of the Source associated with an Access Profile **MANAGER**: Manager of the Identity making the request **GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field",
 								},
 								"approver_id": schema.StringAttribute{
 									Computed:            true,
@@ -159,6 +155,63 @@ func (d *AccessProfileDataSource) Schema(ctx context.Context, req datasource.Sch
 						},
 						Computed:            true,
 						MarkdownDescription: "List describing the steps in approving the revocation request",
+					},
+				},
+				Computed: true,
+			},
+			"provisioning_criteria": schema.SingleNestedAttribute{
+				Attributes: map[string]schema.Attribute{
+					"operation": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "Supported operations on ProvisioningCriteria",
+					},
+					"attribute": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "Name of the Account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it is an error.",
+					},
+					"value": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "String value to test the Account attribute with regard to the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it is an error. If the Attribute is not String-typed, it will be converted to the appropriate type.",
+					},
+					"children": schema.ListNestedAttribute{
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"operation": schema.StringAttribute{
+									Computed:            true,
+									MarkdownDescription: "Supported operations on ProvisioningCriteria",
+								},
+								"attribute": schema.StringAttribute{
+									Computed:            true,
+									MarkdownDescription: "Name of the Account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it is an error.",
+								},
+								"value": schema.StringAttribute{
+									Computed:            true,
+									MarkdownDescription: "String value to test the Account attribute with regard to the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it is an error. If the Attribute is not String-typed, it will be converted to the appropriate type.",
+								},
+								"children": schema.ListNestedAttribute{
+									NestedObject: schema.NestedAttributeObject{
+										Attributes: map[string]schema.Attribute{
+											"operation": schema.StringAttribute{
+												Computed:            true,
+												MarkdownDescription: "Supported operations on ProvisioningCriteria",
+											},
+											"attribute": schema.StringAttribute{
+												Computed:            true,
+												MarkdownDescription: "Name of the Account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it is an error.",
+											},
+											"value": schema.StringAttribute{
+												Computed:            true,
+												MarkdownDescription: "String value to test the Account attribute with regard to the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it is an error. If the Attribute is not String-typed, it will be converted to the appropriate type.",
+											},
+										},
+									},
+									Computed:            true,
+									MarkdownDescription: "Array of child criteria. Required if the operation is AND or OR, otherwise it must be left null. A maximum of three levels of criteria are supported, including leaf nodes.",
+								},
+							},
+						},
+						Computed:            true,
+						MarkdownDescription: "Array of child criteria. Required if the operation is AND or OR, otherwise it must be left null. A maximum of three levels of criteria are supported, including leaf nodes.",
 					},
 				},
 				Computed: true,

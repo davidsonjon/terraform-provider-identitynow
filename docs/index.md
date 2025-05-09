@@ -8,35 +8,39 @@ description: |-
 
 # IdentityNow Provider
 
-The IdentityNow provider provides the resources to interact with [SailPoint IdentityNow](https://www.sailpoint.com/products/identitynow).
+The IdentityNow provider provides the resources to interact with Elastic stack products.
 
 The provider uses Terraform [protocol version 6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) that is compatible with Terraform CLI version 1.0 and later.
 
 ## Authentication
 
-[IdentityNow Authentication Personal Access Tokens](https://developer.sailpoint.com/docs/api/authentication/#generate-a-personal-access-token)
+The provider can leverage the [SailPoint CLI](https://github.com/sailpoint-oss/sailpoint-cli) configuration options or Environment Variables or configuration file.
+
+
+### Static credentials
+
+
 
 ### Environment Variables
 
-The provider can leverage the [SailPoint CLI](https://github.com/sailpoint-oss/sailpoint-cli) Environment Variables.
 
 ## Example Usage
 
 ```terraform
-# Terraform 1.+ uses the Terraform Registry:
+# Terraform 0.13+ uses the Terraform Registry:
 
 terraform {
   required_providers {
     identitynow = {
-      version = "0.1.0"
-      source  = "davidsonjon/identitynow"
+      version = "0.3.1"
+      source  = "terraform-provider-identitynow/identitynow"
     }
   }
 }
 
 provider "identitynow" {
-  sail_base_url      = "https://tenant.api.identitynow.com"
-  sail_client_id     = var.sail_client_id
+  sail_base_url = "https://tenant.api.identitynow.com"
+  sail_client_id = var.sail_client_id
   sail_client_secret = var.sail_client_secret
 }
 ```

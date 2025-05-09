@@ -9,6 +9,7 @@ import (
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -67,13 +68,6 @@ func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// "modified": schema.StringAttribute{
-			// 	Computed:            true,
-			// 	MarkdownDescription: "Date the Access Profile was last modified.",
-			// 	PlanModifiers: []planmodifier.String{
-			// 		stringplanmodifier.UseStateForUnknown(),
-			// 	},
-			// },
 			"enabled": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -162,7 +156,7 @@ func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 									Validators: []validator.String{
 										stringvalidator.OneOf("APP_OWNER", "OWNER", "SOURCE_OWNER", "MANAGER", "GOVERNANCE_GROUP"),
 									},
-									MarkdownDescription: "Describes the individual or group that is responsible for an approval step. Values are as follows. **APP_OWNER**: The owner of the Application  **OWNER**: Owner of the associated Access Profile or Role  **SOURCE_OWNER**: Owner of the Source associated with an Access Profile  **MANAGER**: Manager of the Identity making the request  **GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field",
+									MarkdownDescription: "Describes the individual or group that is responsible for an approval step. Values are as follows. **APP_OWNER**: The owner of the Application **OWNER**: Owner of the associated Access Profile or Role  **SOURCE_OWNER**: Owner of the Source associated with an Access Profile **MANAGER**: Manager of the Identity making the request **GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field",
 								},
 								"approver_id": schema.StringAttribute{
 									Optional:            true,
@@ -175,6 +169,14 @@ func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 				Optional: true,
+				Computed: true,
+				Default: objectdefault.StaticValue(
+					types.ObjectValueMust(RequestabilityType, map[string]attr.Value{
+						"comments_required":        types.BoolNull(),
+						"denial_comments_required": types.BoolNull(),
+						"approval_schemes":         types.ListNull(AccessProfileApprovalSchemeObject),
+					}),
+				),
 			},
 			"revocation_request_config": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
@@ -183,7 +185,7 @@ func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 							Attributes: map[string]schema.Attribute{
 								"approver_type": schema.StringAttribute{
 									Optional:            true,
-									MarkdownDescription: "Describes the individual or group that is responsible for an approval step. Values are as follows. **APP_OWNER**: The owner of the Application  **OWNER**: Owner of the associated Access Profile or Role  **SOURCE_OWNER**: Owner of the Source associated with an Access Profile  **MANAGER**: Manager of the Identity making the request  **GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field",
+									MarkdownDescription: "Describes the individual or group that is responsible for an approval step. Values are as follows. **APP_OWNER**: The owner of the Application **OWNER**: Owner of the associated Access Profile or Role **SOURCE_OWNER**: Owner of the Source associated with an Access Profile **MANAGER**: Manager of the Identity making the request **GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field",
 									Validators: []validator.String{
 										stringvalidator.OneOf("APP_OWNER", "OWNER", "SOURCE_OWNER", "MANAGER", "GOVERNANCE_GROUP"),
 									},
@@ -202,6 +204,76 @@ func (r *AccessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed: true,
 				Default: objectdefault.StaticValue(
 					types.ObjectNull(RevocabilityType),
+				),
+			},
+			"provisioning_criteria": schema.SingleNestedAttribute{
+				Attributes: map[string]schema.Attribute{
+					"operation": schema.StringAttribute{
+						Required:            true,
+						MarkdownDescription: "Supported operations on ProvisioningCriteria",
+						Validators: []validator.String{
+							stringvalidator.OneOf("EQUALS", "NOT_EQUALS", "CONTAINS", "HAS", "AND", "OR"),
+						},
+					},
+					"attribute": schema.StringAttribute{
+						Optional:            true,
+						MarkdownDescription: "Name of the Account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it is an error.",
+					},
+					"value": schema.StringAttribute{
+						Optional:            true,
+						MarkdownDescription: "String value to test the Account attribute with regard to the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it is an error. If the Attribute is not String-typed, it will be converted to the appropriate type.",
+					},
+					"children": schema.ListNestedAttribute{
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"operation": schema.StringAttribute{
+									Required:            true,
+									MarkdownDescription: "Supported operations on ProvisioningCriteria",
+									Validators: []validator.String{
+										stringvalidator.OneOf("EQUALS", "NOT_EQUALS", "CONTAINS", "HAS", "AND", "OR"),
+									},
+								},
+								"attribute": schema.StringAttribute{
+									Optional:            true,
+									MarkdownDescription: "Name of the Account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it is an error.",
+								},
+								"value": schema.StringAttribute{
+									Optional:            true,
+									MarkdownDescription: "String value to test the Account attribute with regard to the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it is an error. If the Attribute is not String-typed, it will be converted to the appropriate type.",
+								},
+								"children": schema.ListNestedAttribute{
+									NestedObject: schema.NestedAttributeObject{
+										Attributes: map[string]schema.Attribute{
+											"operation": schema.StringAttribute{
+												Required:            true,
+												MarkdownDescription: "Supported operations on ProvisioningCriteria",
+												Validators: []validator.String{
+													stringvalidator.OneOf("EQUALS", "NOT_EQUALS", "CONTAINS", "HAS", "AND", "OR"),
+												},
+											},
+											"attribute": schema.StringAttribute{
+												Optional:            true,
+												MarkdownDescription: "Name of the Account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it is an error.",
+											},
+											"value": schema.StringAttribute{
+												Required:            true,
+												MarkdownDescription: "String value to test the Account attribute with regard to the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it is an error. If the Attribute is not String-typed, it will be converted to the appropriate type.",
+											},
+										},
+									},
+									Required:            true,
+									MarkdownDescription: "Array of child criteria. Required if the operation is AND or OR, otherwise it must be left null. A maximum of three levels of criteria are supported, including leaf nodes.",
+								},
+							},
+						},
+						Required:            true,
+						MarkdownDescription: "Array of child criteria. Required if the operation is AND or OR, otherwise it must be left null. A maximum of three levels of criteria are supported, including leaf nodes.",
+					},
+				},
+				Optional: true,
+				Computed: true,
+				Default: objectdefault.StaticValue(
+					types.ObjectNull(ProvisioningCriteriaLevel1Type),
 				),
 			},
 		},

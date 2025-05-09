@@ -78,7 +78,7 @@ func (r *EntitlementRequestConfigResource) Schema(ctx context.Context, req resou
 						MarkdownDescription: "List describing the steps in approving the request",
 					},
 				},
-				Optional: true,
+				Required: true,
 			},
 		},
 	}
@@ -117,18 +117,21 @@ func (r *EntitlementRequestConfigResource) Create(ctx context.Context, req resou
 	reqConfig.AccessRequestConfig.RequestCommentRequired = data.AccessRequestConfig.CommentsRequired.ValueBoolPointer()
 	reqConfig.AccessRequestConfig.DenialCommentRequired = data.AccessRequestConfig.DenialCommentsRequired.ValueBoolPointer()
 
-	for _, ar := range data.AccessRequestConfig.ApprovalSchemes {
-		as := api_beta.EntitlementApprovalScheme{}
-		arId := api_beta.NullableString{}
-		arId.Set(ar.ApproverId.ValueStringPointer())
+	tflog.Info(ctx, fmt.Sprintf("len(data.AccessRequestConfig.ApprovalSchemes): %v", len(data.AccessRequestConfig.ApprovalSchemes)))
+	if len(data.AccessRequestConfig.ApprovalSchemes) == 0 {
+		reqConfig.AccessRequestConfig.ApprovalSchemes = []api_beta.EntitlementApprovalScheme{}
+	} else {
+		for _, ar := range data.AccessRequestConfig.ApprovalSchemes {
+			as := api_beta.EntitlementApprovalScheme{}
+			arId := api_beta.NullableString{}
+			arId.Set(ar.ApproverId.ValueStringPointer())
 
-		as.ApproverType = ar.ApproverType.ValueStringPointer()
-		as.ApproverId = arId
+			as.ApproverType = ar.ApproverType.ValueStringPointer()
+			as.ApproverId = arId
 
-		reqConfig.AccessRequestConfig.ApprovalSchemes = append(reqConfig.AccessRequestConfig.ApprovalSchemes, as)
+			reqConfig.AccessRequestConfig.ApprovalSchemes = append(reqConfig.AccessRequestConfig.ApprovalSchemes, as)
+		}
 	}
-
-	tflog.Info(ctx, fmt.Sprintf("*reqConfig.AccessRequestConfig.ApprovalSchemes: %v", reqConfig.AccessRequestConfig.ApprovalSchemes))
 
 	requestConfig, httpResp, err := r.client.Beta.EntitlementsAPI.PutEntitlementRequestConfig(context.Background(), data.Id.ValueString()).EntitlementRequestConfig(*reqConfig).Execute()
 	if err != nil {
@@ -152,22 +155,27 @@ func (r *EntitlementRequestConfigResource) Create(ctx context.Context, req resou
 
 	reqConfigData.CommentsRequired = types.BoolPointerValue(requestConfig.AccessRequestConfig.RequestCommentRequired)
 	reqConfigData.DenialCommentsRequired = types.BoolPointerValue(requestConfig.AccessRequestConfig.DenialCommentRequired)
+	reqConfigData.ApprovalSchemes = []AccessProfileApprovalScheme{}
 
-	for _, a := range requestConfig.AccessRequestConfig.ApprovalSchemes {
-		approval := AccessProfileApprovalScheme{
-			ApproverType: types.StringPointerValue(a.ApproverType),
-		}
-		appId, err := a.ApproverId.MarshalJSON()
-		if err != nil {
-			log.Printf("error ApproverId.MarshalJSON: %+v\n", a.ApproverId)
-		}
-		if appId != nil {
-			approval.ApproverId = types.StringPointerValue(a.ApproverId.Get())
-		} else {
-			approval.ApproverId = types.StringNull()
-		}
+	if len(requestConfig.AccessRequestConfig.ApprovalSchemes) == 0 {
+		reqConfigData.ApprovalSchemes = []AccessProfileApprovalScheme{}
+	} else {
+		for _, a := range requestConfig.AccessRequestConfig.ApprovalSchemes {
+			approval := AccessProfileApprovalScheme{
+				ApproverType: types.StringPointerValue(a.ApproverType),
+			}
+			appId, err := a.ApproverId.MarshalJSON()
+			if err != nil {
+				log.Printf("error ApproverId.MarshalJSON: %+v\n", a.ApproverId)
+			}
+			if appId != nil {
+				approval.ApproverId = types.StringPointerValue(a.ApproverId.Get())
+			} else {
+				approval.ApproverId = types.StringNull()
+			}
 
-		reqConfigData.ApprovalSchemes = append(reqConfigData.ApprovalSchemes, approval)
+			reqConfigData.ApprovalSchemes = append(reqConfigData.ApprovalSchemes, approval)
+		}
 	}
 
 	data.AccessRequestConfig = reqConfigData
@@ -188,23 +196,31 @@ func (r *EntitlementRequestConfigResource) Read(ctx context.Context, req resourc
 
 	reqConfigResp, httpResp, err := r.client.Beta.EntitlementsAPI.GetEntitlementRequestConfig(context.Background(), data.Id.ValueString()).Execute()
 	if err != nil {
-
-		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
-		if isSailpointError {
-			resp.Diagnostics.AddError(
-				"Error when calling Beta.EntitlementsAPI.GetEntitlementRequestConfig",
-				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+		if err.Error() == "404 Not Found" {
+			resp.Diagnostics.AddWarning(
+				"EntitlementID not found",
+				fmt.Sprintf("Entitlement id: %s was not found removing from a state", data.Id.ValueString()),
 			)
+			resp.State.RemoveResource(ctx)
+			return
 		} else {
-			resp.Diagnostics.AddError(
-				"Error when calling Beta.EntitlementsAPI.GetEntitlementRequestConfig",
-				fmt.Sprintf("Error: %s, see debug info for more information", err),
-			)
+			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
+			if isSailpointError {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.EntitlementsAPI.GetEntitlementRequestConfig",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+				)
+			} else {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.EntitlementsAPI.GetEntitlementRequestConfig",
+					fmt.Sprintf("Error: %s, see debug info for more information", err),
+				)
+			}
+
+			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
+
+			return
 		}
-
-		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
-
-		return
 	}
 
 	reqConfig := &Requestability{}
@@ -212,22 +228,26 @@ func (r *EntitlementRequestConfigResource) Read(ctx context.Context, req resourc
 	reqConfig.CommentsRequired = types.BoolPointerValue(reqConfigResp.AccessRequestConfig.RequestCommentRequired)
 	reqConfig.DenialCommentsRequired = types.BoolPointerValue(reqConfigResp.AccessRequestConfig.DenialCommentRequired)
 
-	for _, a := range reqConfigResp.AccessRequestConfig.ApprovalSchemes {
-		approval := AccessProfileApprovalScheme{
-			ApproverType: types.StringPointerValue(a.ApproverType),
-			// ApproverId:   types.StringPointerValue(a.ApproverId.Get()),
-		}
-		appId, err := a.ApproverId.MarshalJSON()
-		if err != nil {
-			log.Printf("error ApproverId.MarshalJSON: %+v\n", a.ApproverId)
-		}
-		if appId != nil {
-			approval.ApproverId = types.StringPointerValue(a.ApproverId.Get())
-		} else {
-			approval.ApproverId = types.StringNull()
-		}
+	if len(reqConfigResp.AccessRequestConfig.ApprovalSchemes) == 0 {
+		reqConfig.ApprovalSchemes = []AccessProfileApprovalScheme{}
+	} else {
+		for _, a := range reqConfigResp.AccessRequestConfig.ApprovalSchemes {
+			approval := AccessProfileApprovalScheme{
+				ApproverType: types.StringPointerValue(a.ApproverType),
+				// ApproverId:   types.StringPointerValue(a.ApproverId.Get()),
+			}
+			appId, err := a.ApproverId.MarshalJSON()
+			if err != nil {
+				log.Printf("error ApproverId.MarshalJSON: %+v\n", a.ApproverId)
+			}
+			if appId != nil {
+				approval.ApproverId = types.StringPointerValue(a.ApproverId.Get())
+			} else {
+				approval.ApproverId = types.StringNull()
+			}
 
-		reqConfig.ApprovalSchemes = append(reqConfig.ApprovalSchemes, approval)
+			reqConfig.ApprovalSchemes = append(reqConfig.ApprovalSchemes, approval)
+		}
 	}
 
 	data.AccessRequestConfig = reqConfig
@@ -252,18 +272,20 @@ func (r *EntitlementRequestConfigResource) Update(ctx context.Context, req resou
 	reqConfig.AccessRequestConfig.RequestCommentRequired = plan.AccessRequestConfig.CommentsRequired.ValueBoolPointer()
 	reqConfig.AccessRequestConfig.DenialCommentRequired = plan.AccessRequestConfig.DenialCommentsRequired.ValueBoolPointer()
 
-	for _, ar := range plan.AccessRequestConfig.ApprovalSchemes {
-		as := api_beta.EntitlementApprovalScheme{}
-		arId := api_beta.NullableString{}
-		arId.Set(ar.ApproverId.ValueStringPointer())
+	if len(plan.AccessRequestConfig.ApprovalSchemes) == 0 {
+		reqConfig.AccessRequestConfig.ApprovalSchemes = []api_beta.EntitlementApprovalScheme{}
+	} else {
+		for _, ar := range plan.AccessRequestConfig.ApprovalSchemes {
+			as := api_beta.EntitlementApprovalScheme{}
+			arId := api_beta.NullableString{}
+			arId.Set(ar.ApproverId.ValueStringPointer())
 
-		as.ApproverType = ar.ApproverType.ValueStringPointer()
-		as.ApproverId = arId
+			as.ApproverType = ar.ApproverType.ValueStringPointer()
+			as.ApproverId = arId
 
-		reqConfig.AccessRequestConfig.ApprovalSchemes = append(reqConfig.AccessRequestConfig.ApprovalSchemes, as)
+			reqConfig.AccessRequestConfig.ApprovalSchemes = append(reqConfig.AccessRequestConfig.ApprovalSchemes, as)
+		}
 	}
-
-	tflog.Info(ctx, fmt.Sprintf("*reqConfig.AccessRequestConfig.ApprovalSchemes: %v", reqConfig.AccessRequestConfig.ApprovalSchemes))
 
 	requestConfig, httpResp, err := r.client.Beta.EntitlementsAPI.PutEntitlementRequestConfig(context.Background(), plan.Id.ValueString()).EntitlementRequestConfig(*reqConfig).Execute()
 	if err != nil {
@@ -287,6 +309,7 @@ func (r *EntitlementRequestConfigResource) Update(ctx context.Context, req resou
 
 	reqConfigData.CommentsRequired = types.BoolPointerValue(requestConfig.AccessRequestConfig.RequestCommentRequired)
 	reqConfigData.DenialCommentsRequired = types.BoolPointerValue(requestConfig.AccessRequestConfig.DenialCommentRequired)
+	reqConfigData.ApprovalSchemes = []AccessProfileApprovalScheme{}
 
 	for _, a := range requestConfig.AccessRequestConfig.ApprovalSchemes {
 		approval := AccessProfileApprovalScheme{
@@ -326,8 +349,6 @@ func (r *EntitlementRequestConfigResource) Delete(ctx context.Context, req resou
 	reqConfig.AccessRequestConfig.RequestCommentRequired = &falseBool
 	reqConfig.AccessRequestConfig.DenialCommentRequired = &falseBool
 	reqConfig.AccessRequestConfig.ApprovalSchemes = []api_beta.EntitlementApprovalScheme{}
-
-	tflog.Info(ctx, fmt.Sprintf("*reqConfig.AccessRequestConfig.ApprovalSchemes: %v", reqConfig.AccessRequestConfig.ApprovalSchemes))
 
 	_, httpResp, err := r.client.Beta.EntitlementsAPI.PutEntitlementRequestConfig(context.Background(), state.Id.ValueString()).EntitlementRequestConfig(*reqConfig).Execute()
 	if err != nil {

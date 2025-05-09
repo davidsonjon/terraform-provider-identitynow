@@ -1,5 +1,3 @@
-
-
 # Example Identity data source
 data "identitynow_identity" "identity" {
   id = "2072631"
@@ -61,7 +59,7 @@ data "identitynow_segment" "segment_name" {
 
 # Example Segement Access
 resource "identitynow_segment_access" "segment_access" {
-  segment_id = data.identitynow_segment.segment_name.id
+  segment_id        = data.identitynow_segment.segment_name.id
   assignments = [
     {
       type = "ACCESS_PROFILE"

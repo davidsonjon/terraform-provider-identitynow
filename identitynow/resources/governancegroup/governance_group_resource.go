@@ -336,17 +336,17 @@ func (r *GovernanceGroupResource) Read(ctx context.Context, req resource.ReadReq
 	listValue := types.SetValueMust(types.ObjectType{AttrTypes: baseReferenceDto1Types}, elements)
 
 	data.Membership = listValue
-
-	owner, ok := types.ObjectValue(baseReferenceDto1Types, map[string]attr.Value{
-		"name": types.StringPointerValue(workgroup.Owner.Name),
-		"id":   types.StringPointerValue(workgroup.Owner.Id),
-		"type": types.StringPointerValue((*string)(workgroup.Owner.Type)),
-	})
-	if ok.HasError() {
-		resp.Diagnostics.Append(ok...)
+	if workgroup.Owner != nil {
+		owner, ok := types.ObjectValue(baseReferenceDto1Types, map[string]attr.Value{
+			"name": types.StringPointerValue(workgroup.Owner.Name),
+			"id":   types.StringPointerValue(workgroup.Owner.Id),
+			"type": types.StringPointerValue((*string)(workgroup.Owner.Type)),
+		})
+		if ok.HasError() {
+			resp.Diagnostics.Append(ok...)
+		}
+		data.Owner = owner
 	}
-
-	data.Owner = owner
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

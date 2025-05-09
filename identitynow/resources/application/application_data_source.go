@@ -5,8 +5,6 @@ import (
 
 	"fmt"
 
-	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
-	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -16,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	sailpoint "github.com/davidsonjon/golang-sdk/v2"
+	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/config"
+	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/util"
 )
 
 var _ datasource.DataSource = &ApplicationDataSource{}

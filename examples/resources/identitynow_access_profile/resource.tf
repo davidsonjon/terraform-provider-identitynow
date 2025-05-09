@@ -50,4 +50,23 @@ resource "identitynow_access_profile" "access_profile" {
     comments_required        = true
     denial_comments_required = true
   }
+  provisioning_criteria = {
+    attribute = null
+    children = [
+      {
+        attribute = null
+        children = [
+          {
+            attribute = "Attribute1"
+            operation = "EQUALS"
+            value     = "Value1"
+          },
+        ]
+        operation = "AND"
+        value     = null
+      },
+    ]
+    operation = "OR"
+    value     = null
+  }
 }

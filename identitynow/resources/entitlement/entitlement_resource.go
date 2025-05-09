@@ -47,6 +47,7 @@ func (r *EntitlementResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The entitlement id",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"name": schema.StringAttribute{
@@ -84,8 +85,9 @@ func (r *EntitlementResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "True if the entitlement is cloud governed",
 			},
 			"description": schema.StringAttribute{
+				Optional:            true,
 				Computed:            true,
-				MarkdownDescription: "The description of the entitlement",
+				MarkdownDescription: "The description of the entitlement, due to API limitations, may be set to an empty string (`\"\"`) but not **null**. Note: this attribute can be initially aggregated in from some sources and will be overwritten if set",
 			},
 			"requestable": schema.BoolAttribute{
 				Optional:            true,
@@ -98,6 +100,12 @@ func (r *EntitlementResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The Source ID of the entitlement",
 			},
 			"owner": schema.SingleNestedAttribute{
+				MarkdownDescription: "The Owner of the entitlement",
+				Optional:            true,
+				Computed:            true,
+				Default: objectdefault.StaticValue(
+					types.ObjectNull(OwnerSchemeObject),
+				),
 				Attributes: map[string]schema.Attribute{
 					"id": schema.StringAttribute{
 						Required:            true,
@@ -116,11 +124,61 @@ func (r *EntitlementResource) Schema(ctx context.Context, req resource.SchemaReq
 						MarkdownDescription: "The type of the Source, will always be `IDENTITY`",
 					},
 				},
+			},
+			"access_model_metadata": schema.ListNestedAttribute{
 				Optional: true,
-				Computed: true,
-				Default: objectdefault.StaticValue(
-					types.ObjectNull(OwnerSchemeObject),
-				),
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"key": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "Technical name of the Attribute. This is unique and cannot be changed after creation.",
+						},
+						"name": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The display name of the key.",
+						},
+						"multiselect": schema.BoolAttribute{
+							Required:            true,
+							MarkdownDescription: "Indicates whether the attribute can have multiple values.",
+						},
+						"status": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The status of the Attribute.",
+						},
+						"type": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The type of the Attribute. This can be either `custom` or `governance`.",
+						},
+						"object_types": schema.ListAttribute{
+							ElementType:         types.StringType,
+							Required:            true,
+							MarkdownDescription: "An array of object types this attributes values can be applied to. Possible values are `all` or `entitlement`. Value `all` means this attribute can be used with all object types that are supported.",
+						},
+						"description": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The description of the Attribute.",
+						},
+						"values": schema.ListNestedAttribute{
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"value": schema.StringAttribute{
+										Required:            true,
+										MarkdownDescription: "Technical name of the Attribute value. This is unique and cannot be changed after creation.",
+									},
+									"name": schema.StringAttribute{
+										Required:            true,
+										MarkdownDescription: "The display name of the Attribute value.",
+									},
+									"status": schema.StringAttribute{
+										Required:            true,
+										MarkdownDescription: "The status of the Attribute value.",
+									},
+								},
+							},
+							Required: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -255,6 +313,9 @@ func (r *EntitlementResource) Create(ctx context.Context, req resource.CreateReq
 	newEntitlement := *entitlement
 	newEntitlement.SetPrivileged(data.Privileged.ValueBool())
 	newEntitlement.SetRequestable(data.Requestable.ValueBool())
+	if !data.Description.IsUnknown() {
+		newEntitlement.Description = *beta.NewNullableString(data.Description.ValueStringPointer())
+	}
 
 	if data.Owner != nil {
 		owner := beta.EntitlementOwner{
@@ -266,6 +327,39 @@ func (r *EntitlementResource) Create(ctx context.Context, req resource.CreateReq
 	} else {
 		newEntitlement.Owner = nil
 	}
+
+	accessmodelmetadata := beta.EntitlementAccessModelMetadata{
+		Attributes: []beta.AttributeDTO{},
+	}
+
+	for _, att := range data.AccessModelMetadata {
+		metatdataAtts := beta.AttributeDTO{}
+		metatdataAtts.Key = att.Key.ValueStringPointer()
+		metatdataAtts.Name = att.Name.ValueStringPointer()
+		metatdataAtts.Multiselect = att.Multiselect.ValueBoolPointer()
+		metatdataAtts.Status = att.Status.ValueStringPointer()
+		metatdataAtts.Type = att.Type.ValueStringPointer()
+		metatdataAtts.Description = att.Description.ValueStringPointer()
+
+		elements := make([]types.String, 0, len(att.ObjectTypes.Elements()))
+		diags := att.ObjectTypes.ElementsAs(ctx, &elements, false)
+		resp.Diagnostics.Append(diags...)
+
+		for _, v := range elements {
+			metatdataAtts.ObjectTypes = append(metatdataAtts.ObjectTypes, v.ValueString())
+		}
+
+		for _, v := range att.Values {
+			value := &beta.AttributeValueDTO{
+				Value:  v.Value.ValueStringPointer(),
+				Name:   v.Name.ValueStringPointer(),
+				Status: v.Status.ValueStringPointer(),
+			}
+			metatdataAtts.Values = append(metatdataAtts.Values, *value)
+		}
+		accessmodelmetadata.Attributes = append(accessmodelmetadata.Attributes, metatdataAtts)
+	}
+	newEntitlement.AccessModelMetadata = &accessmodelmetadata
 
 	patch, err := jsondiff.Compare(entitlement, newEntitlement)
 	if err != nil {
@@ -331,23 +425,33 @@ func (r *EntitlementResource) Read(ctx context.Context, req resource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	entitlement := &beta.Entitlement{}
 
 	entitlement, httpResp, err := r.client.Beta.EntitlementsAPI.GetEntitlement(ctx, data.Id.ValueString()).Execute()
 	if err != nil {
-		sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
-		if isSailpointError {
-			resp.Diagnostics.AddError(
-				"Error when calling Beta.EntitlementsAPI.GetEntitlement",
-				fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+		if err.Error() == "404 Not Found" {
+			resp.Diagnostics.AddWarning(
+				"EntitlementID not found",
+				fmt.Sprintf("Entitlement id: %s was not found removing from a state", data.Id.ValueString()),
 			)
+			resp.State.RemoveResource(ctx)
+			return
 		} else {
-			resp.Diagnostics.AddError(
-				"Error when calling Beta.EntitlementsAPI.GetEntitlement",
-				fmt.Sprintf("Error: %s, see debug info for more information", err),
-			)
+			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
+			if isSailpointError {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.EntitlementsAPI.GetEntitlement",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+				)
+			} else {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.EntitlementsAPI.GetEntitlement",
+					fmt.Sprintf("Error: %s, see debug info for more information", err),
+				)
+			}
+			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
+			return
 		}
-		tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
-		return
 	}
 
 	parseAttributes(&data, entitlement, &resp.Diagnostics)
@@ -429,9 +533,26 @@ func (r *EntitlementResource) Update(ctx context.Context, req resource.UpdateReq
 			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
 			return
 		}
-		parseAttributes(&plan, patchEnt, &resp.Diagnostics)
+		parseAttributes(&update, patchEnt, &resp.Diagnostics)
 	} else {
-		parseAttributes(&plan, planEnt, &resp.Diagnostics)
+		entitlement, httpResp, err := r.client.Beta.EntitlementsAPI.GetEntitlement(ctx, plan.Id.ValueString()).Execute()
+		if err != nil {
+			sailpointError, isSailpointError := util.SailpointErrorFromHTTPBody(httpResp)
+			if isSailpointError {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.EntitlementsAPI.GetEntitlement",
+					fmt.Sprintf("Error: %s", *sailpointError.GetMessages()[0].Text),
+				)
+			} else {
+				resp.Diagnostics.AddError(
+					"Error when calling Beta.EntitlementsAPI.GetEntitlement",
+					fmt.Sprintf("Error: %s, see debug info for more information", err),
+				)
+			}
+			tflog.Info(ctx, fmt.Sprintf("Full HTTP response: %v", httpResp))
+			return
+		}
+		parseAttributes(&update, entitlement, &resp.Diagnostics)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &update)...)

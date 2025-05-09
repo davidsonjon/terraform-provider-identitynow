@@ -13,6 +13,8 @@ import (
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/entitlement"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/governancegroup"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/identity"
+	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/metadataattribute"
+	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/role"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/segment"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/source"
 	"github.com/hashicorp/go-retryablehttp"
@@ -138,6 +140,8 @@ func (p *Provider) Resources(ctx context.Context) []func() resource.Resource {
 		source.NewSourceLoadWaitResource,
 		segment.NewSegmentResource,
 		segment.NewSegmentAccessResource,
+		metadataattribute.NewMetadataAttributeResource,
+		role.NewRoleResource,
 	}
 }
 
@@ -150,6 +154,8 @@ func (p *Provider) DataSources(ctx context.Context) []func() datasource.DataSour
 		application.NewApplicationDataSource,
 		governancegroup.NewGovernanceGroupDataSource,
 		segment.NewSegmentDataSource,
+		metadataattribute.NewAccessModelMetadataDataSource,
+		role.NewRoleDataSource,
 	}
 }
 
