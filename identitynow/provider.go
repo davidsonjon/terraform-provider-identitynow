@@ -148,6 +148,7 @@ func (p *Provider) Resources(ctx context.Context) []func() resource.Resource {
 func (p *Provider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		entitlement.NewEntitlementDataSource,
+		entitlement.NewEntitlementsDataSource,
 		source.NewSourceDataSource,
 		identity.NewIdentityDataSource,
 		accessprofile.NewAccessProfileDataSource,
