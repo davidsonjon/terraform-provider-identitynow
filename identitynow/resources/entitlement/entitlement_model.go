@@ -6,6 +6,7 @@ import (
 	beta "github.com/davidsonjon/golang-sdk/v2/api_beta"
 	"github.com/davidsonjon/terraform-provider-identitynow/identitynow/resources/metadataattribute"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -188,4 +189,67 @@ var ValuesObject = types.ObjectType{
 		"name":   types.StringType,
 		"status": types.StringType,
 	},
+}
+
+// ConvertBetaEntitlementToModel converts a beta.Entitlement to the Terraform Entitlement model
+// This is shared between the single entitlement and multiple entitlements data sources
+func ConvertBetaEntitlementToModel(ctx context.Context, betaEnt beta.Entitlement) (Entitlement, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var ent Entitlement
+
+	ent.Id = types.StringPointerValue(betaEnt.Id)
+	ent.Name = types.StringPointerValue(betaEnt.Name)
+	ent.Created = types.StringValue(betaEnt.Created.String())
+	ent.Modified = types.StringValue(betaEnt.Modified.String())
+	ent.Attribute = types.StringPointerValue(betaEnt.Attribute.Get())
+	ent.Value = types.StringPointerValue(betaEnt.Value)
+	ent.SourceSchemaObjectType = types.StringPointerValue(betaEnt.SourceSchemaObjectType)
+	ent.Privileged = types.BoolPointerValue(betaEnt.Privileged)
+	ent.CloudGoverned = types.BoolPointerValue(betaEnt.CloudGoverned)
+	ent.Description = types.StringPointerValue(betaEnt.Description.Get())
+	ent.Requestable = types.BoolPointerValue(betaEnt.Requestable)
+
+	ent.SourceID = types.StringPointerValue(betaEnt.Source.Id)
+
+	// Handle Owner
+	if betaEnt.Owner != nil {
+		owner := &OwnerReference{}
+		owner.Id = types.StringPointerValue(betaEnt.Owner.Id)
+		owner.Name = types.StringPointerValue(betaEnt.Owner.Name)
+		owner.Type = types.StringPointerValue(betaEnt.Owner.Type)
+		ent.Owner = owner
+	}
+
+	// Handle AccessModelMetadata
+	if len(betaEnt.AccessModelMetadata.Attributes) > 0 {
+		metadata := []metadataattribute.AttributeDTO{}
+
+		for _, att := range betaEnt.AccessModelMetadata.Attributes {
+			metatdataAtts := metadataattribute.AttributeDTO{}
+			metatdataAtts.Key = types.StringPointerValue(att.Key)
+			metatdataAtts.Name = types.StringPointerValue(att.Name)
+			metatdataAtts.Multiselect = types.BoolPointerValue(att.Multiselect)
+			metatdataAtts.Status = types.StringPointerValue(att.Status)
+			metatdataAtts.Type = types.StringPointerValue(att.Type)
+			metatdataAtts.Description = types.StringPointerValue(att.Description)
+
+			objectTypes, diags1 := types.ListValueFrom(ctx, types.StringType, att.ObjectTypes)
+			metatdataAtts.ObjectTypes = objectTypes
+			diags.Append(diags1...)
+
+			for _, v := range att.Values {
+				value := &metadataattribute.AttributeValueDTO{
+					Value:  types.StringPointerValue(v.Value),
+					Name:   types.StringPointerValue(v.Name),
+					Status: types.StringPointerValue(v.Status),
+				}
+				metatdataAtts.Values = append(metatdataAtts.Values, *value)
+			}
+			metadata = append(metadata, metatdataAtts)
+		}
+
+		ent.AccessModelMetadata = metadata
+	}
+
+	return ent, diags
 }
