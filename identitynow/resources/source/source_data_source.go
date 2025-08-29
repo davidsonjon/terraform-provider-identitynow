@@ -162,8 +162,18 @@ func (d *SourceDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Name = types.StringValue(source.Name)
 	data.Description = types.StringPointerValue(source.Description)
 
+	// Safe type assertion for cloudExternalId to handle SCIM 2.0 sources that don't have this field
+	cloudExternalIdValue := types.StringNull()
+	if source.ConnectorAttributes != nil {
+		if cloudExtId, exists := source.ConnectorAttributes["cloudExternalId"]; exists && cloudExtId != nil {
+			if strVal, ok := cloudExtId.(string); ok {
+				cloudExternalIdValue = types.StringValue(strVal)
+			}
+		}
+	}
+
 	cAttr, ok := types.ObjectValue(connectorAttributesTypes, map[string]attr.Value{
-		"cloud_external_id": types.StringValue(source.ConnectorAttributes["cloudExternalId"].(string)),
+		"cloud_external_id": cloudExternalIdValue,
 	})
 	if ok.HasError() {
 		resp.Diagnostics.Append(ok...)
