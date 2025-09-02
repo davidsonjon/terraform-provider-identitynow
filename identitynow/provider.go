@@ -151,6 +151,7 @@ func (p *Provider) DataSources(ctx context.Context) []func() datasource.DataSour
 		entitlement.NewEntitlementsDataSource,
 		source.NewSourceDataSource,
 		identity.NewIdentityDataSource,
+		identity.NewIdentitiesDataSource,
 		accessprofile.NewAccessProfileDataSource,
 		application.NewApplicationDataSource,
 		governancegroup.NewGovernanceGroupDataSource,
