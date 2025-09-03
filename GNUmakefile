@@ -9,11 +9,12 @@ install: build
 lint:
 	golangci-lint run
 
-generate:
+generate: fmt
 	cd tools; go generate ./...
 
 fmt:
 	gofmt -s -w -e .
+	terraform fmt -recursive examples
 
 test:
 	go test -v -cover -timeout=120s -parallel=10 ./...

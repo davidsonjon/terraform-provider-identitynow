@@ -35,7 +35,7 @@ func (d *IdentitiesDataSource) Schema(ctx context.Context, req datasource.Schema
 		Attributes: map[string]schema.Attribute{
 			"filters": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Filter expression to query identities (e.g., 'alias sw \"alice\"', 'email co \"example.com\"', or 'firstname eq \"John\"')",
+				MarkdownDescription: "Filter expression to query identities (e.g., 'alias sw \"alice\"', 'email eq \"test@example.com\"', or 'firstname eq \"John\"') filtering is support for the following fields and operators:\n\n **id**: eq, in\n\n **name**: eq, sw\n\n **alias**: eq, sw\n\n **firstname**: eq, sw\n\n **lastname**: eq, sw\n\n **email**: eq, sw\n\n **cloudStatus**: eq\n\n **processingState**: eq\n\n **correlated**: eq\n\n **protected**: eq",
 			},
 			"limit": schema.Int64Attribute{
 				Optional:            true,
