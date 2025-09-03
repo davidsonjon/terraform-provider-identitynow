@@ -39,7 +39,7 @@ func (d *EntitlementsDataSource) Metadata(ctx context.Context, req datasource.Me
 func (d *EntitlementsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	// Get the shared entitlement schema attributes
 	entitlementAttributes := GetEntitlementSchemaAttributes()
-	
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Entitlements data source for querying multiple entitlements with filter support",
 
