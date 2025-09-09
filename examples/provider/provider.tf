@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "identitynow" {
-  sail_base_url = "https://tenant.api.identitynow.com"
-  sail_client_id = var.sail_client_id
+  sail_base_url      = "https://tenant.api.identitynow.com"
+  sail_client_id     = var.sail_client_id
   sail_client_secret = var.sail_client_secret
 }

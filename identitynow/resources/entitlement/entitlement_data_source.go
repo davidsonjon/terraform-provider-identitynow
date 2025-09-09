@@ -32,7 +32,7 @@ func (d *EntitlementDataSource) Metadata(ctx context.Context, req datasource.Met
 func (d *EntitlementDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	// Get the shared entitlement schema attributes
 	attributes := GetEntitlementSchemaAttributes()
-	
+
 	// Override the 'id' attribute to be required for the single entitlement data source
 	attributes["id"] = schema.StringAttribute{
 		Required:            true,
@@ -116,4 +116,3 @@ func parseAttributes(ent *Entitlement, betaEnt *beta.Entitlement, diags *diag.Di
 	}
 	*ent = convertedEnt
 }
-

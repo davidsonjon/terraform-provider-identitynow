@@ -21,7 +21,7 @@ resource "identitynow_application" "application" {
   owner = {
     id = data.identitynow_identity.identity.cc_id
   }
-  account_source_id        = data.identitynow_source.source.id
+  account_source_id         = data.identitynow_source.source.id
   app_center_enabled        = false
   provision_request_enabled = false
   access_profile_ids = [
