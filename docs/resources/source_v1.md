@@ -295,7 +295,17 @@ hand-written against the `golang-sdk`'s `api_beta.SourcesAPIService` client.
   Delimited File source's attributes look nothing like a Workday or Active
   Directory source's) - see this repository's `transform_v1` resource for
   the same modeling pattern applied to a different dynamic/discriminated-union
-  field. The live API always merges its own server-computed status keys
+  field. If `apply` fails with a `400`/"semantically invalid" error, this is
+  almost always a `connector_attributes` shape mismatch (a required key
+  missing or nested under the wrong parent, e.g. accidentally wrapping the
+  whole object in an extra `input` key) rather than a Terraform-level schema
+  error, since this field isn't statically typed here. The most reliable fix
+  is to configure the source once via the ISC UI, read it back with
+  `GET /sources/v1/{id}` (or the `identitynow_source_v1` data source), and
+  mirror that exact `connectorAttributes` structure (minus secrets) into your
+  `connector_attributes` config - the "Configuration properties" API
+  reference for the target connector type documents the expected keys, but
+  the live response is the more reliable source of truth in practice. The live API always merges its own server-computed status keys
   (`healthy`, `since`, `status`, `connectionType`, `connectorName` -
   duplicates of the top-level attributes of the same purpose) into this same
   JSON object on every response, so this resource always preserves your

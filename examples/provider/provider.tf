@@ -1,7 +1,8 @@
 terraform {
   required_providers {
     identitynow = {
-      source = "hashicorp.com/edu/identitynow"
+      source  = "davidsonjon/identitynow"
+      version = "~> 0.5"
     }
   }
 }
