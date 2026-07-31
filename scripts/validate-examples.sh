@@ -25,7 +25,7 @@ cd "$REPO_ROOT"
 
 # Must match the `source` used in examples/provider/provider.tf (the real
 # published registry address, since that file is also what's rendered on the
-# Terraform Registry docs) - NOT the "hashicorp.com/edu/identitynow"
+# Terraform Registry docs) - NOT the "local.dev/identitynow/identitynow"
 # placeholder used by test/*/main.tf for local manual `make plan`/`apply`
 # testing (see docs/TESTING.md), which is a separate, unrelated convention.
 PROVIDER_ADDRESS="davidsonjon/identitynow"

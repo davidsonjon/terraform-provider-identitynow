@@ -11,7 +11,11 @@ import (
 
 func main() {
 	opts := providerserver.ServeOpts{
-		Address: "hashicorp.com/edu/identitynow",
+		// Must be the full hostname/namespace/type address (not just
+		// namespace/type) - providerserver.Serve fatally rejects anything
+		// shorter, which would otherwise crash the binary on startup for
+		// every real user installing this from the registry.
+		Address: "registry.terraform.io/davidsonjon/identitynow",
 	}
 
 	err := providerserver.Serve(context.Background(), provider.New(), opts)
