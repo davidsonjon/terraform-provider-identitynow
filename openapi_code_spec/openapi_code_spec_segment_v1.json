@@ -1,0 +1,322 @@
+{
+  "datasources": [
+    {
+      "name": "segment",
+      "schema": {
+        "attributes": [
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The segment ID to retrieve."
+            }
+          },
+          {
+            "name": "active",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "This boolean indicates whether the segment is currently active. Inactive segments have no effect."
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The time when the segment is created."
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The segment's optional description."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The time when the segment is modified."
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The segment's business name."
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Identity id"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Human-readable display name of the owner. It may be left null or omitted in a POST or PATCH. If set, it must match the current value of the owner's display name, otherwise a 400 Bad Request error will result."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner type. This field must be either left null or set to 'IDENTITY' on input, otherwise a 400 Bad Request error will result."
+                  }
+                }
+              ],
+              "description": "The owner of this object.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.OwnerReferenceSegments"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "segments",
+      "schema": {
+        "attributes": [
+          {
+            "name": "limit",
+            "int64": {
+              "computed_optional_required": "computed_optional",
+              "description": "Max number of results to return.\nSee [V3 API Standard Collection Parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters) for more information.",
+              "validators": [
+                {
+                  "custom": {
+                    "imports": [
+                      {
+                        "path": "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+                      }
+                    ],
+                    "schema_definition": "int64validator.Between(0, 250)"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "offset",
+            "int64": {
+              "computed_optional_required": "computed_optional",
+              "description": "Offset into the full result set. Usually specified with *limit* to paginate through the results.\nSee [V3 API Standard Collection Parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters) for more information.",
+              "validators": [
+                {
+                  "custom": {
+                    "imports": [
+                      {
+                        "path": "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+                      }
+                    ],
+                    "schema_definition": "int64validator.AtLeast(0)"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "segments",
+            "set_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "active",
+                    "bool": {
+                      "computed_optional_required": "computed",
+                      "description": "This boolean indicates whether the segment is currently active. Inactive segments have no effect."
+                    }
+                  },
+                  {
+                    "name": "created",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The time when the segment is created."
+                    }
+                  },
+                  {
+                    "name": "description",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The segment's optional description."
+                    }
+                  },
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The segment's ID."
+                    }
+                  },
+                  {
+                    "name": "modified",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The time when the segment is modified."
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The segment's business name."
+                    }
+                  },
+                  {
+                    "name": "owner",
+                    "single_nested": {
+                      "computed_optional_required": "computed",
+                      "attributes": [
+                        {
+                          "name": "id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Identity id"
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Human-readable display name of the owner. It may be left null or omitted in a POST or PATCH. If set, it must match the current value of the owner's display name, otherwise a 400 Bad Request error will result."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Owner type. This field must be either left null or set to 'IDENTITY' on input, otherwise a 400 Bad Request error will result."
+                          }
+                        }
+                      ],
+                      "description": "The owner of this object."
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "segment",
+      "schema": {
+        "attributes": [
+          {
+            "name": "active",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "This boolean indicates whether the segment is currently active. Inactive segments have no effect."
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The time when the segment is created."
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The segment's optional description."
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The segment's ID."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The time when the segment is modified."
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The segment's business name."
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Identity id"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Human-readable display name of the owner. It may be left null or omitted in a POST or PATCH. If set, it must match the current value of the owner's display name, otherwise a 400 Bad Request error will result."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner type. This field must be either left null or set to 'IDENTITY' on input, otherwise a 400 Bad Request error will result.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "description": "The owner of this object.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.OwnerReferenceSegments"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

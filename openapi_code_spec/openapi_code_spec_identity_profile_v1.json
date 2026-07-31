@@ -1,0 +1,375 @@
+{
+  "datasources": [
+    {
+      "name": "identity_profile",
+      "schema": {
+        "attributes": [
+          {
+            "name": "authoritative_source",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Authoritative source's ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Authoritative source's name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Authoritative source's object type."
+                  }
+                }
+              ],
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.IdentityProfileAllOfAuthoritativeSource"
+              }
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Creation date of the Object"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Identity profile's description."
+            }
+          },
+          {
+            "name": "has_time_based_attr",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "Indicates the value of `requiresPeriodicRefresh` attribute for the identity profile."
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "System-generated unique ID of the Object"
+            }
+          },
+          {
+            "name": "identity_count",
+            "int64": {
+              "computed_optional_required": "computed",
+              "description": "Number of identities belonging to the identity profile."
+            }
+          },
+          {
+            "name": "identity_exception_report_reference",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "report_name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Report name."
+                  }
+                },
+                {
+                  "name": "task_result_id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Task result ID."
+                  }
+                }
+              ],
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.IdentityExceptionReportReference"
+              }
+            }
+          },
+          {
+            "name": "identity_refresh_required",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "Set this value to 'True' if an identity refresh is necessary. You would typically want to trigger an identity refresh when a change has been made on the source."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Last modification date of the Object"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Name of the Object"
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's object type."
+                  }
+                }
+              ],
+              "description": "Identity profile's owner.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.IdentityProfileAllOfOwner"
+              }
+            }
+          },
+          {
+            "name": "priority",
+            "int64": {
+              "computed_optional_required": "computed",
+              "description": "Identity profile's priority."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "identity_profile",
+      "schema": {
+        "attributes": [
+          {
+            "name": "authoritative_source",
+            "single_nested": {
+              "computed_optional_required": "required",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Authoritative source's ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Authoritative source's name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Authoritative source's object type.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"SOURCE\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.IdentityProfileAllOfAuthoritativeSource"
+              }
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Creation date of the Object"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Identity profile's description."
+            }
+          },
+          {
+            "name": "has_time_based_attr",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "Indicates the value of `requiresPeriodicRefresh` attribute for the identity profile."
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "System-generated unique ID of the Object"
+            }
+          },
+          {
+            "name": "identity_count",
+            "int64": {
+              "computed_optional_required": "computed_optional",
+              "description": "Number of identities belonging to the identity profile."
+            }
+          },
+          {
+            "name": "identity_exception_report_reference",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "report_name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Report name."
+                  }
+                },
+                {
+                  "name": "task_result_id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Task result ID."
+                  }
+                }
+              ],
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.IdentityExceptionReportReference"
+              }
+            }
+          },
+          {
+            "name": "identity_refresh_required",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "description": "Set this value to 'True' if an identity refresh is necessary. You would typically want to trigger an identity refresh when a change has been made on the source."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Last modification date of the Object"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "Name of the Object"
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's object type.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "description": "Identity profile's owner.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.IdentityProfileAllOfOwner"
+              }
+            }
+          },
+          {
+            "name": "priority",
+            "int64": {
+              "computed_optional_required": "computed_optional",
+              "description": "Identity profile's priority."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

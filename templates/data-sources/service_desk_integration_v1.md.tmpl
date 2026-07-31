@@ -1,0 +1,29 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Service Desk Integrations"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+See the [`identitynow_service_desk_integration_v1` resource documentation](../resources/service_desk_integration_v1.md#known-limitations--live-testing-notes)
+for the full list of limitations shared by both the resource and this data
+source - in particular, reading a pre-existing integration whose
+`provisioningConfig.managedResourceRefs` is non-empty is affected by a known
+upstream SDK bug.

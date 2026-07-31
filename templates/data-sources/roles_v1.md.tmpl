@@ -1,0 +1,32 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Roles"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+Each entry in `roles` is populated by the same conversion code as the
+singular [`identitynow_role_v1` data source](../data-sources/role_v1.md) - see
+its "Known Limitations & Live Testing Notes" section for the full list of
+pass-through-only attributes shared by both.
+
+`GET /roles/v1`'s documented maximum `limit` is 50 (lower than most other
+IdentityNow list APIs); requested limits above that are capped with a
+warning rather than an error.

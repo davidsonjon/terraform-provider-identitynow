@@ -1,0 +1,589 @@
+{
+  "datasources": [
+    {
+      "name": "service_desk_integration",
+      "schema": {
+        "attributes": [
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "ID of the Service Desk integration to get"
+            }
+          },
+          {
+            "name": "attributes",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "description": "Service Desk integration's attributes. Validation constraints enforced by the implementation."
+            }
+          },
+          {
+            "name": "before_provisioning_rule",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Before Provisioning Rule ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Rule display name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Before Provisioning Rule DTO type."
+                  }
+                }
+              ],
+              "description": "Before Provisioning Rule.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.BeforeProvisioningRuleDto"
+              }
+            }
+          },
+          {
+            "name": "cluster",
+            "string": {
+              "computed_optional_required": "computed",
+              "deprecation_message": "This attribute is deprecated.",
+              "description": "Cluster ID for the Service Desk integration (replaced by clusterRef, retained for backward compatibility)."
+            }
+          },
+          {
+            "name": "cluster_ref",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Source cluster ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Source cluster display name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Source cluster DTO type."
+                  }
+                }
+              ],
+              "description": "Source cluster.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.SourceClusterDto"
+              }
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The date and time the Service Desk integration was created"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Service Desk integration's description."
+            }
+          },
+          {
+            "name": "managed_sources",
+            "list": {
+              "computed_optional_required": "computed",
+              "element_type": {
+                "string": {}
+              },
+              "deprecation_message": "This attribute is deprecated.",
+              "description": "Source IDs for the Service Desk integration (replaced by provisioningConfig.managedSResourceRefs, but retained here for backward compatibility)."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The date and time the Service Desk integration was last modified"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Service Desk integration's name. The name must be unique."
+            }
+          },
+          {
+            "name": "owner_ref",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's identity ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's DTO type."
+                  }
+                }
+              ],
+              "description": "Owner's identity.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.OwnerDto"
+              }
+            }
+          },
+          {
+            "name": "provisioning_config",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "managed_resource_refs",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "ID of source for service desk integration template."
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Human-readable name of source for service desk integration template."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "DTO type of source for service desk integration template."
+                          }
+                        }
+                      ]
+                    },
+                    "description": "References to sources for the Service Desk integration template.  May only be specified if universalManager is false."
+                  }
+                },
+                {
+                  "name": "no_provisioning_requests",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Name of an attribute that when true disables the saving of ProvisioningRequest objects whenever plans are sent through this integration."
+                  }
+                },
+                {
+                  "name": "plan_initializer_script",
+                  "single_nested": {
+                    "computed_optional_required": "computed",
+                    "attributes": [
+                      {
+                        "name": "source",
+                        "string": {
+                          "computed_optional_required": "computed",
+                          "description": "This is a Rule that allows provisioning instruction changes."
+                        }
+                      }
+                    ],
+                    "description": "This is a reference to a plan initializer script."
+                  }
+                },
+                {
+                  "name": "provisioning_request_expiration",
+                  "int64": {
+                    "computed_optional_required": "computed",
+                    "description": "When saving pending requests is enabled, this defines the number of hours the request is allowed to live before it is considered expired and no longer affects plan compilation."
+                  }
+                },
+                {
+                  "name": "universal_manager",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Specifies whether this configuration is used to manage provisioning requests for all sources from the org.  If true, no managedResourceRefs are allowed."
+                  }
+                }
+              ],
+              "description": "The 'provisioningConfig' property specifies the configuration used to provision integrations."
+            }
+          },
+          {
+            "name": "type",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Service Desk integration types:\n\n- ServiceNowSDIM\n- ServiceNow\n"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "service_desk_integration",
+      "schema": {
+        "attributes": [
+          {
+            "name": "attributes",
+            "single_nested": {
+              "computed_optional_required": "required",
+              "description": "Service Desk integration's attributes. Validation constraints enforced by the implementation."
+            }
+          },
+          {
+            "name": "before_provisioning_rule",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Before Provisioning Rule ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Rule display name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Before Provisioning Rule DTO type.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"RULE\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "description": "Before Provisioning Rule.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.BeforeProvisioningRuleDto"
+              }
+            }
+          },
+          {
+            "name": "cluster",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "deprecation_message": "This attribute is deprecated.",
+              "description": "Cluster ID for the Service Desk integration (replaced by clusterRef, retained for backward compatibility)."
+            }
+          },
+          {
+            "name": "cluster_ref",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Source cluster ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Source cluster display name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Source cluster DTO type.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"CLUSTER\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "description": "Source cluster.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.SourceClusterDto"
+              }
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The date and time the Service Desk integration was created"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "Service Desk integration's description."
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Unique identifier for the Service Desk integration"
+            }
+          },
+          {
+            "name": "managed_sources",
+            "list": {
+              "computed_optional_required": "computed_optional",
+              "element_type": {
+                "string": {}
+              },
+              "deprecation_message": "This attribute is deprecated.",
+              "description": "Source IDs for the Service Desk integration (replaced by provisioningConfig.managedSResourceRefs, but retained here for backward compatibility)."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The date and time the Service Desk integration was last modified"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "Service Desk integration's name. The name must be unique."
+            }
+          },
+          {
+            "name": "owner_ref",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's identity ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's DTO type.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "description": "Owner's identity.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.OwnerDto"
+              }
+            }
+          },
+          {
+            "name": "provisioning_config",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "managed_resource_refs",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "id",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "ID of source for service desk integration template."
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Human-readable name of source for service desk integration template."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "DTO type of source for service desk integration template.",
+                            "validators": [
+                              {
+                                "custom": {
+                                  "imports": [
+                                    {
+                                      "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                    }
+                                  ],
+                                  "schema_definition": "stringvalidator.OneOf(\n\"SOURCE\",\n)"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    "description": "References to sources for the Service Desk integration template.  May only be specified if universalManager is false."
+                  }
+                },
+                {
+                  "name": "no_provisioning_requests",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Name of an attribute that when true disables the saving of ProvisioningRequest objects whenever plans are sent through this integration."
+                  }
+                },
+                {
+                  "name": "plan_initializer_script",
+                  "single_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "attributes": [
+                      {
+                        "name": "source",
+                        "string": {
+                          "computed_optional_required": "computed_optional",
+                          "description": "This is a Rule that allows provisioning instruction changes."
+                        }
+                      }
+                    ],
+                    "description": "This is a reference to a plan initializer script."
+                  }
+                },
+                {
+                  "name": "provisioning_request_expiration",
+                  "int64": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "When saving pending requests is enabled, this defines the number of hours the request is allowed to live before it is considered expired and no longer affects plan compilation."
+                  }
+                },
+                {
+                  "name": "universal_manager",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Specifies whether this configuration is used to manage provisioning requests for all sources from the org.  If true, no managedResourceRefs are allowed."
+                  }
+                }
+              ],
+              "description": "The 'provisioningConfig' property specifies the configuration used to provision integrations."
+            }
+          },
+          {
+            "name": "type",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": "ServiceNowSDIM"
+              },
+              "description": "Service Desk integration types:\n\n- ServiceNowSDIM\n- ServiceNow\n"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

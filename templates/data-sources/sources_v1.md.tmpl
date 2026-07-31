@@ -1,0 +1,31 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Sources"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+Each entry in `sources` is populated by the same conversion code as the
+singular [`identitynow_source_v1` data source](../data-sources/source_v1.md) -
+see its "Known Limitations & Live Testing Notes" section for the full list
+of limitations shared by both.
+
+`GET /sources/v1`'s documented maximum `limit` is 250; requested limits
+above that are capped with a warning rather than an error.

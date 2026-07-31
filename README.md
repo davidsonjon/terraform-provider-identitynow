@@ -1,62 +1,121 @@
-# IdentityNow Terraform Provider
+# Terraform Provider for SailPoint IdentityNow
 
-Terraform provider for SailPoint IdentityNow.
+A [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework)
+provider for SailPoint IdentityNow / Identity Security Cloud (ISC), built on
+top of the official [`golang-sdk`](https://github.com/sailpoint-oss/golang-sdk).
 
-## NOTE
+## Scope
 
-This repo is initially just intended to be used as a reference for others.
+- **Resources** (16): `access_model_metadata_attribute_v1`, `access_profile_v1`,
+  `application_access_association_v1`, `application_v1`,
+  `entitlement_request_config_v1`, `entitlement_v1`,
+  `governance_group_members_v1`, `governance_group_v1`,
+  `identity_profile_v1`, `role_v1`, `segment_access_v1`, `segment_v1`,
+  `service_desk_integration_v1`, `source_load_entitlement_wait_v1`,
+  `source_v1`, `transform_v1`.
+- **Data sources** (22): singular + plural pairs for most of the above
+  (`identitynow_<x>_v1` / `identitynow_<x>s_v1`), plus read-only sources such
+  as `identity_v1`/`identities_v1` and `governance_group_connections_v1`.
 
-There are currently no plans to publish from here to the terraform registry at this time.
-
-This provider is still in development/testing, not recommended for production use.
-
-## Provider Development
+See [`examples/`](examples/) for real, sanitized HCL for every
+resource/data source, and [`docs/`](docs/) for the full generated reference
+(schema, examples, and hand-written "Known Limitations & Live Testing Notes"
+per target).
 
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.19
+- [Go](https://golang.org/doc/install) — see `go.mod` for the exact pinned
+  toolchain version
+- [Node.js](https://nodejs.org/) (only needed for the per-service `v1`
+  codegen pipeline's `swagger-cli bundle` step — not needed to just build or
+  use the provider)
 
-### Building The Provider
-
-1. Clone the repository
-1. Enter the repository directory
-1. Build the provider using the Go `install` command:
+## Building & installing locally
 
 ```shell
-go install
+make build    # go build ./...
+make install  # go install — puts the binary in $GOPATH/bin
 ```
 
-### Adding Dependencies
+To exercise a locally-built binary with real Terraform configs without
+publishing to a registry, point `~/.terraformrc`'s `dev_overrides` at the
+installed binary (see [`docs/TESTING.md`](docs/TESTING.md) for the exact
+convention this repo uses).
 
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
+## Development
 
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
+This provider is built via a two-stage OpenAPI code-generation pipeline
+([`terraform-plugin-codegen-openapi`](https://github.com/hashicorp/terraform-plugin-codegen-openapi)
++ [`terraform-plugin-codegen-framework`](https://github.com/hashicorp/terraform-plugin-codegen-framework))
+followed by hand-written CRUD logic, per target (one resource/data-source
+family at a time):
+
+1. **Bundle/dereference the OpenAPI spec** for the target's service —
+   `make bundle-spec-v1 TARGET=<target> SERVICE=<service-folder>` (one-time
+   per target; the result is committed under `api-specs/dereferenced/`).
+2. **Author a generator config** (`generator_config/generator_config_<target>_v1.yml`)
+   mapping OpenAPI paths/operations to resource/data-source schema keys.
+3. **`make gen-api-v1 TARGET=<target> SERVICE=<service-folder>`** — produces
+   an intermediate "code spec" JSON.
+4. **Schema post-processing & type linking** — apply any needed
+   `generator_config/schema_overrides_<target>_v1.yml` corrections and
+   `generator_config/type_mappings_<target>_v1.yml` SDK type bindings
+   (both via checked-in `scripts/apply_codespec_*.py` scripts, never
+   hand-patched inline).
+5. **`make gen-framework-api-v1 TARGET=<target>`** — generates Go
+   schema/model types into `internal/provider/<target>_v1/` (schema/model
+   only; no CRUD).
+6. **Hand-write CRUD** — `resource_<name>.go` / `datasource_<name>.go`
+   implement Create/Read/Update/Delete/Configure/ImportState against the
+   SDK client. These files are never regenerated and are expected to be
+   hand-maintained.
+7. **Build, wire into `internal/provider/provider.go`, validate.**
+
+Two validation phases apply to every target:
+
+- **Phase A (offline, always run)**: `go build`/`go vet`/`go test ./...`,
+  `make lint`, `make docs` (regenerate + diff-check), `make validate-examples`,
+  `make tflint`. No vendor credentials required.
+- **Phase B (live, requires a real sandbox tenant)**: `make plan TARGET=<folder>`
+  / `make apply TARGET=<folder>` against a config under `test/<folder>/`
+  (gitignored — see [`docs/TESTING.md`](docs/TESTING.md) for the full
+  convention, including credential handling via `test/.env`).
+
+### Other useful `make` targets
+
+```shell
+make lint              # golangci-lint
+make tflint             # tflint over examples/
+make validate-examples  # terraform validate over examples/
+make docs               # regenerate docs/ via tfplugindocs
+make test               # go test ./...
+make testacc            # TF_ACC=1 acceptance tests — real side effects, costs money/time
+make fmt                # gofmt -s -w .
+```
+
+### Adding a Go dependency
 
 ```shell
 go get github.com/author/dependency
 go mod tidy
 ```
 
-Then commit the changes to `go.mod` and `go.sum`.
+Commit the resulting `go.mod`/`go.sum` changes.
 
-### Using the provider
+### AI agent context
 
-Fill this in for each provider
+Contributors (human or AI) extending this provider should start with
+[`.github/copilot-instructions.md`](.github/copilot-instructions.md), which
+points to the fuller agent/knowledge files under
+[`.github/agents/`](.github/agents/) — these capture the pipeline in detail,
+hand-written-CRUD patterns, known SDK quirks, and a running log of lessons
+learned from building out each target.
 
-### Developing the Provider
+## Release status
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
-
-To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
-
-To generate or update documentation, run `go generate`.
-
-In order to run the full suite of Acceptance tests, run `make testacc`.
-
-*Note:* Acceptance tests create real resources, and often cost money to run.
-
-```shell
-make testacc
-```
+CI (`.github/workflows/ci.yml`) runs build/vet/test, lint, a docs-drift
+check, `tflint`, and `terraform validate` on every push/PR. Release
+automation (`.goreleaser.yml`, `.github/workflows/release.yml`) is present
+but has not yet been exercised against a real tag — there are currently no
+plans to publish this provider to the Terraform Registry.

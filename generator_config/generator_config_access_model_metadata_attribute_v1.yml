@@ -1,0 +1,28 @@
+provider:
+  name: identitynow
+resources:
+  access_model_metadata_attribute:
+    create:
+      path: /access-model-metadata/v1/attributes
+      method: POST
+    read:
+      path: /access-model-metadata/v1/attributes/{key}
+      method: GET
+    update:
+      path: /access-model-metadata/v1/attributes/{key}
+      method: PATCH
+    # No delete: op-set for this resource. The /access-model-metadata/v1
+    # service exposes no DELETE operation anywhere for attributes or values -
+    # only GET/POST/PATCH. Metadata attributes are a shared, potentially
+    # widely-referenced taxonomy (entitlements/access profiles/roles can all
+    # be tagged with a given attribute's values), so SailPoint models removal
+    # as a status transition (PATCH status to "deprecated"/"inactive"), not a
+    # hard delete. Delete() is hand-written in resource_access_model_metadata_attribute.go
+    # to PATCH status accordingly rather than calling a nonexistent DELETE
+    # endpoint - see that file's package doc for the full rationale.
+
+data_sources:
+  access_model_metadata_attribute:
+    read:
+      path: /access-model-metadata/v1/attributes/{key}
+      method: GET

@@ -1,0 +1,168 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Sources"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+This resource is the repo's first **fully hand-written, no-codegen**
+target: it has no OpenAPI schema of its own to generate from, since it
+does not model a persistent REST object. Instead it behaves like
+`null_resource`/`terraform_data`: it triggers an action (an entitlement
+aggregation on a source) and its replacement semantics are driven entirely
+by the `triggers` map, not by drift against any upstream GET.
+
+- **There is no create/read/update/delete endpoint for "a load entitlement
+  wait."** `Create` calls `POST /sources/v1/{sourceId}/load-entitlements`
+  (`SourcesAPI.ImportEntitlements` in the SDK) to launch a background
+  `CLOUD_ENTITLEMENT_IMPORT` task, then polls
+  `GET /task-status/v1/{id}` (`TaskManagementAPI.GetTaskStatus`) until that
+  task's `completed` timestamp is set, failing unless `completionStatus` is
+  `SUCCESS` or `WARNING`. `Read` is a no-op (there is nothing to re-fetch).
+  `Delete` only removes Terraform state - there is no "undo" for a
+  historical aggregation run.
+- **`source_id` is the plain IdentityNow/ISC source id** - live testing
+  confirmed this directly: a delimited-file source's connector
+  `cloud_external_id` was tried and rejected (`400 Illegal value ... for
+  field "sourceId"`), while the plain id (the same id used everywhere else
+  in this provider) succeeded. This resource intentionally does **not**
+  follow the reference `davidsonjon/identitynow` provider's example, which
+  happens to use `cloud_external_id` for its own equivalent resource.
+- **Live testing uncovered and fixed a vendored SDK bug**: the generated
+  `ApiImportEntitlementsRequest` always sets `Content-Type:
+  multipart/form-data`, but `client.prepareRequest` in
+  `golang-sdk/v2`'s `api_beta/client.go` only builds a correctly
+  boundary'd multipart body when `len(formFiles) > 0`, due to an
+  operator-precedence bug in its condition
+  (`(hasMultipartPrefix && len(formParams) > 0) || len(formFiles) > 0`).
+  With no file supplied (the normal case for any non-delimited-file
+  source), the request is sent with a `multipart/form-data` header but no
+  boundary and an empty body, which the API deterministically rejected
+  with `HTTP 500` in live testing. This resource works around it by always
+  passing a throwaway empty temp file via `.File(...)`, forcing the SDK
+  down its correct multipart-encoding path. This same bug likely affects
+  any other vendored SDK method with an optional `*os.File` parameter (for
+  example `ImportAccounts`/`ImportUncorrelatedAccounts`) - worth checking
+  before adopting those elsewhere in this provider.
+- **Live testing also found the task-status list filter's documented
+  `type` enum value for entitlement aggregation
+  (`CLOUD_ENTITLEMENT_IMPORT`) doesn't actually work**: the API rejected it
+  outright (`Unsupported Task Definition type`), and the real launched
+  task's `type` field is always the generic scheduler value `"QUARTZ"` -
+  the task is only distinguished by its `uniqueName`
+  (`Cloud Group Aggregation - ...`)/`taskDefinitionSummary`, not `type`.
+  The `wait_for_active_jobs` pre-check therefore filters only on
+  `sourceId` + `completionStatus isnull`, which live testing confirmed
+  works correctly.
+- **Live testing also uncovered a `completed`/`completionStatus` write-race
+  in the API**: on rare polls, `GET /task-status/v1/{id}` returns
+  `completed` already set (a non-null timestamp) while `completionStatus`
+  is still empty/null for a brief window - re-querying the same task id
+  moments later showed `completionStatus` populate from empty to
+  `SUCCESS`. Treating `completed` alone as authoritative caused spurious
+  `completed with status ""` failures. This resource's poll loop now
+  requires **both** `completed` to be set **and** `completionStatus` to be
+  non-empty before concluding the task is finished; the "completed but
+  empty status" combination is treated as still-in-progress and polling
+  continues (bounded by `create_timeout`, same as any other in-progress
+  state).
+- **`triggers` forces replacement on any change**, exactly like
+  `null_resource.triggers`/`terraform_data.triggers_replace` - this is how
+  practitioners intentionally re-run aggregation (e.g. after provisioning a
+  new upstream group that the source should pick up).
+- **`wait_for_active_jobs`** only controls a *pre-check* before launching a
+  new aggregation: when `true`, `Create` first polls
+  `GET /task-status/v1` filtered to `sourceId` + `completionStatus isnull`
+  for this `source_id` and waits for any in-progress task to clear, to
+  avoid overlapping/duplicate aggregation runs. It does not affect whether
+  `Create` waits for the *newly launched* task - that wait always happens.
+- **`create_timeout`** is a hand-rolled Optional+Computed string duration
+  (default `"30m"`), not the framework's `timeouts` block, since this repo
+  doesn't otherwise depend on `terraform-plugin-framework-timeouts`. It
+  bounds the pre-wait for active jobs plus the wait for the newly launched
+  task to complete.
+- **`wait_for_active_jobs` and `create_timeout` can be changed in place**
+  without forcing replacement (unlike `source_id`/`triggers`) - `Update`
+  only persists these Terraform-local knobs and never re-triggers
+  aggregation on its own.
+- **Import** accepts a composite id in the same shape as the reference
+  provider: `<source_id>,<trigger_key1>:<trigger_value1>/<trigger_key2>:<trigger_value2>,<wait_for_active_jobs>`
+  (use an empty string between the two commas if there are no triggers to
+  import, e.g. `<source_id>,,<wait_for_active_jobs>`). Imported state has no
+  historical task id to recover, so `id` is set to `source_id` instead, and
+  `create_timeout` is set to the default `"30m"` regardless of the prior
+  configured value (it isn't encoded in the import id) - the next `plan`
+  will show a one-time in-place diff back to your configured value, which
+  is expected and harmless since it never forces replacement. Note for
+  contributors: because imported `id` (`source_id`) never matches a live
+  resource's post-`Create` `id` (a task id), the acceptance test for this
+  resource uses `ImportStateCheck` instead of `ImportStateVerify`, which
+  correlates old/new state by matching `id` and would otherwise always
+  report "resource not found".
+
+### Illustrative pattern: gating on a new upstream group before re-aggregating
+
+The reference provider's docs pair this resource with an external identity
+source (for example Azure AD) so that provisioning a new group there
+triggers a fresh aggregation before an `identitynow_entitlement_v1` adopts
+the resulting entitlement by `source_id` + `value`. This snippet is
+illustrative only (it isn't part of this repo's auto-validated examples,
+since it introduces an external `azuread` provider dependency purely for
+documentation purposes) - adapt the `azuread_group`/source/attribute names
+to your own tenant:
+
+```hcl
+provider "azuread" {}
+
+resource "azuread_group" "example" {
+  display_name     = "example-idn-group"
+  security_enabled = true
+
+  # Group membership is managed outside Terraform (e.g. by an access
+  # request workflow once the entitlement exists in ISC), so avoid drift.
+  lifecycle {
+    ignore_changes = [members]
+  }
+}
+
+data "identitynow_source_v1" "azuread" {
+  id = "9e99be10dcf24aa9bbe83902dece8738"
+}
+
+resource "identitynow_source_load_entitlement_wait_v1" "azuread" {
+  source_id = data.identitynow_source_v1.azuread.id
+
+  # A new group id changes this map, forcing replacement and re-triggering
+  # aggregation so the new group is picked up as an entitlement.
+  triggers = {
+    group_id = azuread_group.example.id
+  }
+
+  wait_for_active_jobs = true
+}
+
+# Safe to adopt by source_id + value only after aggregation completes.
+resource "identitynow_entitlement_v1" "azuread_group" {
+  source_id = data.identitynow_source_v1.azuread.id
+  value     = azuread_group.example.display_name
+
+  depends_on = [identitynow_source_load_entitlement_wait_v1.azuread]
+}
+```

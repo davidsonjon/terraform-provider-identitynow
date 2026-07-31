@@ -1,0 +1,70 @@
+strip_defaults:
+  # cloud_governed is Computed-only, but tfplugingen-framework generated a
+  # static booldefault.StaticBool(false) for it purely because the OpenAPI
+  # spec declares `false` as its schema-level default - the live API can and
+  # does return `true` for cloud-governed entitlements (e.g. ones sourced
+  # from an identity-security-cloud-managed application), which produces a
+  # "Provider produced inconsistent result after apply" error on Create for
+  # any such entitlement. Same bug class as sources_v1's `healthy` and
+  # application_v1's `account_source.use_for_password_management` - see
+  # those two schema_overrides files for prior precedent/rationale.
+  - path: "cloud_governed"
+    scope: resource
+
+required_overrides:
+  # "id" must be practitioner-supplied (Required, not Computed) - this is
+  # how the "adopt-existing" pattern identifies *which* already-existing
+  # entitlement to bring under Terraform management (see
+  # resource_entitlement.go's package doc). Since "create" was pointed at a
+  # PATCH's JSON-Patch body (see generator_config_entitlement_v1.yml), even
+  # "id" came out fully Computed by default.
+  - path: "id"
+    scope: resource
+    required: true
+
+  # These 6 fields are the only ones the API's PATCH doc lists as
+  # practitioner-writable ("The following fields are patchable:
+  # requestable, segments, privilegeOverride/level, owner, name,
+  # description, and manuallyUpdatedFields" - manuallyUpdatedFields is
+  # handled separately via schema.ignores + a hand-added JSON attribute,
+  # see generator_config_entitlement_v1.yml). Everything else on the
+  # entitlement is purely aggregated from the source system and stays
+  # Computed-only. Since "create" was pointed at a JSON-Patch-bodied
+  # operation (see generator_config_entitlement_v1.yml's comment), every
+  # attribute generated fully Computed by default - these overrides force
+  # the writable subset to computed_optional so practitioners can actually
+  # configure them.
+  - path: "requestable"
+    scope: resource
+    required: false
+
+  - path: "segments"
+    scope: resource
+    required: false
+
+  - path: "name"
+    scope: resource
+    required: false
+
+  - path: "description"
+    scope: resource
+    required: false
+
+  - path: "owner"
+    scope: resource
+    required: false
+
+  # Once "owner" itself is Optional (see above), its "id"/"type" leaf
+  # attributes still need to be settable when the practitioner does
+  # configure an owner - tfplugingen-openapi generated them Computed-only.
+  # Mirrors identity_profile_v1/governance_group_v1/role_v1/application_v1's
+  # established "owner.id"/"owner.type" Required, "owner.name" Computed-only
+  # (echoed back by the API, and per the patch doc: "Owner name is
+  # optional, and it won't be modified") shape.
+  - path: "owner.id"
+    scope: resource
+    required: true
+
+  - path: "owner.type"
+    scope: resource
+    required: true

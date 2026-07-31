@@ -1,0 +1,31 @@
+provider:
+  name: identitynow
+
+data_sources:
+  identity:
+    read:
+      path: /identities/v1/{id}
+      method: GET
+    schema:
+      ignores:
+        # `attributes` is a genuinely dynamic, connector-derived map
+        # (documented only via an `example`, no fixed property set - same
+        # class of field as entitlement_v1's `attributes`). Excluded here and
+        # hand-added back as a jsontypes.Normalized JSON string, matching that
+        # precedent.
+        - attributes
+        # `managerRef`/`lifecycleState` are small, structurally simple nested
+        # objects with no recursion or collision risk - NOT ignored, left to
+        # generate normally.
+  identities:
+    read:
+      path: /identities/v1
+      method: GET
+    schema:
+      ignores:
+        - attributes
+        # `count` is a reserved root attribute/block name in Terraform (the
+        # `count` meta-argument) - same fix as segment_v1/governance_groups_v1's
+        # plural data sources: drop the API's `count` query param entirely
+        # rather than exposing it.
+        - count

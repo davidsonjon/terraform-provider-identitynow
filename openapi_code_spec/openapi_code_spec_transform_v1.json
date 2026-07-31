@@ -1,0 +1,107 @@
+{
+	"datasources": [
+		{
+			"name": "transform",
+			"schema": {
+				"attributes": [
+					{
+						"name": "id",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "ID of the transform to retrieve"
+						}
+					},
+					{
+						"name": "internal",
+						"bool": {
+							"computed_optional_required": "computed",
+							"description": "Indicates whether this is an internal SailPoint-created transform or a customer-created transform"
+						}
+					},
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "Unique name of this transform"
+						}
+					},
+					{
+						"name": "type",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "The type of transform operation"
+						}
+					}
+				]
+			}
+		}
+	],
+	"provider": {
+		"name": "identitynow"
+	},
+	"resources": [
+		{
+			"name": "transform",
+			"schema": {
+				"attributes": [
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "Unique name of this transform",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthBetween(1, 50)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "type",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "The type of transform operation",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.OneOf(\n\"accountAttribute\",\n\"base64Decode\",\n\"base64Encode\",\n\"concat\",\n\"conditional\",\n\"dateCompare\",\n\"dateFormat\",\n\"dateMath\",\n\"decomposeDiacriticalMarks\",\n\"e164phone\",\n\"firstValid\",\n\"rule\",\n\"identityAttribute\",\n\"indexOf\",\n\"iso3166\",\n\"lastIndexOf\",\n\"leftPad\",\n\"lookup\",\n\"lower\",\n\"normalizeNames\",\n\"randomAlphaNumeric\",\n\"randomNumeric\",\n\"reference\",\n\"replaceAll\",\n\"replace\",\n\"rightPad\",\n\"split\",\n\"static\",\n\"substring\",\n\"trim\",\n\"upper\",\n\"usernameGenerator\",\n\"uuid\",\n\"displayName\",\n\"rfc5646\",\n)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "id",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "Unique ID of this transform"
+						}
+					},
+					{
+						"name": "internal",
+						"bool": {
+							"computed_optional_required": "computed",
+							"default": {
+								"static": false
+							},
+							"description": "Indicates whether this is an internal SailPoint-created transform or a customer-created transform"
+						}
+					}
+				]
+			}
+		}
+	],
+	"version": "0.1"
+}

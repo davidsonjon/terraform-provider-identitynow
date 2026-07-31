@@ -1,0 +1,22 @@
+provider:
+  name: identitynow
+resources:
+  service_desk_integration:
+    create:
+      path: /service-desk-integrations/v1
+      method: POST
+    read:
+      path: /service-desk-integrations/v1/{id}
+      method: GET
+    update:
+      path: /service-desk-integrations/v1/{id}
+      method: PATCH
+    delete:
+      path: /service-desk-integrations/v1/{id}
+      method: DELETE
+
+data_sources:
+  service_desk_integration:
+    read:
+      path: /service-desk-integrations/v1/{id}
+      method: GET

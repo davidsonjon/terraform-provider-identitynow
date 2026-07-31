@@ -1,0 +1,77 @@
+# Durable type-linking config for the role_v1 target, backfilled 2026-07-28
+# from the associated_external_type mappings already present in the
+# committed openapi_code_spec/openapi_code_spec_role_v1.json (applied
+# originally via a one-off inline script during role_v1's pipeline run,
+# predating scripts/apply_codespec_type_mappings.py). Captured here so a
+# future `make gen-api-v1 TARGET=role SERVICE=roles` re-run (e.g. after
+# refreshing the upstream spec) can replay the exact same type-linking
+# decisions non-interactively via:
+#
+#   python3 scripts/apply_codespec_type_mappings.py --target role_v1
+#
+# Dotted paths were confirmed against the current code spec with:
+#   python3 scripts/apply_codespec_type_mappings.py --target role_v1 --dump-paths
+#
+# Notes:
+# - `access_model_metadata.attributes.values`, `access_request_config.*`, and
+#   `owner` mirror access_profile_v1's equivalent mappings almost exactly
+#   (shared SDK types across Role/Access Profile) except approval schemes use
+#   the Role-specific `ApprovalSchemeForRole` type, not
+#   `AccessProfileApprovalScheme` - the two are structurally similar but
+#   distinct generated SDK types; do not conflate them.
+# - `membership.criteria.key` / `membership.criteria.children.child_key` /
+#   `membership.criteria.children.grandchildren.grandchild_key` are all
+#   mapped to the same `RoleCriteriaKey` type at every depth of the 3-level
+#   recursive criteria tree (see the SDK type-shape reference catalog's
+#   ProvisioningCriteriaLevel1/2/3 entry for a structurally similar recursive
+#   shape on a different target) - `RoleCriteriaKey` itself is a small
+#   discriminated-union-shaped leaf type (type/key/sourceId fields), not
+#   further nested, so it maps cleanly as a leaf at every level.
+external_type_mappings:
+  - path: "access_model_metadata.attributes.values"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.AttributeValueDTO"
+  - path: "access_profiles"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.AccessProfileRef"
+  - path: "access_request_config.approval_schemes"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.ApprovalSchemeForRole"
+  - path: "access_request_config.max_permitted_access_duration"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.AccessDuration"
+  - path: "dimension_refs"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.DimensionRef"
+  - path: "membership.criteria.key"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.RoleCriteriaKey"
+  - path: "membership.criteria.children.child_key"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.RoleCriteriaKey"
+  - path: "membership.criteria.children.grandchildren.grandchild_key"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.RoleCriteriaKey"
+  - path: "membership.identities"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.RoleMembershipIdentity"
+  - path: "owner"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.OwnerReference"
+  - path: "revocation_request_config.revocation_approval_schemes"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.ApprovalSchemeForRole"
+
+# No symbol collisions were encountered for this target's mapped types.
+symbol_renames: []

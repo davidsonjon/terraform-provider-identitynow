@@ -1,0 +1,17 @@
+external_type_mappings:
+  # WorkgroupDtoOwner is a leaf single_nested block (all-scalar children:
+  # type/id/name/display_name/email_address, all plain *string per direct
+  # SDK source inspection of api_beta.model_workgroup_dto_owner.go - no
+  # NullableString outliers like AdditionalOwnerRef/EntitlementRef.Name, see
+  # the SDK type-shape reference catalog) - safe to map per the
+  # tfplugingen-openapi-type-reviewer's leaf-block-only rule.
+  - path: "owner"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.WorkgroupDtoOwner"
+
+symbol_renames: []
+  # No collisions found: "owner" is the only single_nested/list_nested block
+  # in this target's schema, appearing once each in the resource and data
+  # source trees - confirmed via a full recursive nested-block name scan
+  # (see the governance_group pipeline's 2026-07-28 knowledge entry).

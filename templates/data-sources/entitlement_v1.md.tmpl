@@ -1,0 +1,31 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Entitlements"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+Each attribute is populated by the same conversion code as the
+[`identitynow_entitlement_v1` resource](../resources/entitlement_v1.md) -
+see its "Known Limitations & Live Testing Notes" section for the full
+rationale on `attributes`, `manually_updated_fields`, `access_model_metadata`,
+and which fields are aggregated-from-source vs. practitioner-writable
+(writability is naturally irrelevant here since this is a read-only data
+source).

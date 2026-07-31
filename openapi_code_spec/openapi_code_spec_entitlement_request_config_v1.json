@@ -1,0 +1,187 @@
+{
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "entitlement_request_config",
+      "schema": {
+        "attributes": [
+          {
+            "name": "access_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Id of the specific approver, used only when approverType is GOVERNANCE_GROUP or WORKFLOW"
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Describes the individual or group that is responsible for an approval step. Values are as follows.\n\n**ENTITLEMENT_OWNER**: Owner of the associated Entitlement\n\n**SOURCE_OWNER**: Owner of the associated Source\n\n**MANAGER**: Manager of the Identity for whom the request is being made\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field, Workflows are exclusive to other types of approvals and License required.     ",
+                            "validators": [
+                              {
+                                "custom": {
+                                  "imports": [
+                                    {
+                                      "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                    }
+                                  ],
+                                  "schema_definition": "stringvalidator.OneOf(\n\"ENTITLEMENT_OWNER\",\n\"SOURCE_OWNER\",\n\"MANAGER\",\n\"GOVERNANCE_GROUP\",\n\"WORKFLOW\",\n)"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    "description": "Ordered list of approval steps for the access request. Empty when no approval is required."
+                  }
+                },
+                {
+                  "name": "denial_comment_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "If the reviewer must provide a comment when denying the access request."
+                  }
+                },
+                {
+                  "name": "max_permitted_access_duration",
+                  "single_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "attributes": [
+                      {
+                        "name": "time_unit",
+                        "string": {
+                          "computed_optional_required": "computed_optional",
+                          "description": "The time unit for the duration.",
+                          "validators": [
+                            {
+                              "custom": {
+                                "imports": [
+                                  {
+                                    "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                  }
+                                ],
+                                "schema_definition": "stringvalidator.OneOf(\n\"HOURS\",\n\"DAYS\",\n\"WEEKS\",\n\"MONTHS\",\n)"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "name": "value",
+                        "int64": {
+                          "computed_optional_required": "computed_optional",
+                          "description": "The numeric value of the duration."
+                        }
+                      }
+                    ],
+                    "description": "The maximum duration for which the access is permitted."
+                  }
+                },
+                {
+                  "name": "reauthorization_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Is Reauthorization Required"
+                  }
+                },
+                {
+                  "name": "request_comment_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "If the requester must provide a comment during access request."
+                  }
+                },
+                {
+                  "name": "require_end_date",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "If true, then remove date or sunset date is required in access request of the entitlement."
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "revocation_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "revocation_approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Id of the specific approver, used only when approverType is GOVERNANCE_GROUP or WORKFLOW"
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Describes the individual or group that is responsible for an approval step. Values are as follows.\n\n**ENTITLEMENT_OWNER**: Owner of the associated Entitlement\n\n**SOURCE_OWNER**: Owner of the associated Source\n\n**MANAGER**: Manager of the Identity for whom the request is being made\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field, Workflows are exclusive to other types of approvals and License required.     ",
+                            "validators": [
+                              {
+                                "custom": {
+                                  "imports": [
+                                    {
+                                      "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                    }
+                                  ],
+                                  "schema_definition": "stringvalidator.OneOf(\n\"ENTITLEMENT_OWNER\",\n\"SOURCE_OWNER\",\n\"MANAGER\",\n\"GOVERNANCE_GROUP\",\n\"WORKFLOW\",\n)"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    "description": "Ordered list of approval steps for the access request. Empty when no approval is required."
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Entitlement Id"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

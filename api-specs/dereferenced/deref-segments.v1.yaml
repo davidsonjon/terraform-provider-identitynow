@@ -1,0 +1,2670 @@
+openapi: 3.0.1
+info:
+  title: Identity Security Cloud API - Segments
+  description: Use these APIs to interact with the Identity Security Cloud platform
+    to achieve repeatable, automated processes with greater scalability. We encourage
+    you to join the SailPoint Developer Community forum at https://developer.sailpoint.com/discuss
+    to connect with other developers using our APIs.
+  termsOfService: https://developer.sailpoint.com/discuss/tos
+  contact:
+    name: Developer Relations
+    url: https://developer.sailpoint.com/discuss/api-help
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  version: v1
+servers:
+- url: https://{tenant}.api.identitynow.com
+  description: This is the production API server.
+  variables:
+    tenant:
+      default: sailpoint
+      description: This is the name of your tenant, typically your company's name.
+- url: https://{apiUrl}
+  description: This is the versioned API server.
+  variables:
+    apiUrl:
+      default: sailpoint.api.identitynow.com
+      description: This is the api url of your tenant
+tags:
+- name: Segments
+  description: "Use this API to implement and customize access request segment functionality.\
+    \ \nWith this functionality in place, administrators can create and manage access\
+    \ request segments. \nSegments provide organizations with a way to make the access\
+    \ their users have even more granular - this can simply the access request process\
+    \ for the organization's users and improves security by reducing the risk of overprovisoning\
+    \ access. \n\nSegments represent sets of identities, all grouped by specified\
+    \ identity attributes, who are only able to see and access the access items associated\
+    \ with their segments.\nFor example, administrators could group all their organization's\
+    \ London office employees into one segment, \"London Office Employees,\" by their\
+    \ shared location. \nThe administrators could then define the access items the\
+    \ London employees would need, and the identities in the \"London Office Employees\"\
+    \ would then only be able to see and access those items.\n\nIn Identity Security\
+    \ Cloud, administrators can use the 'Access' drop-down menu and select 'Segments'\
+    \ to reach the 'Access Requests Segments' page. \nThis page lists all the existing\
+    \ access request segments, along with their statuses, enabled or disabled. \n\
+    Administrators can use this page to create, edit, enable, disable, and delete\
+    \ segments. \nTo create a segment, an administrator must provide a name, define\
+    \ the identities grouped in the segment, and define the items the identities in\
+    \ the segment can access.\nThese items can be access profiles, roles, or entitlements.\
+    \ \n\nWhen administrators use the API to create and manage segments, they use\
+    \ a JSON expression in the `visibilityCriteria` object to define the segment's\
+    \ identities and access items. \n\nRefer to [Managing Access Request Segments](https://documentation.sailpoint.com/saas/help/requests/segments.html)\
+    \ for more information about segments in Identity Security Cloud.\n"
+paths:
+  /segments/v1:
+    post:
+      operationId: createSegmentV1
+      security:
+      - userAuth:
+        - idn:segment:manage
+      - applicationAuth:
+        - idn:segment:manage
+      x-sailpoint-userLevels:
+      - ORG_ADMIN
+      tags:
+      - Segments
+      summary: Create segment
+      description: "This API creates a segment. \n>**Note:** Segment definitions may\
+        \ take time to propagate to all identities."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              title: Segment
+              properties:
+                id:
+                  type: string
+                  description: The segment's ID.
+                  example: 0f11f2a4-7c94-4bf3-a2bd-742580fe3bde
+                name:
+                  type: string
+                  description: The segment's business name.
+                  example: segment-xyz
+                created:
+                  type: string
+                  format: date-time
+                  description: The time when the segment is created.
+                  example: '2020-01-01T00:00:00.000000Z'
+                modified:
+                  type: string
+                  format: date-time
+                  description: The time when the segment is modified.
+                  example: '2020-01-01T00:00:00.000000Z'
+                description:
+                  type: string
+                  description: The segment's optional description.
+                  example: This segment represents xyz
+                owner:
+                  type: object
+                  nullable: true
+                  description: The owner of this object.
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - IDENTITY
+                      description: Owner type. This field must be either left null
+                        or set to 'IDENTITY' on input, otherwise a 400 Bad Request
+                        error will result.
+                      example: IDENTITY
+                    id:
+                      type: string
+                      description: Identity id
+                      example: 2c9180a46faadee4016fb4e018c20639
+                    name:
+                      type: string
+                      description: Human-readable display name of the owner. It may
+                        be left null or omitted in a POST or PATCH. If set, it must
+                        match the current value of the owner's display name, otherwise
+                        a 400 Bad Request error will result.
+                      example: support
+                visibilityCriteria:
+                  type: object
+                  title: Visibility Criteria
+                  nullable: true
+                  properties:
+                    expression:
+                      type: object
+                      title: Expression
+                      properties:
+                        operator:
+                          type: string
+                          description: Operator for the expression
+                          enum:
+                          - AND
+                          - EQUALS
+                          example: EQUALS
+                        attribute:
+                          type: string
+                          description: Name for the attribute
+                          example: location
+                          nullable: true
+                        value:
+                          type: object
+                          title: Value
+                          nullable: true
+                          properties:
+                            type:
+                              type: string
+                              description: The type of attribute value
+                              example: STRING
+                            value:
+                              type: string
+                              description: The attribute value
+                              example: Austin
+                        children:
+                          type: array
+                          nullable: true
+                          description: List of expressions
+                          items:
+                            type: object
+                            properties:
+                              operator:
+                                type: string
+                                description: Operator for the expression
+                                enum:
+                                - AND
+                                - EQUALS
+                                example: EQUALS
+                              attribute:
+                                type: string
+                                description: Name for the attribute
+                                example: location
+                                nullable: true
+                              value:
+                                type: object
+                                title: Value
+                                nullable: true
+                                properties:
+                                  type:
+                                    type: string
+                                    description: The type of attribute value
+                                    example: STRING
+                                  value:
+                                    type: string
+                                    description: The attribute value
+                                    example: Austin
+                              children:
+                                type: string
+                                nullable: true
+                                description: There cannot be anymore nested children.
+                                  This will always be null.
+                                example: null
+                          example: []
+                active:
+                  type: boolean
+                  description: This boolean indicates whether the segment is currently
+                    active. Inactive segments have no effect.
+                  default: false
+                  example: true
+      responses:
+        '201':
+          description: Segment created
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Segment
+                properties:
+                  id:
+                    type: string
+                    description: The segment's ID.
+                    example: 0f11f2a4-7c94-4bf3-a2bd-742580fe3bde
+                  name:
+                    type: string
+                    description: The segment's business name.
+                    example: segment-xyz
+                  created:
+                    type: string
+                    format: date-time
+                    description: The time when the segment is created.
+                    example: '2020-01-01T00:00:00.000000Z'
+                  modified:
+                    type: string
+                    format: date-time
+                    description: The time when the segment is modified.
+                    example: '2020-01-01T00:00:00.000000Z'
+                  description:
+                    type: string
+                    description: The segment's optional description.
+                    example: This segment represents xyz
+                  owner:
+                    type: object
+                    nullable: true
+                    description: The owner of this object.
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - IDENTITY
+                        description: Owner type. This field must be either left null
+                          or set to 'IDENTITY' on input, otherwise a 400 Bad Request
+                          error will result.
+                        example: IDENTITY
+                      id:
+                        type: string
+                        description: Identity id
+                        example: 2c9180a46faadee4016fb4e018c20639
+                      name:
+                        type: string
+                        description: Human-readable display name of the owner. It
+                          may be left null or omitted in a POST or PATCH. If set,
+                          it must match the current value of the owner's display name,
+                          otherwise a 400 Bad Request error will result.
+                        example: support
+                  visibilityCriteria:
+                    type: object
+                    title: Visibility Criteria
+                    nullable: true
+                    properties:
+                      expression:
+                        type: object
+                        title: Expression
+                        properties:
+                          operator:
+                            type: string
+                            description: Operator for the expression
+                            enum:
+                            - AND
+                            - EQUALS
+                            example: EQUALS
+                          attribute:
+                            type: string
+                            description: Name for the attribute
+                            example: location
+                            nullable: true
+                          value:
+                            type: object
+                            title: Value
+                            nullable: true
+                            properties:
+                              type:
+                                type: string
+                                description: The type of attribute value
+                                example: STRING
+                              value:
+                                type: string
+                                description: The attribute value
+                                example: Austin
+                          children:
+                            type: array
+                            nullable: true
+                            description: List of expressions
+                            items:
+                              type: object
+                              properties:
+                                operator:
+                                  type: string
+                                  description: Operator for the expression
+                                  enum:
+                                  - AND
+                                  - EQUALS
+                                  example: EQUALS
+                                attribute:
+                                  type: string
+                                  description: Name for the attribute
+                                  example: location
+                                  nullable: true
+                                value:
+                                  type: object
+                                  title: Value
+                                  nullable: true
+                                  properties:
+                                    type:
+                                      type: string
+                                      description: The type of attribute value
+                                      example: STRING
+                                    value:
+                                      type: string
+                                      description: The attribute value
+                                      example: Austin
+                                children:
+                                  type: string
+                                  nullable: true
+                                  description: There cannot be anymore nested children.
+                                    This will always be null.
+                                  example: null
+                            example: []
+                  active:
+                    type: boolean
+                    description: This boolean indicates whether the segment is currently
+                      active. Inactive segments have no effect.
+                    default: false
+                    example: true
+        '400':
+          description: Client Error - Returned if the request body is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+        '401':
+          description: Unauthorized - Returned if there is no authorization header,
+            or if the JWT token is expired.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    description: A message describing the error
+                    example: 'JWT validation failed: JWT is expired'
+        '403':
+          description: Forbidden - Returned if the user you are running as, doesn't
+            have access to this end-point.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '403':
+                  summary: An example of a 403 response object
+                  value:
+                    detailCode: 403 Forbidden
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: The server understood the request but refuses to authorize
+                        it.
+        '429':
+          description: Too Many Requests - Returned in response to too many requests
+            in a given period of time - rate limited. The Retry-After header in the
+            response includes how long to wait before trying again.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: A message describing the error
+                    example: ' Rate Limit Exceeded '
+        '500':
+          description: Internal Server Error - Returned if there is an unexpected
+            error.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '500':
+                  summary: An example of a 500 response object
+                  value:
+                    detailCode: 500.0 Internal Fault
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: An internal fault occurred.
+    get:
+      operationId: listSegmentsV1
+      security:
+      - userAuth:
+        - idn:segment:read
+        - idn:segment:manage
+      - applicationAuth:
+        - idn:segment:read
+        - idn:segment:manage
+      x-sailpoint-userLevels:
+      - ORG_ADMIN
+      tags:
+      - Segments
+      summary: List segments
+      description: 'This API returns a list of all segments. '
+      parameters:
+      - in: query
+        name: limit
+        description: 'Max number of results to return.
+
+          See [V3 API Standard Collection Parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters)
+          for more information.'
+        required: false
+        example: 250
+        schema:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 250
+          default: 250
+      - in: query
+        name: offset
+        description: 'Offset into the full result set. Usually specified with *limit*
+          to paginate through the results.
+
+          See [V3 API Standard Collection Parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters)
+          for more information.'
+        required: false
+        example: 0
+        schema:
+          type: integer
+          format: int32
+          minimum: 0
+          default: 0
+      - in: query
+        name: count
+        description: 'If *true* it will populate the *X-Total-Count* response header
+          with the number of results that would be returned if *limit* and *offset*
+          were ignored.
+
+
+          Since requesting a total count can have a performance impact, it is recommended
+          not to send **count=true** if that value will not be used.
+
+
+          See [V3 API Standard Collection Parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters)
+          for more information.'
+        required: false
+        example: true
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: List of all segments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  title: Segment
+                  properties:
+                    id:
+                      type: string
+                      description: The segment's ID.
+                      example: 0f11f2a4-7c94-4bf3-a2bd-742580fe3bde
+                    name:
+                      type: string
+                      description: The segment's business name.
+                      example: segment-xyz
+                    created:
+                      type: string
+                      format: date-time
+                      description: The time when the segment is created.
+                      example: '2020-01-01T00:00:00.000000Z'
+                    modified:
+                      type: string
+                      format: date-time
+                      description: The time when the segment is modified.
+                      example: '2020-01-01T00:00:00.000000Z'
+                    description:
+                      type: string
+                      description: The segment's optional description.
+                      example: This segment represents xyz
+                    owner:
+                      type: object
+                      nullable: true
+                      description: The owner of this object.
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - IDENTITY
+                          description: Owner type. This field must be either left
+                            null or set to 'IDENTITY' on input, otherwise a 400 Bad
+                            Request error will result.
+                          example: IDENTITY
+                        id:
+                          type: string
+                          description: Identity id
+                          example: 2c9180a46faadee4016fb4e018c20639
+                        name:
+                          type: string
+                          description: Human-readable display name of the owner. It
+                            may be left null or omitted in a POST or PATCH. If set,
+                            it must match the current value of the owner's display
+                            name, otherwise a 400 Bad Request error will result.
+                          example: support
+                    visibilityCriteria:
+                      type: object
+                      title: Visibility Criteria
+                      nullable: true
+                      properties:
+                        expression:
+                          type: object
+                          title: Expression
+                          properties:
+                            operator:
+                              type: string
+                              description: Operator for the expression
+                              enum:
+                              - AND
+                              - EQUALS
+                              example: EQUALS
+                            attribute:
+                              type: string
+                              description: Name for the attribute
+                              example: location
+                              nullable: true
+                            value:
+                              type: object
+                              title: Value
+                              nullable: true
+                              properties:
+                                type:
+                                  type: string
+                                  description: The type of attribute value
+                                  example: STRING
+                                value:
+                                  type: string
+                                  description: The attribute value
+                                  example: Austin
+                            children:
+                              type: array
+                              nullable: true
+                              description: List of expressions
+                              items:
+                                type: object
+                                properties:
+                                  operator:
+                                    type: string
+                                    description: Operator for the expression
+                                    enum:
+                                    - AND
+                                    - EQUALS
+                                    example: EQUALS
+                                  attribute:
+                                    type: string
+                                    description: Name for the attribute
+                                    example: location
+                                    nullable: true
+                                  value:
+                                    type: object
+                                    title: Value
+                                    nullable: true
+                                    properties:
+                                      type:
+                                        type: string
+                                        description: The type of attribute value
+                                        example: STRING
+                                      value:
+                                        type: string
+                                        description: The attribute value
+                                        example: Austin
+                                  children:
+                                    type: string
+                                    nullable: true
+                                    description: There cannot be anymore nested children.
+                                      This will always be null.
+                                    example: null
+                              example: []
+                    active:
+                      type: boolean
+                      description: This boolean indicates whether the segment is currently
+                        active. Inactive segments have no effect.
+                      default: false
+                      example: true
+        '400':
+          description: Client Error - Returned if the request body is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+        '401':
+          description: Unauthorized - Returned if there is no authorization header,
+            or if the JWT token is expired.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    description: A message describing the error
+                    example: 'JWT validation failed: JWT is expired'
+        '403':
+          description: Forbidden - Returned if the user you are running as, doesn't
+            have access to this end-point.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '403':
+                  summary: An example of a 403 response object
+                  value:
+                    detailCode: 403 Forbidden
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: The server understood the request but refuses to authorize
+                        it.
+        '429':
+          description: Too Many Requests - Returned in response to too many requests
+            in a given period of time - rate limited. The Retry-After header in the
+            response includes how long to wait before trying again.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: A message describing the error
+                    example: ' Rate Limit Exceeded '
+        '500':
+          description: Internal Server Error - Returned if there is an unexpected
+            error.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '500':
+                  summary: An example of a 500 response object
+                  value:
+                    detailCode: 500.0 Internal Fault
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: An internal fault occurred.
+  /segments/v1/{id}:
+    get:
+      operationId: getSegmentV1
+      security:
+      - userAuth:
+        - idn:segment:read
+        - idn:segment:manage
+      - applicationAuth:
+        - idn:segment:read
+        - idn:segment:manage
+      x-sailpoint-userLevels:
+      - ORG_ADMIN
+      tags:
+      - Segments
+      summary: Get segment by id
+      description: This API returns the segment specified by the given ID.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        x-sailpoint-resource-operation-id: listSegmentsV1
+        description: The segment ID to retrieve.
+        example: ef38f94347e94562b5bb8424a56397d8
+      responses:
+        '200':
+          description: Segment
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Segment
+                properties:
+                  id:
+                    type: string
+                    description: The segment's ID.
+                    example: 0f11f2a4-7c94-4bf3-a2bd-742580fe3bde
+                  name:
+                    type: string
+                    description: The segment's business name.
+                    example: segment-xyz
+                  created:
+                    type: string
+                    format: date-time
+                    description: The time when the segment is created.
+                    example: '2020-01-01T00:00:00.000000Z'
+                  modified:
+                    type: string
+                    format: date-time
+                    description: The time when the segment is modified.
+                    example: '2020-01-01T00:00:00.000000Z'
+                  description:
+                    type: string
+                    description: The segment's optional description.
+                    example: This segment represents xyz
+                  owner:
+                    type: object
+                    nullable: true
+                    description: The owner of this object.
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - IDENTITY
+                        description: Owner type. This field must be either left null
+                          or set to 'IDENTITY' on input, otherwise a 400 Bad Request
+                          error will result.
+                        example: IDENTITY
+                      id:
+                        type: string
+                        description: Identity id
+                        example: 2c9180a46faadee4016fb4e018c20639
+                      name:
+                        type: string
+                        description: Human-readable display name of the owner. It
+                          may be left null or omitted in a POST or PATCH. If set,
+                          it must match the current value of the owner's display name,
+                          otherwise a 400 Bad Request error will result.
+                        example: support
+                  visibilityCriteria:
+                    type: object
+                    title: Visibility Criteria
+                    nullable: true
+                    properties:
+                      expression:
+                        type: object
+                        title: Expression
+                        properties:
+                          operator:
+                            type: string
+                            description: Operator for the expression
+                            enum:
+                            - AND
+                            - EQUALS
+                            example: EQUALS
+                          attribute:
+                            type: string
+                            description: Name for the attribute
+                            example: location
+                            nullable: true
+                          value:
+                            type: object
+                            title: Value
+                            nullable: true
+                            properties:
+                              type:
+                                type: string
+                                description: The type of attribute value
+                                example: STRING
+                              value:
+                                type: string
+                                description: The attribute value
+                                example: Austin
+                          children:
+                            type: array
+                            nullable: true
+                            description: List of expressions
+                            items:
+                              type: object
+                              properties:
+                                operator:
+                                  type: string
+                                  description: Operator for the expression
+                                  enum:
+                                  - AND
+                                  - EQUALS
+                                  example: EQUALS
+                                attribute:
+                                  type: string
+                                  description: Name for the attribute
+                                  example: location
+                                  nullable: true
+                                value:
+                                  type: object
+                                  title: Value
+                                  nullable: true
+                                  properties:
+                                    type:
+                                      type: string
+                                      description: The type of attribute value
+                                      example: STRING
+                                    value:
+                                      type: string
+                                      description: The attribute value
+                                      example: Austin
+                                children:
+                                  type: string
+                                  nullable: true
+                                  description: There cannot be anymore nested children.
+                                    This will always be null.
+                                  example: null
+                            example: []
+                  active:
+                    type: boolean
+                    description: This boolean indicates whether the segment is currently
+                      active. Inactive segments have no effect.
+                    default: false
+                    example: true
+        '400':
+          description: Client Error - Returned if the request body is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+        '401':
+          description: Unauthorized - Returned if there is no authorization header,
+            or if the JWT token is expired.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    description: A message describing the error
+                    example: 'JWT validation failed: JWT is expired'
+        '403':
+          description: Forbidden - Returned if the user you are running as, doesn't
+            have access to this end-point.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '403':
+                  summary: An example of a 403 response object
+                  value:
+                    detailCode: 403 Forbidden
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: The server understood the request but refuses to authorize
+                        it.
+        '404':
+          description: Not Found - returned if the request URL refers to a resource
+            or object that does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '404':
+                  summary: An example of a 404 response object
+                  value:
+                    detailCode: 404 Not found
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: The server did not find a current representation for the
+                        target resource.
+        '429':
+          description: Too Many Requests - Returned in response to too many requests
+            in a given period of time - rate limited. The Retry-After header in the
+            response includes how long to wait before trying again.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: A message describing the error
+                    example: ' Rate Limit Exceeded '
+        '500':
+          description: Internal Server Error - Returned if there is an unexpected
+            error.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '500':
+                  summary: An example of a 500 response object
+                  value:
+                    detailCode: 500.0 Internal Fault
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: An internal fault occurred.
+    delete:
+      operationId: deleteSegmentV1
+      security:
+      - userAuth:
+        - idn:segment:manage
+      - applicationAuth:
+        - idn:segment:manage
+      x-sailpoint-userLevels:
+      - ORG_ADMIN
+      tags:
+      - Segments
+      summary: Delete segment by id
+      description: 'This API deletes the segment specified by the given ID.
+
+        >**Note:** that segment deletion may take some time to become effective.    '
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        x-sailpoint-resource-operation-id: listSegmentsV1
+        description: The segment ID to delete.
+        example: ef38f94347e94562b5bb8424a56397d8
+      responses:
+        '204':
+          description: No content.
+        '400':
+          description: Client Error - Returned if the request body is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+        '401':
+          description: Unauthorized - Returned if there is no authorization header,
+            or if the JWT token is expired.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    description: A message describing the error
+                    example: 'JWT validation failed: JWT is expired'
+        '403':
+          description: Forbidden - Returned if the user you are running as, doesn't
+            have access to this end-point.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '403':
+                  summary: An example of a 403 response object
+                  value:
+                    detailCode: 403 Forbidden
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: The server understood the request but refuses to authorize
+                        it.
+        '404':
+          description: Not Found - returned if the request URL refers to a resource
+            or object that does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '404':
+                  summary: An example of a 404 response object
+                  value:
+                    detailCode: 404 Not found
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: The server did not find a current representation for the
+                        target resource.
+        '429':
+          description: Too Many Requests - Returned in response to too many requests
+            in a given period of time - rate limited. The Retry-After header in the
+            response includes how long to wait before trying again.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: A message describing the error
+                    example: ' Rate Limit Exceeded '
+        '500':
+          description: Internal Server Error - Returned if there is an unexpected
+            error.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '500':
+                  summary: An example of a 500 response object
+                  value:
+                    detailCode: 500.0 Internal Fault
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: An internal fault occurred.
+    patch:
+      operationId: patchSegmentV1
+      security:
+      - userAuth:
+        - idn:segment:manage
+      - applicationAuth:
+        - idn:segment:manage
+      x-sailpoint-userLevels:
+      - ORG_ADMIN
+      tags:
+      - Segments
+      summary: Update segment
+      description: 'Use this API to update segment fields by using the [JSON Patch](https://tools.ietf.org/html/rfc6902)
+        standard.
+
+        >**Note:** Changes to a segment may take some time to propagate to all identities.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        x-sailpoint-resource-operation-id: listSegmentsV1
+        description: The segment ID to modify.
+        example: ef38f94347e94562b5bb8424a56397d8
+      requestBody:
+        required: true
+        description: 'A list of segment update operations according to the [JSON Patch](https://tools.ietf.org/html/rfc6902)
+          standard.
+
+
+          The following fields are patchable:
+
+          * name
+
+          * description
+
+          * owner
+
+          * visibilityCriteria
+
+          * active
+
+          '
+        content:
+          application/json-patch+json:
+            schema:
+              type: array
+              items:
+                type: object
+            examples:
+              Set Visibility Criteria:
+                description: Set the visibility criteria
+                value:
+                - op: replace
+                  path: /visibilityCriteria
+                  value:
+                    expression:
+                      operator: AND
+                      children:
+                      - operator: EQUALS
+                        attribute: location
+                        value:
+                          type: STRING
+                          value: Philadelphia
+                      - operator: EQUALS
+                        attribute: department
+                        value:
+                          type: STRING
+                          value: HR
+      responses:
+        '200':
+          description: Indicates the PATCH operation succeeded, and returns the segment's
+            new representation.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Segment
+                properties:
+                  id:
+                    type: string
+                    description: The segment's ID.
+                    example: 0f11f2a4-7c94-4bf3-a2bd-742580fe3bde
+                  name:
+                    type: string
+                    description: The segment's business name.
+                    example: segment-xyz
+                  created:
+                    type: string
+                    format: date-time
+                    description: The time when the segment is created.
+                    example: '2020-01-01T00:00:00.000000Z'
+                  modified:
+                    type: string
+                    format: date-time
+                    description: The time when the segment is modified.
+                    example: '2020-01-01T00:00:00.000000Z'
+                  description:
+                    type: string
+                    description: The segment's optional description.
+                    example: This segment represents xyz
+                  owner:
+                    type: object
+                    nullable: true
+                    description: The owner of this object.
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - IDENTITY
+                        description: Owner type. This field must be either left null
+                          or set to 'IDENTITY' on input, otherwise a 400 Bad Request
+                          error will result.
+                        example: IDENTITY
+                      id:
+                        type: string
+                        description: Identity id
+                        example: 2c9180a46faadee4016fb4e018c20639
+                      name:
+                        type: string
+                        description: Human-readable display name of the owner. It
+                          may be left null or omitted in a POST or PATCH. If set,
+                          it must match the current value of the owner's display name,
+                          otherwise a 400 Bad Request error will result.
+                        example: support
+                  visibilityCriteria:
+                    type: object
+                    title: Visibility Criteria
+                    nullable: true
+                    properties:
+                      expression:
+                        type: object
+                        title: Expression
+                        properties:
+                          operator:
+                            type: string
+                            description: Operator for the expression
+                            enum:
+                            - AND
+                            - EQUALS
+                            example: EQUALS
+                          attribute:
+                            type: string
+                            description: Name for the attribute
+                            example: location
+                            nullable: true
+                          value:
+                            type: object
+                            title: Value
+                            nullable: true
+                            properties:
+                              type:
+                                type: string
+                                description: The type of attribute value
+                                example: STRING
+                              value:
+                                type: string
+                                description: The attribute value
+                                example: Austin
+                          children:
+                            type: array
+                            nullable: true
+                            description: List of expressions
+                            items:
+                              type: object
+                              properties:
+                                operator:
+                                  type: string
+                                  description: Operator for the expression
+                                  enum:
+                                  - AND
+                                  - EQUALS
+                                  example: EQUALS
+                                attribute:
+                                  type: string
+                                  description: Name for the attribute
+                                  example: location
+                                  nullable: true
+                                value:
+                                  type: object
+                                  title: Value
+                                  nullable: true
+                                  properties:
+                                    type:
+                                      type: string
+                                      description: The type of attribute value
+                                      example: STRING
+                                    value:
+                                      type: string
+                                      description: The attribute value
+                                      example: Austin
+                                children:
+                                  type: string
+                                  nullable: true
+                                  description: There cannot be anymore nested children.
+                                    This will always be null.
+                                  example: null
+                            example: []
+                  active:
+                    type: boolean
+                    description: This boolean indicates whether the segment is currently
+                      active. Inactive segments have no effect.
+                    default: false
+                    example: true
+        '400':
+          description: Client Error - Returned if the request body is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+        '401':
+          description: Unauthorized - Returned if there is no authorization header,
+            or if the JWT token is expired.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    description: A message describing the error
+                    example: 'JWT validation failed: JWT is expired'
+        '403':
+          description: Forbidden - Returned if the user you are running as, doesn't
+            have access to this end-point.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '403':
+                  summary: An example of a 403 response object
+                  value:
+                    detailCode: 403 Forbidden
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: The server understood the request but refuses to authorize
+                        it.
+        '404':
+          description: Not Found - returned if the request URL refers to a resource
+            or object that does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '404':
+                  summary: An example of a 404 response object
+                  value:
+                    detailCode: 404 Not found
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: The server did not find a current representation for the
+                        target resource.
+        '429':
+          description: Too Many Requests - Returned in response to too many requests
+            in a given period of time - rate limited. The Retry-After header in the
+            response includes how long to wait before trying again.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    description: A message describing the error
+                    example: ' Rate Limit Exceeded '
+        '500':
+          description: Internal Server Error - Returned if there is an unexpected
+            error.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Error Response Dto
+                properties:
+                  detailCode:
+                    type: string
+                    description: Fine-grained error code providing more detail of
+                      the error.
+                    example: 400.1 Bad Request Content
+                  trackingId:
+                    type: string
+                    description: Unique tracking id for the error.
+                    example: e7eab60924f64aa284175b9fa3309599
+                  messages:
+                    type: array
+                    description: Generic localized reason for error
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+                  causes:
+                    type: array
+                    description: Plain-text descriptive reasons to provide additional
+                      detail to the text provided in the messages field
+                    items:
+                      type: object
+                      title: Error Message Dto
+                      properties:
+                        locale:
+                          type: string
+                          description: The locale for the message text, a BCP 47 language
+                            tag.
+                          example: en-US
+                          nullable: true
+                        localeOrigin:
+                          type: string
+                          enum:
+                          - DEFAULT
+                          - REQUEST
+                          - null
+                          description: An indicator of how the locale was selected.
+                            *DEFAULT* means the locale is the system default. *REQUEST*
+                            means the locale was selected from the request context
+                            (i.e., best match based on the *Accept-Language* header).
+                            Additional values may be added in the future without notice.
+                          example: DEFAULT
+                          nullable: true
+                        text:
+                          type: string
+                          description: Actual text of the error message in the indicated
+                            locale.
+                          example: The request was syntactically correct but its content
+                            is semantically invalid.
+              examples:
+                '500':
+                  summary: An example of a 500 response object
+                  value:
+                    detailCode: 500.0 Internal Fault
+                    trackingId: b21b1f7ce4da4d639f2c62a57171b427
+                    messages:
+                    - locale: en-US
+                      localeOrigin: DEFAULT
+                      text: An internal fault occurred.
+security:
+- userAuth:
+  - sp:scopes:all

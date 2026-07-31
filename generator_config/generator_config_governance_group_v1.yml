@@ -1,0 +1,22 @@
+provider:
+  name: identitynow
+resources:
+  governance_group:
+    create:
+      path: /workgroups/v1
+      method: POST
+    read:
+      path: /workgroups/v1/{id}
+      method: GET
+    update:
+      path: /workgroups/v1/{id}
+      method: PATCH
+    delete:
+      path: /workgroups/v1/{id}
+      method: DELETE
+
+data_sources:
+  governance_group:
+    read:
+      path: /workgroups/v1/{id}
+      method: GET

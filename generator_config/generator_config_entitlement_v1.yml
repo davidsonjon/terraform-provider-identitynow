@@ -1,0 +1,67 @@
+provider:
+  name: identitynow
+resources:
+  entitlement:
+    # tfplugingen-openapi requires a "create" block even though this
+    # resource's real Create() (hand-written) never calls a create API at
+    # all - entitlements are never created or destroyed via this API. They
+    # only come into existence via source aggregation (see
+    # /entitlements/v1/aggregate/sources/{id}, exercised by the separate
+    # source_load_entitlement_wait_v1 helper resource) and are never deleted
+    # through this API either - the resource "adopts" an entitlement that
+    # already exists in IdentityNow (looked up by id) into Terraform state,
+    # manages only the handful of patchable fields, and on destroy simply
+    # forgets it (RemoveResource, no API call) rather than deleting anything
+    # real. Pointing "create" at the same GET used for "read" was tried
+    # first and made tfplugingen-openapi skip the whole resource entirely
+    # ("no compatible schema found" - it appears to require create's method
+    # to differ from a plain read-only GET to derive a resource schema at
+    # all). Pointing it at the PATCH used for "update" instead works: PATCH's
+    # request body is a generic JSON-Patch-operation array, not an object
+    # shaped like the entitlement resource, so tfplugingen-openapi can't
+    # correlate any property names to it either - the net effect is every
+    # attribute generates Computed-only by default (correctly matching
+    # "nothing is actually created"), and the handful of genuinely patchable
+    # fields (requestable, segments, owner, name, description,
+    # manually_updated_fields) are then forced to computed_optional via
+    # schema_overrides_entitlement_v1.yml's required_overrides, exactly
+    # mirroring application_v1's owner/access_profile_ids precedent. See
+    # resource_entitlement.go's package doc for the full pattern.
+    #
+    # NOTE: the API's own patch doc additionally lists "privilegeOverride/
+    # level" as patchable, but no "privilegeOverride" property exists
+    # anywhere in entitlementv2.yaml (only the read-only, aggregated
+    # "privilegeLevel" object with direct/setBy/setByType/inherited/
+    # effective sub-fields does) - flagged as an open question for Phase B
+    # live testing rather than guessed at here; privilege_level is left
+    # fully Computed/read-only in this pilot.
+    create:
+      path: /entitlements/v1/{id}
+      method: PATCH
+    read:
+      path: /entitlements/v1/{id}
+      method: GET
+    update:
+      path: /entitlements/v1/{id}
+      method: PATCH
+    schema:
+      ignores:
+        # Both are `additionalProperties: true` free-form maps with no
+        # declared properties of their own - tfplugingen-openapi generates
+        # them as an attribute-less single_nested object (unusable, same
+        # class of gap as role_v1's "legacy_membership_info"). Hand-added
+        # later as jsontypes.Normalized JSON-string CustomTypes, matching
+        # sources_v1's connectorAttributes/transform_v1's attributes
+        # precedent.
+        - attributes
+        - manuallyUpdatedFields
+
+data_sources:
+  entitlement:
+    read:
+      path: /entitlements/v1/{id}
+      method: GET
+    schema:
+      ignores:
+        - attributes
+        - manuallyUpdatedFields

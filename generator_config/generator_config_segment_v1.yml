@@ -1,0 +1,61 @@
+provider:
+  name: identitynow
+resources:
+  segment:
+    create:
+      path: /segments/v1
+      method: POST
+    read:
+      path: /segments/v1/{id}
+      method: GET
+    update:
+      path: /segments/v1/{id}
+      method: PATCH
+    delete:
+      path: /segments/v1/{id}
+      method: DELETE
+    schema:
+      ignores:
+        # `visibility_criteria.expression` has a "value" single_nested block
+        # at two different depths (expression.value AND
+        # expression.children.value, both structurally identical per the
+        # OpenAPI spec) - tfplugingen-framework generates a Go type keyed
+        # only by attribute *name*, not full path, so it emits a duplicate
+        # `ValueType`/`ValueValue`/etc. declaration and fails to build
+        # ("ValueType redeclared in this block"). Unlike role_v1's
+        # similarly-recursive membership.criteria tree (whose real API
+        # property names genuinely differ per depth - key/child_key/
+        # grandchild_key - so no collision ever occurs there),
+        # visibility_criteria's recursion reuses the literal name "value" at
+        # both depths, so there is no schema-driven way to avoid this via
+        # generation alone. Ignored here and hand-written directly in
+        # resource_segment.go/segment_data_source.go/segments_data_source.go
+        # instead, preserving the exact `value`/`children` attribute names
+        # from the spec (and the reference davidsonjon/identitynow
+        # provider's docs) rather than renaming anything to dodge the
+        # collision.
+        - visibilityCriteria
+
+data_sources:
+  segment:
+    read:
+      path: /segments/v1/{id}
+      method: GET
+    schema:
+      ignores:
+        - visibilityCriteria
+  segments:
+    read:
+      path: /segments/v1
+      method: GET
+    schema:
+      ignores:
+        - visibilityCriteria
+        # `count` is a reserved root attribute/block name in Terraform (the
+        # `count` meta-argument) - a schema with a root-level `count`
+        # attribute fails validation ("count is a reserved root
+        # attribute/block name"). This mirrors governance_group_v1's
+        # `governance_groups` plural data source, which drops this same
+        # query param from its schema entirely for the same reason (see
+        # datasource_governance_groups.go) rather than renaming it.
+        - count

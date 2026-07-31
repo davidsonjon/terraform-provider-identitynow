@@ -1,31 +1,50 @@
-
 ---
-layout: ""
-page_title: "Provider: IdentityNow"
+page_title: "{{.ProviderShortName}} Provider"
 description: |-
-  The IdentityNow provider provides the resources to interact with SailPoint IdentityNow platform.
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
 ---
 
-# IdentityNow Provider
+# {{.ProviderShortName}} Provider
 
-The IdentityNow provider provides the resources to interact with Elastic stack products.
+Terraform provider for [SailPoint Identity Security Cloud (IdentityNow)](https://documentation.sailpoint.com/index.html).
 
-The provider uses Terraform [protocol version 6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) that is compatible with Terraform CLI version 1.0 and later.
-
-## Authentication
-
-The provider can leverage the [SailPoint CLI](https://github.com/sailpoint-oss/sailpoint-cli) configuration options or Environment Variables or configuration file.
-
-
-### Static credentials
-
-
-
-### Environment Variables
-
-
+{{ if .HasExamples -}}
 ## Example Usage
 
-{{tffile "examples/provider/provider.tf"}}
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
 
 {{ .SchemaMarkdown | trimspace }}
+
+## Resources and Data Sources
+
+This provider is under active, incremental development against SailPoint's
+new per-service `v1` OpenAPI specs (see
+[SailPoint's API versioning migration guide](https://developer.sailpoint.com/docs/api/api-versioning-migration/)).
+Each target below is developed and validated independently - check its own
+documentation page for known limitations before relying on it.
+
+### Roles
+
+- [`identitynow_role_v1` (resource)](resources/role_v1.md)
+- [`identitynow_role_v1` (data source)](data-sources/role_v1.md)
+
+### Service Desk Integrations
+
+- [`identitynow_service_desk_integration_v1` (resource)](resources/service_desk_integration_v1.md)
+- [`identitynow_service_desk_integration_v1` (data source)](data-sources/service_desk_integration_v1.md)
+
+## Pilot Status and Known Limitations
+
+Both targets above are `_v1` pilots: their generated schema/model types come
+from `tfplugingen-framework` against SailPoint's per-service `v1` OpenAPI
+specs, but Create/Read/Update/Delete logic is hand-written against the
+`golang-sdk`'s `api_beta` package (SailPoint has not yet published dedicated
+per-service `v1` Go SDK packages). See each resource/data source's own
+"Known Limitations & Live Testing Notes" section for specifics uncovered by
+running `terraform apply`/`terraform plan` and acceptance tests against a
+real sandbox tenant - these notes exist because a clean `terraform plan`
+alone does not guarantee correct `apply`-time behavior.

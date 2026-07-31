@@ -1,47 +1,33 @@
-
 ---
-layout: ""
-page_title: "Provider: IdentityNow"
+page_title: "identitynow Provider"
 description: |-
-  The IdentityNow provider provides the resources to interact with SailPoint IdentityNow platform.
+  The IdentityNow (Identity Security Cloud) provider is used to interact with resources supported by SailPoint's IdentityNow/ISC APIs https://documentation.sailpoint.com/index.html. The provider needs to be configured with the proper credentials before it can be used.
+  Credentials can be provided via the sail_client_id/sail_client_secret attributes below, or via the SAIL_CLIENT_ID/SAIL_CLIENT_SECRET/SAIL_BASE_URL environment variables (preferred, to avoid committing secrets to configuration).
 ---
 
-# IdentityNow Provider
+# identitynow Provider
 
-The IdentityNow provider provides the resources to interact with Elastic stack products.
-
-The provider uses Terraform [protocol version 6](https://developer.hashicorp.com/terraform/plugin/terraform-plugin-protocol#protocol-version-6) that is compatible with Terraform CLI version 1.0 and later.
-
-## Authentication
-
-The provider can leverage the [SailPoint CLI](https://github.com/sailpoint-oss/sailpoint-cli) configuration options or Environment Variables or configuration file.
-
-
-### Static credentials
-
-
-
-### Environment Variables
-
+Terraform provider for [SailPoint Identity Security Cloud (IdentityNow)](https://documentation.sailpoint.com/index.html).
 
 ## Example Usage
 
 ```terraform
-# Terraform 0.13+ uses the Terraform Registry:
-
 terraform {
   required_providers {
     identitynow = {
-      version = "0.3.1"
-      source  = "terraform-provider-identitynow/identitynow"
+      source = "hashicorp.com/edu/identitynow"
     }
   }
 }
 
+# Credentials should come from environment/CI secrets, not hardcoded literals.
+# See https://developer.sailpoint.com/docs/api/authentication/ for how to
+# create a personal access token/client id+secret pair for your tenant.
 provider "identitynow" {
-  sail_base_url      = "https://tenant.api.identitynow.com"
+  sail_base_url      = var.sail_base_url
   sail_client_id     = var.sail_client_id
   sail_client_secret = var.sail_client_secret
+  http_retry_max     = 1
 }
 ```
 
@@ -50,7 +36,37 @@ provider "identitynow" {
 
 ### Optional
 
-- `http_retry_max` (Number) Override number of retries for the retryablehttp client - default is 20
-- `sail_base_url` (String)
-- `sail_client_id` (String)
-- `sail_client_secret` (String)
+- `http_retry_max` (Number) Override number of retries for the retryablehttp client - default is 20.
+- `sail_base_url` (String) The base URL of your IdentityNow/ISC tenant API, e.g. `https://your-tenant.api.identitynow.com`. May also be set via the `SAIL_BASE_URL` environment variable.
+- `sail_client_id` (String) The OAuth client ID for a [personal access token or API client](https://developer.sailpoint.com/docs/api/authentication/) on your tenant. May also be set via the `SAIL_CLIENT_ID` environment variable.
+- `sail_client_secret` (String, Sensitive) The OAuth client secret paired with `sail_client_id`. May also be set via the `SAIL_CLIENT_SECRET` environment variable.
+
+## Resources and Data Sources
+
+This provider is under active, incremental development against SailPoint's
+new per-service `v1` OpenAPI specs (see
+[SailPoint's API versioning migration guide](https://developer.sailpoint.com/docs/api/api-versioning-migration/)).
+Each target below is developed and validated independently - check its own
+documentation page for known limitations before relying on it.
+
+### Roles
+
+- [`identitynow_role_v1` (resource)](resources/role_v1.md)
+- [`identitynow_role_v1` (data source)](data-sources/role_v1.md)
+
+### Service Desk Integrations
+
+- [`identitynow_service_desk_integration_v1` (resource)](resources/service_desk_integration_v1.md)
+- [`identitynow_service_desk_integration_v1` (data source)](data-sources/service_desk_integration_v1.md)
+
+## Pilot Status and Known Limitations
+
+Both targets above are `_v1` pilots: their generated schema/model types come
+from `tfplugingen-framework` against SailPoint's per-service `v1` OpenAPI
+specs, but Create/Read/Update/Delete logic is hand-written against the
+`golang-sdk`'s `api_beta` package (SailPoint has not yet published dedicated
+per-service `v1` Go SDK packages). See each resource/data source's own
+"Known Limitations & Live Testing Notes" section for specifics uncovered by
+running `terraform apply`/`terraform plan` and acceptance tests against a
+real sandbox tenant - these notes exist because a clean `terraform plan`
+alone does not guarantee correct `apply`-time behavior.

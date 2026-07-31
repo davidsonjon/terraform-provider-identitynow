@@ -1,0 +1,59 @@
+provider:
+  name: identitynow
+resources:
+  identity_profile:
+    create:
+      path: /identity-profiles/v1
+      method: POST
+    read:
+      path: /identity-profiles/v1/{identity-profile-id}
+      method: GET
+    update:
+      # updateIdentityProfileV1 - RFC 6902 JSON Patch, same convention as
+      # sources_v1/role_v1/service_desk_integration_v1/governance_group_v1.
+      # Spec docs explicitly call out id/created/modified/identityCount/
+      # identityRefreshRequired as non-updatable, and that authoritativeSource
+      # and identityAttributeConfig cannot both be changed in the same PATCH
+      # (see the Update() handling in resource_identity_profile.go).
+      path: /identity-profiles/v1/{identity-profile-id}
+      method: PATCH
+    delete:
+      # deleteIdentityProfileV1 - NOTE: unlike every other _v1 pilot's
+      # delete, this one is asynchronous - a 202 response referencing a
+      # background "bulk delete" TaskResult, not a synchronous 204. Delete()
+      # must poll until the identity profile actually disappears (GET 404)
+      # before returning, so Terraform doesn't consider the resource gone
+      # before the backend job has actually finished. See the package doc.
+      path: /identity-profiles/v1/{identity-profile-id}
+      method: DELETE
+    schema:
+      ignores:
+        # identityAttributeConfig is a dynamic/discriminated-union field:
+        # attributeTransforms[].transformDefinition.attributes is `type:
+        # object, additionalProperties: true` whose real shape depends
+        # entirely on the sibling transformDefinition.type (same
+        # discriminated-union pattern as transform_v1's own top-level
+        # "attributes", and sources_v1's "connectorAttributes" nested map).
+        # tfplugingen-openapi/-framework can't generate a faithful static
+        # schema for this arbitrary-depth nested shape - hand-added as a
+        # jsontypes.Normalized JSON-string CustomType in
+        # resource_identity_profile.go/datasource_identity_profile.go
+        # instead, mirroring transform_v1/sources_v1's precedent. See the
+        # "Dynamic/discriminated-union attributes-style fields" bullet in
+        # the IdentityNow agent's Project Context.
+        - identityAttributeConfig
+        # NOTE: "identityprofileid" (a duplicate, path-param-synthesized id
+        # attribute) CANNOT be removed via `ignores:` here - ignores only
+        # filters real body-schema properties, not path-param-derived
+        # attributes. It is instead dropped post-generation via
+        # scripts/apply_codespec_schema_overrides.py's new drop_attributes
+        # config - see generator_config/schema_overrides_identity_profile_v1.yml.
+
+data_sources:
+  identity_profile:
+    read:
+      path: /identity-profiles/v1/{identity-profile-id}
+      method: GET
+    schema:
+      ignores:
+        - identityAttributeConfig

@@ -1,0 +1,37 @@
+provider:
+  name: identitynow
+resources:
+  connector_rule:
+    create:
+      path: /connector-rules/v1
+      method: POST
+    read:
+      path: /connector-rules/v1/{id}
+      method: GET
+    update:
+      path: /connector-rules/v1/{id}
+      method: PUT
+    delete:
+      path: /connector-rules/v1/{id}
+      method: DELETE
+    schema:
+      ignores:
+        # "attributes" is a generic, non-discriminated "map of string to
+        # objects" (no sibling "type" field to key a static schema off of,
+        # unlike transform's "attributes"). Hand-added as a
+        # jsontypes.Normalized JSON-string CustomType in
+        # resource_connector_rule.go/datasource_connector_rule.go instead,
+        # following the same pattern established for transform_v1's
+        # discriminated-union "attributes" (see the 2026-07-24
+        # dynamic-attributes-pattern-research decision in
+        # .github/agents/identitynow-terraform-provider-developer.knowledge.md).
+        - attributes
+
+data_sources:
+  connector_rule:
+    read:
+      path: /connector-rules/v1/{id}
+      method: GET
+    schema:
+      ignores:
+        - attributes

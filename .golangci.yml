@@ -1,0 +1,26 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - unused
+    - staticcheck
+    - govet
+  exclusions:
+    rules:
+      # Generated schema/model code from tfplugingen-framework — do not hand-fix,
+      # regenerate from the spec instead.
+      - path: '_gen\.go$'
+        linters:
+          - all
+      - path: 'internal/provider/.*/(resource_|datasource_)[a-z_]+/'
+        linters:
+          - all
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

@@ -1,0 +1,32 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Applications"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+Each entry in `applications` is populated by the same conversion code as the
+singular [`identitynow_application_v1` data source](../data-sources/application_v1.md) -
+see its "Known Limitations & Live Testing Notes" section for details,
+including how `access_profile_ids` is populated via a separate API call per
+application.
+
+The API's documented maximum `limit` for `GET /source-apps/v1/all` is 250;
+requested limits above that are capped with a warning rather than an error.

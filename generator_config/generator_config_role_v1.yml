@@ -1,0 +1,22 @@
+provider:
+  name: identitynow
+resources:
+  role:
+    create:
+      path: /roles/v1
+      method: POST
+    read:
+      path: /roles/v1/{id}
+      method: GET
+    update:
+      path: /roles/v1/{id}
+      method: PATCH
+    delete:
+      path: /roles/v1/{id}
+      method: DELETE
+
+data_sources:
+  role:
+    read:
+      path: /roles/v1/{id}
+      method: GET

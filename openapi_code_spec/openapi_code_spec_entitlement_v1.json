@@ -1,0 +1,676 @@
+{
+  "datasources": [
+    {
+      "name": "entitlement",
+      "schema": {
+        "attributes": [
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The entitlement ID"
+            }
+          },
+          {
+            "name": "access_model_metadata",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "attributes",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "description",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Describes the metadata item"
+                          }
+                        },
+                        {
+                          "name": "key",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Unique identifier for the metadata type"
+                          }
+                        },
+                        {
+                          "name": "multiselect",
+                          "bool": {
+                            "computed_optional_required": "computed",
+                            "description": "Allows selecting multiple values"
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Human readable name of the metadata type"
+                          }
+                        },
+                        {
+                          "name": "object_types",
+                          "list": {
+                            "computed_optional_required": "computed",
+                            "element_type": {
+                              "string": {}
+                            },
+                            "description": "The types of objects"
+                          }
+                        },
+                        {
+                          "name": "status",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The state of the metadata item"
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The type of the metadata item"
+                          }
+                        },
+                        {
+                          "name": "values",
+                          "list_nested": {
+                            "computed_optional_required": "computed",
+                            "nested_object": {
+                              "attributes": [
+                                {
+                                  "name": "name",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "Display name of the value"
+                                  }
+                                },
+                                {
+                                  "name": "status",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "The status of the individual value"
+                                  }
+                                },
+                                {
+                                  "name": "value",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "The value to assign to the metdata item"
+                                  }
+                                }
+                              ]
+                            },
+                            "description": "The value to assign to the metadata item"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "description": "Additional data to classify the entitlement"
+            }
+          },
+          {
+            "name": "attribute",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The entitlement attribute name"
+            }
+          },
+          {
+            "name": "cloud_governed",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "True if the entitlement is cloud governed"
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Time when the entitlement was created"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The description of the entitlement"
+            }
+          },
+          {
+            "name": "direct_permissions",
+            "list_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "rights",
+                    "list": {
+                      "computed_optional_required": "computed",
+                      "element_type": {
+                        "string": {}
+                      },
+                      "description": "All the rights (e.g. actions) that this permission allows on the target"
+                    }
+                  },
+                  {
+                    "name": "target",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The target the permission would grants rights on."
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Time when the entitlement was last modified"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The entitlement name"
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The identity ID"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The display name of the identity"
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The type of object"
+                  }
+                }
+              ],
+              "description": "The identity that owns the entitlement"
+            }
+          },
+          {
+            "name": "privilege_level",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "direct",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Direct privilege level assigned to the entitlement"
+                  }
+                },
+                {
+                  "name": "effective",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Effective privilege level assigned to the entitlement"
+                  }
+                },
+                {
+                  "name": "inherited",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Inherited privilege level on the entitlement, if any"
+                  }
+                },
+                {
+                  "name": "set_by",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "User or process that set the privilege level"
+                  }
+                },
+                {
+                  "name": "set_by_type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Method by which the privilege level was set"
+                  }
+                }
+              ],
+              "description": "Privilege level of the entitlement"
+            }
+          },
+          {
+            "name": "requestable",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "True if the entitlement is able to be directly requested"
+            }
+          },
+          {
+            "name": "segments",
+            "list": {
+              "computed_optional_required": "computed",
+              "element_type": {
+                "string": {}
+              },
+              "description": "List of IDs of segments, if any, to which this Entitlement is assigned."
+            }
+          },
+          {
+            "name": "source",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The source ID"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The source name"
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The source type, will always be \"SOURCE\""
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "source_schema_object_type",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The object type of the entitlement from the source schema"
+            }
+          },
+          {
+            "name": "tags",
+            "list": {
+              "computed_optional_required": "computed",
+              "element_type": {
+                "string": {}
+              },
+              "description": "List of tags assigned to the entitlement"
+            }
+          },
+          {
+            "name": "value",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The value of the entitlement"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "entitlement",
+      "schema": {
+        "attributes": [
+          {
+            "name": "access_model_metadata",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "attributes",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "description",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Describes the metadata item"
+                          }
+                        },
+                        {
+                          "name": "key",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Unique identifier for the metadata type"
+                          }
+                        },
+                        {
+                          "name": "multiselect",
+                          "bool": {
+                            "computed_optional_required": "computed",
+                            "default": {
+                              "static": false
+                            },
+                            "description": "Allows selecting multiple values"
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Human readable name of the metadata type"
+                          }
+                        },
+                        {
+                          "name": "object_types",
+                          "list": {
+                            "computed_optional_required": "computed",
+                            "element_type": {
+                              "string": {}
+                            },
+                            "description": "The types of objects"
+                          }
+                        },
+                        {
+                          "name": "status",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The state of the metadata item"
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The type of the metadata item"
+                          }
+                        },
+                        {
+                          "name": "values",
+                          "list_nested": {
+                            "computed_optional_required": "computed",
+                            "nested_object": {
+                              "attributes": [
+                                {
+                                  "name": "name",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "Display name of the value"
+                                  }
+                                },
+                                {
+                                  "name": "status",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "The status of the individual value"
+                                  }
+                                },
+                                {
+                                  "name": "value",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "The value to assign to the metdata item"
+                                  }
+                                }
+                              ]
+                            },
+                            "description": "The value to assign to the metadata item"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "description": "Additional data to classify the entitlement"
+            }
+          },
+          {
+            "name": "attribute",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The entitlement attribute name"
+            }
+          },
+          {
+            "name": "cloud_governed",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "True if the entitlement is cloud governed"
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Time when the entitlement was created"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The description of the entitlement"
+            }
+          },
+          {
+            "name": "direct_permissions",
+            "list_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "rights",
+                    "list": {
+                      "computed_optional_required": "computed",
+                      "element_type": {
+                        "string": {}
+                      },
+                      "description": "All the rights (e.g. actions) that this permission allows on the target"
+                    }
+                  },
+                  {
+                    "name": "target",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The target the permission would grants rights on."
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The entitlement id"
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Time when the entitlement was last modified"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The entitlement name"
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "required",
+                    "description": "The identity ID"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The display name of the identity"
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "required",
+                    "description": "The type of object"
+                  }
+                }
+              ],
+              "description": "The identity that owns the entitlement"
+            }
+          },
+          {
+            "name": "privilege_level",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "direct",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Direct privilege level assigned to the entitlement"
+                  }
+                },
+                {
+                  "name": "effective",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Effective privilege level assigned to the entitlement"
+                  }
+                },
+                {
+                  "name": "inherited",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Inherited privilege level on the entitlement, if any"
+                  }
+                },
+                {
+                  "name": "set_by",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "User or process that set the privilege level"
+                  }
+                },
+                {
+                  "name": "set_by_type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Method by which the privilege level was set"
+                  }
+                }
+              ],
+              "description": "Privilege level of the entitlement"
+            }
+          },
+          {
+            "name": "requestable",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "True if the entitlement is able to be directly requested"
+            }
+          },
+          {
+            "name": "segments",
+            "list": {
+              "computed_optional_required": "computed_optional",
+              "element_type": {
+                "string": {}
+              },
+              "description": "List of IDs of segments, if any, to which this Entitlement is assigned."
+            }
+          },
+          {
+            "name": "source",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The source ID"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The source name"
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The source type, will always be \"SOURCE\""
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "source_schema_object_type",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The object type of the entitlement from the source schema"
+            }
+          },
+          {
+            "name": "tags",
+            "list": {
+              "computed_optional_required": "computed",
+              "element_type": {
+                "string": {}
+              },
+              "description": "List of tags assigned to the entitlement"
+            }
+          },
+          {
+            "name": "value",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The value of the entitlement"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

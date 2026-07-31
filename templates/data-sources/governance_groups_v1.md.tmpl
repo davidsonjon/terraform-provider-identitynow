@@ -1,0 +1,31 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Governance Groups"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+Each entry in `governance_groups` is populated by the same conversion code
+as the singular [`identitynow_governance_group_v1` data source](../data-sources/governance_group_v1.md) -
+see its "Known Limitations & Live Testing Notes" section for the full list
+of limitations shared by both.
+
+`GET /workgroups/v1`'s documented maximum `limit` is 250; requested limits
+above that are capped with a warning rather than an error.

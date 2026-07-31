@@ -1,0 +1,40 @@
+provider:
+  name: identitynow
+resources:
+  source:
+    create:
+      path: /sources/v1
+      method: POST
+    read:
+      path: /sources/v1/{id}
+      method: GET
+    update:
+      # updateSourceV1 - RFC 6902 JSON Patch. Deliberately NOT putSourceV1
+      # (the full-replace PUT variant) - see the IdentityNow agent's Sources
+      # pilot task description and the JSON-Patch update-helper pattern
+      # already used by governance_group_v1/role_v1/service_desk_integration_v1.
+      path: /sources/v1/{id}
+      method: PATCH
+    delete:
+      path: /sources/v1/{id}
+      method: DELETE
+    schema:
+      ignores:
+        # connectorAttributes is a dynamic/discriminated-union field (its
+        # real shape depends entirely on the sibling "type" field, e.g.
+        # Active Directory vs Workday vs a delimited-file source all have
+        # completely different connectorAttributes shapes) - same pattern as
+        # transform_v1's "attributes" field. Hand-added later as a
+        # jsontypes.Normalized JSON-string CustomType. See the IdentityNow
+        # agent's Project Context "Dynamic/discriminated-union attributes-
+        # style fields" bullet.
+        - connectorAttributes
+
+data_sources:
+  source:
+    read:
+      path: /sources/v1/{id}
+      method: GET
+    schema:
+      ignores:
+        - connectorAttributes

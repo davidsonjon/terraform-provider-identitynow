@@ -1,0 +1,316 @@
+{
+	"datasources": [
+		{
+			"name": "connector_rule",
+			"schema": {
+				"attributes": [
+					{
+						"name": "id",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "ID of the connector rule to get."
+						}
+					},
+					{
+						"name": "created",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "an ISO 8601 UTC timestamp when this rule was created"
+						}
+					},
+					{
+						"name": "description",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "a description of the rule's purpose"
+						}
+					},
+					{
+						"name": "modified",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "an ISO 8601 UTC timestamp when this rule was last modified"
+						}
+					},
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "the name of the rule"
+						}
+					},
+					{
+						"name": "signature",
+						"single_nested": {
+							"computed_optional_required": "computed",
+							"attributes": [
+								{
+									"name": "input",
+									"list_nested": {
+										"computed_optional_required": "computed",
+										"nested_object": {
+											"attributes": [
+												{
+													"name": "description",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "the description of the argument"
+													}
+												},
+												{
+													"name": "name",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "the name of the argument"
+													}
+												},
+												{
+													"name": "type",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "the programmatic type of the argument"
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": "output",
+									"single_nested": {
+										"computed_optional_required": "computed",
+										"attributes": [
+											{
+												"name": "description",
+												"string": {
+													"computed_optional_required": "computed",
+													"description": "the description of the argument"
+												}
+											},
+											{
+												"name": "name",
+												"string": {
+													"computed_optional_required": "computed",
+													"description": "the name of the argument"
+												}
+											},
+											{
+												"name": "type",
+												"string": {
+													"computed_optional_required": "computed",
+													"description": "the programmatic type of the argument"
+												}
+											}
+										]
+									}
+								}
+							],
+							"description": "The rule's function signature. Describes the rule's input arguments and output (if any)"
+						}
+					},
+					{
+						"name": "source_code",
+						"single_nested": {
+							"computed_optional_required": "computed",
+							"attributes": [
+								{
+									"name": "script",
+									"string": {
+										"computed_optional_required": "computed",
+										"description": "The code"
+									}
+								},
+								{
+									"name": "version",
+									"string": {
+										"computed_optional_required": "computed",
+										"description": "the version of the code"
+									}
+								}
+							],
+							"description": "SourceCode"
+						}
+					},
+					{
+						"name": "type",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "the type of rule"
+						}
+					}
+				]
+			}
+		}
+	],
+	"provider": {
+		"name": "identitynow"
+	},
+	"resources": [
+		{
+			"name": "connector_rule",
+			"schema": {
+				"attributes": [
+					{
+						"name": "description",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "a description of the rule's purpose"
+						}
+					},
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "the name of the rule",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthBetween(1, 128)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "signature",
+						"single_nested": {
+							"computed_optional_required": "computed_optional",
+							"attributes": [
+								{
+									"name": "input",
+									"list_nested": {
+										"computed_optional_required": "required",
+										"nested_object": {
+											"attributes": [
+												{
+													"name": "description",
+													"string": {
+														"computed_optional_required": "computed_optional",
+														"description": "the description of the argument"
+													}
+												},
+												{
+													"name": "name",
+													"string": {
+														"computed_optional_required": "required",
+														"description": "the name of the argument"
+													}
+												},
+												{
+													"name": "type",
+													"string": {
+														"computed_optional_required": "computed_optional",
+														"description": "the programmatic type of the argument"
+													}
+												}
+											]
+										}
+									}
+								},
+								{
+									"name": "output",
+									"single_nested": {
+										"computed_optional_required": "computed_optional",
+										"attributes": [
+											{
+												"name": "description",
+												"string": {
+													"computed_optional_required": "computed_optional",
+													"description": "the description of the argument"
+												}
+											},
+											{
+												"name": "name",
+												"string": {
+													"computed_optional_required": "required",
+													"description": "the name of the argument"
+												}
+											},
+											{
+												"name": "type",
+												"string": {
+													"computed_optional_required": "computed_optional",
+													"description": "the programmatic type of the argument"
+												}
+											}
+										]
+									}
+								}
+							],
+							"description": "The rule's function signature. Describes the rule's input arguments and output (if any)"
+						}
+					},
+					{
+						"name": "source_code",
+						"single_nested": {
+							"computed_optional_required": "required",
+							"attributes": [
+								{
+									"name": "script",
+									"string": {
+										"computed_optional_required": "required",
+										"description": "The code"
+									}
+								},
+								{
+									"name": "version",
+									"string": {
+										"computed_optional_required": "required",
+										"description": "the version of the code"
+									}
+								}
+							],
+							"description": "SourceCode"
+						}
+					},
+					{
+						"name": "type",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "the type of rule",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.OneOf(\n\"BuildMap\",\n\"ConnectorAfterCreate\",\n\"ConnectorAfterDelete\",\n\"ConnectorAfterModify\",\n\"ConnectorBeforeCreate\",\n\"ConnectorBeforeDelete\",\n\"ConnectorBeforeModify\",\n\"JDBCBuildMap\",\n\"JDBCOperationProvisioning\",\n\"JDBCProvision\",\n\"PeopleSoftHRMSBuildMap\",\n\"PeopleSoftHRMSOperationProvisioning\",\n\"PeopleSoftHRMSProvision\",\n\"RACFPermissionCustomization\",\n\"ResourceObjectCustomization\",\n\"SAPBuildMap\",\n\"SapHrManagerRule\",\n\"SapHrOperationProvisioning\",\n\"SapHrProvision\",\n\"SuccessFactorsOperationProvisioning\",\n\"WebServiceAfterOperationRule\",\n\"WebServiceBeforeOperationRule\",\n\"ResourceObjectCustomization\",\n)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "created",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "an ISO 8601 UTC timestamp when this rule was created"
+						}
+					},
+					{
+						"name": "id",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "the ID of the rule"
+						}
+					},
+					{
+						"name": "modified",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "an ISO 8601 UTC timestamp when this rule was last modified"
+						}
+					}
+				]
+			}
+		}
+	],
+	"version": "0.1"
+}

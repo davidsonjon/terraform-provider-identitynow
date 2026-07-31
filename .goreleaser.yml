@@ -1,5 +1,11 @@
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
+#
+# Mirrors the HashiCorp terraform-provider-scaffolding-framework template
+# (https://github.com/hashicorp/terraform-provider-scaffolding-framework/blob/main/.goreleaser.yml)
+# almost verbatim — this is the standard, expected shape for a publicly
+# published Terraform provider and there was no project-specific reason to
+# deviate from it.
 version: 2
 before:
   hooks:
@@ -29,9 +35,12 @@ builds:
   ignore:
     - goos: darwin
       goarch: '386'
+    - goos: windows
+      goarch: arm
   binary: '{{ .ProjectName }}_v{{ .Version }}'
 archives:
-- format: zip
+- formats:
+  - zip
   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 checksum:
   extra_files:
@@ -42,7 +51,7 @@ checksum:
 signs:
   - artifacts: checksum
     args:
-      # if you are using this in a GitHub action or some other automated pipeline, you 
+      # if you are using this in a GitHub action or some other automated pipeline, you
       # need to pass the batch flag to indicate its not interactive.
       - "--batch"
       - "--local-user"

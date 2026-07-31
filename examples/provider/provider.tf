@@ -1,16 +1,17 @@
-# Terraform 0.13+ uses the Terraform Registry:
-
 terraform {
   required_providers {
     identitynow = {
-      version = "0.3.1"
-      source  = "terraform-provider-identitynow/identitynow"
+      source = "hashicorp.com/edu/identitynow"
     }
   }
 }
 
+# Credentials should come from environment/CI secrets, not hardcoded literals.
+# See https://developer.sailpoint.com/docs/api/authentication/ for how to
+# create a personal access token/client id+secret pair for your tenant.
 provider "identitynow" {
-  sail_base_url      = "https://tenant.api.identitynow.com"
+  sail_base_url      = var.sail_base_url
   sail_client_id     = var.sail_client_id
   sail_client_secret = var.sail_client_secret
+  http_retry_max     = 1
 }

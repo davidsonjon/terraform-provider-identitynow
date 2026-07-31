@@ -1,0 +1,26 @@
+provider:
+  name: identitynow
+resources:
+  entitlement_request_config:
+    # This resource manages the request/revocation approval configuration
+    # for an entitlement that already exists (adopted by id, same pattern as
+    # entitlement_v1 - see that target's generator config for the full
+    # rationale). There is no dedicated "create" endpoint: the API only
+    # exposes GET (read the current config, which always exists with
+    # server-side defaults even if never explicitly set) and PUT (replace
+    # the whole config). Pointing "create" at the PUT endpoint lets
+    # tfplugingen-openapi derive the full read/write schema from its request
+    # body (an object shaped like the resource, unlike entitlement_v1's
+    # generic JSON-Patch body) - Create() will hand-write a plain PUT call
+    # (no different from Update()) and Destroy() will simply forget the
+    # resource in state (RemoveResource, no API call) rather than deleting
+    # anything real, matching entitlement_v1's adopt-existing convention.
+    create:
+      path: /entitlements/v1/{id}/entitlement-request-config
+      method: PUT
+    read:
+      path: /entitlements/v1/{id}/entitlement-request-config
+      method: GET
+    update:
+      path: /entitlements/v1/{id}/entitlement-request-config
+      method: PUT
