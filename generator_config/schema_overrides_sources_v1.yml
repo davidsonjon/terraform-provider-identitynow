@@ -1,0 +1,34 @@
+strip_defaults:
+  # The OpenAPI spec declares `default: false` on this attribute (see
+  # api-specs/dereferenced/deref-sources.v1.yaml's Source schema), which
+  # tfplugingen-openapi faithfully carried into a static `Default:
+  # booldefault.StaticBool(false)` on the resource schema. This attribute is
+  # genuinely a server-computed status field (whether the source's most
+  # recent health check passed) whose real live value is essentially never
+  # `false` for a freshly created source - confirmed live via `terraform
+  # apply`, which failed with "Provider produced inconsistent result after
+  # apply" (planned `healthy = false` vs actual `true`). Stripping the
+  # default lets this plan as Unknown when unconfigured, which is always
+  # apply-consistent regardless of the live value.
+  - path: "healthy"
+    scope: resource
+
+  # `category` also carries a misleading static `default: null` in the spec;
+  # stripped here in addition to being forced Computed-only below, so it
+  # never plans a static empty-string default before the first Read.
+  - path: "category"
+    scope: resource
+
+computed_only_overrides:
+  # `category` is generated as `computed_optional` (Optional+Computed) by
+  # tfplugingen-openapi, but live testing confirmed the API silently ignores
+  # any value the practitioner configures: every existing real source in this
+  # tenant has `category = null` regardless of connector type, and a live
+  # `terraform apply` explicitly setting `category = "CredentialProvider"`
+  # still came back `null` from `POST /beta/sources`. Since the server never
+  # persists a configured value, leaving this Optional causes a permanent
+  # (not just first-apply) "Provider produced inconsistent result after
+  # apply" error any time it's set. Forced Computed-only so Terraform can
+  # only read the server's value, never configure it.
+  - path: "category"
+    scope: resource

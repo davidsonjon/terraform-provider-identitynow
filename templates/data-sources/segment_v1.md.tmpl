@@ -1,0 +1,34 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Segments"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+See the [`identitynow_segment_v1` resource documentation](../resources/segment_v1.md#known-limitations--live-testing-notes)
+for the full list of limitations shared by both the resource and this data
+source (both are backed by the same underlying `visibility_criteria`
+model/conversion code).
+
+Exactly one of `id` or `name` must be set. Name lookups match the exact
+segment name (no partial/prefix matching) and page through
+`GET /segments/v1` client-side, since that endpoint has no server-side name
+filter; an error is returned if zero or more than one segment share that
+name.

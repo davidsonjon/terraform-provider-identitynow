@@ -1,0 +1,39 @@
+provider:
+  name: identitynow
+resources:
+  transform:
+    create:
+      path: /transforms/v1
+      method: POST
+    read:
+      path: /transforms/v1/{id}
+      method: GET
+    update:
+      path: /transforms/v1/{id}
+      method: PUT
+    delete:
+      path: /transforms/v1/{id}
+      method: DELETE
+    schema:
+      ignores:
+        # "attributes" is a discriminated-union (oneOf across ~35 "type"
+        # values), and several of those variants have genuinely
+        # arbitrary-depth children (e.g. every variant's "input" property is
+        # `type: object, additionalProperties: true` holding another full
+        # nested transform definition; "concat"'s "values" is an array of
+        # `type: object` items). tfplugingen-openapi/-framework can't
+        # generate a faithful static schema for this - it is hand-added as a
+        # jsontypes.Normalized JSON-string CustomType in
+        # resource_transform.go/datasource_transform.go instead. See the
+        # 2026-07-24 dynamic-attributes-pattern-research decision in
+        # .github/agents/identitynow-terraform-provider-developer.knowledge.md.
+        - attributes
+
+data_sources:
+  transform:
+    read:
+      path: /transforms/v1/{id}
+      method: GET
+    schema:
+      ignores:
+        - attributes

@@ -1,0 +1,1863 @@
+{
+  "datasources": [
+    {
+      "name": "role",
+      "schema": {
+        "attributes": [
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "ID of the Role"
+            }
+          },
+          {
+            "name": "access_model_metadata",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "attributes",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "description",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The description of the Attribute."
+                          }
+                        },
+                        {
+                          "name": "key",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Technical name of the Attribute. This is unique and cannot be changed after creation."
+                          }
+                        },
+                        {
+                          "name": "multiselect",
+                          "bool": {
+                            "computed_optional_required": "computed",
+                            "description": "Indicates whether the attribute can have multiple values."
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The display name of the key."
+                          }
+                        },
+                        {
+                          "name": "object_types",
+                          "list": {
+                            "computed_optional_required": "computed",
+                            "element_type": {
+                              "string": {}
+                            },
+                            "description": "An array of object types this attributes values can be applied to. Possible values are \"all\" or \"entitlement\". Value \"all\" means this attribute can be used with all object types that are supported."
+                          }
+                        },
+                        {
+                          "name": "status",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The status of the Attribute."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The type of the Attribute. This can be either \"custom\" or \"governance\"."
+                          }
+                        },
+                        {
+                          "name": "values",
+                          "list_nested": {
+                            "computed_optional_required": "computed",
+                            "nested_object": {
+                              "attributes": [
+                                {
+                                  "name": "name",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "The display name of the Attribute value."
+                                  }
+                                },
+                                {
+                                  "name": "status",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "The status of the Attribute value."
+                                  }
+                                },
+                                {
+                                  "name": "value",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "Technical name of the Attribute value. This is unique and cannot be changed after creation."
+                                  }
+                                }
+                              ],
+                              "associated_external_type": {
+                                "import": {
+                                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                                },
+                                "type": "*api_beta.AttributeValueDTO"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "description": "This field must be left null or empty when creating an Role, otherwise a 400 Bad Request error will result."
+            }
+          },
+          {
+            "name": "access_profiles",
+            "list_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "ID of the Access Profile"
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Human-readable display name of the Access Profile. This field is ignored on input."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Type of requested object. This field must be either left null or set to 'ACCESS_PROFILE' when creating an Access Profile, otherwise a 400 Bad Request error will result."
+                    }
+                  }
+                ],
+                "associated_external_type": {
+                  "import": {
+                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  },
+                  "type": "*api_beta.AccessProfileRef"
+                }
+              }
+            }
+          },
+          {
+            "name": "access_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Id of the specific approver, used when approverType is GOVERNANCE_GROUP, WORKFLOW, or ADDITIONAL_GOVERNANCE_GROUP."
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Describes the individual or group that is responsible for an approval step. Values are as follows.\n\n**OWNER**: Owner of the associated Role\n\n**MANAGER**: Manager of the Identity making the request\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field. Workflow is exclusive to other types of approvals and License required.\n\n**ALL_OWNERS**: All owners of the Role, including the primary owner and any secondary owners\n\n**ADDITIONAL_OWNER**: An additional owner of the Role, the ID of which is specified by the **approverId** field\n\n**ADDITIONAL_GOVERNANCE_GROUP**: An additional Governance Group, the ID of which is specified by the **approverId** field"
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.ApprovalSchemeForRole"
+                      }
+                    },
+                    "description": "List describing the steps in approving the request"
+                  }
+                },
+                {
+                  "name": "comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Whether the requester of the containing object must provide comments justifying the request"
+                  }
+                },
+                {
+                  "name": "denial_comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Whether an approver must provide comments when denying the request"
+                  }
+                },
+                {
+                  "name": "dimension_schema",
+                  "single_nested": {
+                    "computed_optional_required": "computed",
+                    "attributes": [
+                      {
+                        "name": "dimension_attributes",
+                        "list_nested": {
+                          "computed_optional_required": "computed",
+                          "nested_object": {
+                            "attributes": [
+                              {
+                                "name": "derived",
+                                "bool": {
+                                  "computed_optional_required": "computed",
+                                  "description": "If an attribute is derived, its value comes from the identity. Otherwise, it can be provided with access request"
+                                }
+                              },
+                              {
+                                "name": "display_name",
+                                "string": {
+                                  "computed_optional_required": "computed",
+                                  "description": "Display name of the attribute"
+                                }
+                              },
+                              {
+                                "name": "name",
+                                "string": {
+                                  "computed_optional_required": "computed",
+                                  "description": "Name of the attribute"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "description": "Contains a list of dimension attributes. Required only for Dynamic Roles"
+                  }
+                },
+                {
+                  "name": "form_definition_id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The ID of the form definition used for the access request. If specified, the form is presented to the requester during the access request process."
+                  }
+                },
+                {
+                  "name": "max_permitted_access_duration",
+                  "single_nested": {
+                    "computed_optional_required": "computed",
+                    "attributes": [
+                      {
+                        "name": "time_unit",
+                        "string": {
+                          "computed_optional_required": "computed",
+                          "description": "The unit of time that corresponds to the **value**. It defines the scale of the time period."
+                        }
+                      },
+                      {
+                        "name": "value",
+                        "int64": {
+                          "computed_optional_required": "computed",
+                          "description": "The numeric value representing the amount of time, which is defined in the **timeUnit**."
+                        }
+                      }
+                    ],
+                    "associated_external_type": {
+                      "import": {
+                        "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                      },
+                      "type": "*api_beta.AccessDuration"
+                    }
+                  }
+                },
+                {
+                  "name": "reauthorization_required",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Indicates whether reauthorization is required for the request."
+                  }
+                },
+                {
+                  "name": "require_end_date",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Indicates whether the requester of the containing object must provide access end date."
+                  }
+                }
+              ],
+              "description": "Access request configuration for this object"
+            }
+          },
+          {
+            "name": "additional_owners",
+            "list_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "ID of the identity or governance group."
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Display name. It may be left null or omitted on input. If set, it must match the current display name of the identity or governance group, otherwise a 400 Bad Request error may result."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Type of the additional owner; IDENTITY for an identity, GOVERNANCE_GROUP for a governance group."
+                    }
+                  }
+                ]
+              },
+              "description": "List of additional owner references beyond the primary owner. Each entry may be an identity (IDENTITY) or a governance group (GOVERNANCE_GROUP)."
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Date the Role was created"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "A human-readable description of the Role"
+            }
+          },
+          {
+            "name": "dimension_refs",
+            "list_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "ID of the object to which this reference applies"
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Human-readable display name of the object to which this reference applies"
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The type of the object to which this reference applies"
+                    }
+                  }
+                ],
+                "associated_external_type": {
+                  "import": {
+                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  },
+                  "type": "*api_beta.DimensionRef"
+                }
+              },
+              "description": "List of references to dimensions to which this Role is assigned. This field is only relevant if the Role is dimensional."
+            }
+          },
+          {
+            "name": "dimensional",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "Whether the Role is dimensional."
+            }
+          },
+          {
+            "name": "enabled",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "Whether the Role is enabled or not."
+            }
+          },
+          {
+            "name": "entitlements",
+            "list_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Entitlement's ID."
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Entitlement's display name."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Entitlement's DTO type."
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "legacy_membership_info",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "description": "This field is not directly modifiable and is generally expected to be *null*. In very rare instances, some Roles may have been created using membership selection criteria that are no longer fully supported. While these Roles will still work, they should be migrated to STANDARD or IDENTITY_LIST selection criteria. This field exists for informational purposes as an aid to such migration."
+            }
+          },
+          {
+            "name": "membership",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "criteria",
+                  "single_nested": {
+                    "computed_optional_required": "computed",
+                    "attributes": [
+                      {
+                        "name": "children",
+                        "list_nested": {
+                          "computed_optional_required": "computed",
+                          "nested_object": {
+                            "attributes": [
+                              {
+                                "name": "grandchildren",
+                                "list_nested": {
+                                  "computed_optional_required": "computed",
+                                  "nested_object": {
+                                    "attributes": [
+                                      {
+                                        "name": "grandchild_key",
+                                        "single_nested": {
+                                          "computed_optional_required": "computed",
+                                          "attributes": [
+                                            {
+                                              "name": "property",
+                                              "string": {
+                                                "computed_optional_required": "computed",
+                                                "description": "The name of the attribute or entitlement to which the associated criteria applies."
+                                              }
+                                            },
+                                            {
+                                              "name": "source_id",
+                                              "string": {
+                                                "computed_optional_required": "computed",
+                                                "description": "ID of the Source from which an account attribute or entitlement is drawn. Required if type is ACCOUNT or ENTITLEMENT"
+                                              }
+                                            },
+                                            {
+                                              "name": "type",
+                                              "string": {
+                                                "computed_optional_required": "computed",
+                                                "description": "Indicates whether the associated criteria represents an expression on identity attributes, account attributes, or entitlements, respectively."
+                                              }
+                                            }
+                                          ],
+                                          "description": "Refers to a specific Identity attribute, Account attibute, or Entitlement used in Role membership criteria",
+                                          "associated_external_type": {
+                                            "import": {
+                                              "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                                            },
+                                            "type": "*api_beta.RoleCriteriaKey"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "name": "operation",
+                                        "string": {
+                                          "computed_optional_required": "computed",
+                                          "description": "An operation"
+                                        }
+                                      },
+                                      {
+                                        "name": "string_value",
+                                        "string": {
+                                          "computed_optional_required": "computed",
+                                          "description": "String value to test the Identity attribute, Account attribute, or Entitlement specified in the key w/r/t the specified operation. If this criteria is a leaf node, that is, if the operation is one of EQUALS, NOT_EQUALS, CONTAINS, DOES_NOT_CONTAIN, STARTS_WITH, or ENDS_WITH, this field is required. Otherwise, specifying it is an error."
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "description": "Array of child criteria. Required if the operation is AND or OR, otherwise it must be left null. A maximum of three levels of criteria are supported, including leaf nodes. Additionally, AND nodes can only be children or OR nodes and vice-versa."
+                                }
+                              },
+                              {
+                                "name": "child_key",
+                                "single_nested": {
+                                  "computed_optional_required": "computed",
+                                  "attributes": [
+                                    {
+                                      "name": "property",
+                                      "string": {
+                                        "computed_optional_required": "computed",
+                                        "description": "The name of the attribute or entitlement to which the associated criteria applies."
+                                      }
+                                    },
+                                    {
+                                      "name": "source_id",
+                                      "string": {
+                                        "computed_optional_required": "computed",
+                                        "description": "ID of the Source from which an account attribute or entitlement is drawn. Required if type is ACCOUNT or ENTITLEMENT"
+                                      }
+                                    },
+                                    {
+                                      "name": "type",
+                                      "string": {
+                                        "computed_optional_required": "computed",
+                                        "description": "Indicates whether the associated criteria represents an expression on identity attributes, account attributes, or entitlements, respectively."
+                                      }
+                                    }
+                                  ],
+                                  "description": "Refers to a specific Identity attribute, Account attibute, or Entitlement used in Role membership criteria",
+                                  "associated_external_type": {
+                                    "import": {
+                                      "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                                    },
+                                    "type": "*api_beta.RoleCriteriaKey"
+                                  }
+                                }
+                              },
+                              {
+                                "name": "operation",
+                                "string": {
+                                  "computed_optional_required": "computed",
+                                  "description": "An operation"
+                                }
+                              },
+                              {
+                                "name": "string_value",
+                                "string": {
+                                  "computed_optional_required": "computed",
+                                  "description": "String value to test the Identity attribute, Account attribute, or Entitlement specified in the key w/r/t the specified operation. If this criteria is a leaf node, that is, if the operation is one of EQUALS, NOT_EQUALS, CONTAINS, DOES_NOT_CONTAIN, STARTS_WITH, or ENDS_WITH, this field is required. Otherwise, specifying it is an error."
+                                }
+                              }
+                            ]
+                          },
+                          "description": "Array of child criteria. Required if the operation is AND or OR, otherwise it must be left null. A maximum of three levels of criteria are supported, including leaf nodes. Additionally, AND nodes can only be children or OR nodes and vice-versa."
+                        }
+                      },
+                      {
+                        "name": "key",
+                        "single_nested": {
+                          "computed_optional_required": "computed",
+                          "attributes": [
+                            {
+                              "name": "property",
+                              "string": {
+                                "computed_optional_required": "computed",
+                                "description": "The name of the attribute or entitlement to which the associated criteria applies."
+                              }
+                            },
+                            {
+                              "name": "source_id",
+                              "string": {
+                                "computed_optional_required": "computed",
+                                "description": "ID of the Source from which an account attribute or entitlement is drawn. Required if type is ACCOUNT or ENTITLEMENT"
+                              }
+                            },
+                            {
+                              "name": "type",
+                              "string": {
+                                "computed_optional_required": "computed",
+                                "description": "Indicates whether the associated criteria represents an expression on identity attributes, account attributes, or entitlements, respectively."
+                              }
+                            }
+                          ],
+                          "description": "Refers to a specific Identity attribute, Account attibute, or Entitlement used in Role membership criteria",
+                          "associated_external_type": {
+                            "import": {
+                              "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                            },
+                            "type": "*api_beta.RoleCriteriaKey"
+                          }
+                        }
+                      },
+                      {
+                        "name": "operation",
+                        "string": {
+                          "computed_optional_required": "computed",
+                          "description": "An operation"
+                        }
+                      },
+                      {
+                        "name": "string_value",
+                        "string": {
+                          "computed_optional_required": "computed",
+                          "description": "String value to test the Identity attribute, Account attribute, or Entitlement specified in the key w/r/t the specified operation. If this criteria is a leaf node, that is, if the operation is one of EQUALS, NOT_EQUALS, CONTAINS, DOES_NOT_CONTAIN, STARTS_WITH, or ENDS_WITH, this field is required. Otherwise, specifying it is an error."
+                        }
+                      }
+                    ],
+                    "description": "Defines STANDARD type Role membership"
+                  }
+                },
+                {
+                  "name": "identities",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "alias_name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "User name of the Identity"
+                          }
+                        },
+                        {
+                          "name": "id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Identity id"
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Human-readable display name of the Identity."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "An enumeration of the types of DTOs supported within the IdentityNow infrastructure."
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.RoleMembershipIdentity"
+                      }
+                    },
+                    "description": "Defines role membership as being exclusive to the specified Identities, when type is IDENTITY_LIST."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "This enum characterizes the type of a Role's membership selector. Only the following two are fully supported:\n\nSTANDARD: Indicates that Role membership is defined in terms of a criteria expression\n\nIDENTITY_LIST: Indicates that Role membership is conferred on the specific identities listed"
+                  }
+                }
+              ],
+              "description": "When present, specifies that the Role is to be granted to Identities which either satisfy specific criteria or which are members of a given list of Identities."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Date the Role was last modified."
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The human-readable display name of the Role"
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's identity ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's name. It may be left null or omitted in a POST or PATCH. If set, it must match the current value of the owner's display name, otherwise a 400 Bad Request error will result."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner type. This field must be either left null or set to 'IDENTITY' on input, otherwise a 400 Bad Request error will result."
+                  }
+                }
+              ],
+              "description": "Owner of the object.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.OwnerReference"
+              }
+            }
+          },
+          {
+            "name": "privilege_level",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The privilege level of the role, if applicable."
+            }
+          },
+          {
+            "name": "requestable",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "Whether the Role can be the target of access requests."
+            }
+          },
+          {
+            "name": "revocation_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "revocation_approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Id of the specific approver, used when approverType is GOVERNANCE_GROUP, WORKFLOW, or ADDITIONAL_GOVERNANCE_GROUP."
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Describes the individual or group that is responsible for an approval step. Values are as follows.\n\n**OWNER**: Owner of the associated Role\n\n**MANAGER**: Manager of the Identity making the request\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field. Workflow is exclusive to other types of approvals and License required.\n\n**ALL_OWNERS**: All owners of the Role, including the primary owner and any secondary owners\n\n**ADDITIONAL_OWNER**: An additional owner of the Role, the ID of which is specified by the **approverId** field\n\n**ADDITIONAL_GOVERNANCE_GROUP**: An additional Governance Group, the ID of which is specified by the **approverId** field"
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.ApprovalSchemeForRole"
+                      }
+                    },
+                    "description": "List describing the steps in approving the revocation request"
+                  }
+                },
+                {
+                  "name": "comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Whether the requester of the containing object must provide comments justifying the request"
+                  }
+                },
+                {
+                  "name": "denial_comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Whether an approver must provide comments when denying the request"
+                  }
+                }
+              ],
+              "description": "Revocation request configuration for this object."
+            }
+          },
+          {
+            "name": "segments",
+            "list": {
+              "computed_optional_required": "computed",
+              "element_type": {
+                "string": {}
+              },
+              "description": "List of IDs of segments, if any, to which this Role is assigned."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "role",
+      "schema": {
+        "attributes": [
+          {
+            "name": "access_model_metadata",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "attributes",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "description",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "The description of the Attribute."
+                          }
+                        },
+                        {
+                          "name": "key",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Technical name of the Attribute. This is unique and cannot be changed after creation."
+                          }
+                        },
+                        {
+                          "name": "multiselect",
+                          "bool": {
+                            "computed_optional_required": "computed_optional",
+                            "default": {
+                              "static": false
+                            },
+                            "description": "Indicates whether the attribute can have multiple values."
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "The display name of the key."
+                          }
+                        },
+                        {
+                          "name": "object_types",
+                          "list": {
+                            "computed_optional_required": "computed_optional",
+                            "element_type": {
+                              "string": {}
+                            },
+                            "description": "An array of object types this attributes values can be applied to. Possible values are \"all\" or \"entitlement\". Value \"all\" means this attribute can be used with all object types that are supported."
+                          }
+                        },
+                        {
+                          "name": "status",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "The status of the Attribute."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "The type of the Attribute. This can be either \"custom\" or \"governance\"."
+                          }
+                        },
+                        {
+                          "name": "values",
+                          "list_nested": {
+                            "computed_optional_required": "computed_optional",
+                            "nested_object": {
+                              "attributes": [
+                                {
+                                  "name": "name",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "The display name of the Attribute value."
+                                  }
+                                },
+                                {
+                                  "name": "status",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "The status of the Attribute value."
+                                  }
+                                },
+                                {
+                                  "name": "value",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "Technical name of the Attribute value. This is unique and cannot be changed after creation."
+                                  }
+                                }
+                              ],
+                              "associated_external_type": {
+                                "import": {
+                                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                                },
+                                "type": "*api_beta.AttributeValueDTO"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "description": "This field must be left null or empty when creating an Role, otherwise a 400 Bad Request error will result."
+            }
+          },
+          {
+            "name": "access_profiles",
+            "list_nested": {
+              "computed_optional_required": "computed_optional",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "ID of the Access Profile"
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Human-readable display name of the Access Profile. This field is ignored on input."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Type of requested object. This field must be either left null or set to 'ACCESS_PROFILE' when creating an Access Profile, otherwise a 400 Bad Request error will result.",
+                      "validators": [
+                        {
+                          "custom": {
+                            "imports": [
+                              {
+                                "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                              }
+                            ],
+                            "schema_definition": "stringvalidator.OneOf(\n\"ACCESS_PROFILE\",\n)"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "associated_external_type": {
+                  "import": {
+                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  },
+                  "type": "*api_beta.AccessProfileRef"
+                }
+              }
+            }
+          },
+          {
+            "name": "access_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Id of the specific approver, used when approverType is GOVERNANCE_GROUP, WORKFLOW, or ADDITIONAL_GOVERNANCE_GROUP."
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Describes the individual or group that is responsible for an approval step. Values are as follows.\n\n**OWNER**: Owner of the associated Role\n\n**MANAGER**: Manager of the Identity making the request\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field. Workflow is exclusive to other types of approvals and License required.\n\n**ALL_OWNERS**: All owners of the Role, including the primary owner and any secondary owners\n\n**ADDITIONAL_OWNER**: An additional owner of the Role, the ID of which is specified by the **approverId** field\n\n**ADDITIONAL_GOVERNANCE_GROUP**: An additional Governance Group, the ID of which is specified by the **approverId** field",
+                            "validators": [
+                              {
+                                "custom": {
+                                  "imports": [
+                                    {
+                                      "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                    }
+                                  ],
+                                  "schema_definition": "stringvalidator.OneOf(\n\"OWNER\",\n\"MANAGER\",\n\"GOVERNANCE_GROUP\",\n\"WORKFLOW\",\n\"ALL_OWNERS\",\n\"ADDITIONAL_OWNER\",\n\"ADDITIONAL_GOVERNANCE_GROUP\",\n)"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.ApprovalSchemeForRole"
+                      }
+                    },
+                    "description": "List describing the steps in approving the request"
+                  }
+                },
+                {
+                  "name": "comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Whether the requester of the containing object must provide comments justifying the request"
+                  }
+                },
+                {
+                  "name": "denial_comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Whether an approver must provide comments when denying the request"
+                  }
+                },
+                {
+                  "name": "dimension_schema",
+                  "single_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "attributes": [
+                      {
+                        "name": "dimension_attributes",
+                        "list_nested": {
+                          "computed_optional_required": "computed_optional",
+                          "nested_object": {
+                            "attributes": [
+                              {
+                                "name": "derived",
+                                "bool": {
+                                  "computed_optional_required": "computed_optional",
+                                  "default": {
+                                    "static": true
+                                  },
+                                  "description": "If an attribute is derived, its value comes from the identity. Otherwise, it can be provided with access request"
+                                }
+                              },
+                              {
+                                "name": "display_name",
+                                "string": {
+                                  "computed_optional_required": "computed_optional",
+                                  "description": "Display name of the attribute"
+                                }
+                              },
+                              {
+                                "name": "name",
+                                "string": {
+                                  "computed_optional_required": "computed_optional",
+                                  "description": "Name of the attribute"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    "description": "Contains a list of dimension attributes. Required only for Dynamic Roles"
+                  }
+                },
+                {
+                  "name": "form_definition_id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "The ID of the form definition used for the access request. If specified, the form is presented to the requester during the access request process."
+                  }
+                },
+                {
+                  "name": "max_permitted_access_duration",
+                  "single_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "attributes": [
+                      {
+                        "name": "time_unit",
+                        "string": {
+                          "computed_optional_required": "computed_optional",
+                          "description": "The unit of time that corresponds to the **value**. It defines the scale of the time period.",
+                          "validators": [
+                            {
+                              "custom": {
+                                "imports": [
+                                  {
+                                    "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                  }
+                                ],
+                                "schema_definition": "stringvalidator.OneOf(\n\"HOURS\",\n\"DAYS\",\n\"WEEKS\",\n\"MONTHS\",\n)"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "name": "value",
+                        "int64": {
+                          "computed_optional_required": "computed_optional",
+                          "description": "The numeric value representing the amount of time, which is defined in the **timeUnit**."
+                        }
+                      }
+                    ],
+                    "associated_external_type": {
+                      "import": {
+                        "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                      },
+                      "type": "*api_beta.AccessDuration"
+                    }
+                  }
+                },
+                {
+                  "name": "reauthorization_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Indicates whether reauthorization is required for the request."
+                  }
+                },
+                {
+                  "name": "require_end_date",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Indicates whether the requester of the containing object must provide access end date."
+                  }
+                }
+              ],
+              "description": "Access request configuration for this object"
+            }
+          },
+          {
+            "name": "additional_owners",
+            "list_nested": {
+              "computed_optional_required": "computed_optional",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "ID of the identity or governance group."
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Display name. It may be left null or omitted on input. If set, it must match the current display name of the identity or governance group, otherwise a 400 Bad Request error may result."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Type of the additional owner; IDENTITY for an identity, GOVERNANCE_GROUP for a governance group.",
+                      "validators": [
+                        {
+                          "custom": {
+                            "imports": [
+                              {
+                                "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                              }
+                            ],
+                            "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n\"GOVERNANCE_GROUP\",\n)"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "description": "List of additional owner references beyond the primary owner. Each entry may be an identity (IDENTITY) or a governance group (GOVERNANCE_GROUP)."
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Date the Role was created"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "A human-readable description of the Role"
+            }
+          },
+          {
+            "name": "dimension_refs",
+            "list_nested": {
+              "computed_optional_required": "computed_optional",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "ID of the object to which this reference applies"
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Human-readable display name of the object to which this reference applies"
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "The type of the object to which this reference applies",
+                      "validators": [
+                        {
+                          "custom": {
+                            "imports": [
+                              {
+                                "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                              }
+                            ],
+                            "schema_definition": "stringvalidator.OneOf(\n\"DIMENSION\",\n)"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "associated_external_type": {
+                  "import": {
+                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  },
+                  "type": "*api_beta.DimensionRef"
+                }
+              },
+              "description": "List of references to dimensions to which this Role is assigned. This field is only relevant if the Role is dimensional."
+            }
+          },
+          {
+            "name": "dimensional",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "Whether the Role is dimensional."
+            }
+          },
+          {
+            "name": "enabled",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "Whether the Role is enabled or not."
+            }
+          },
+          {
+            "name": "entitlements",
+            "list_nested": {
+              "computed_optional_required": "computed_optional",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Entitlement's ID."
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Entitlement's display name."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Entitlement's DTO type.",
+                      "validators": [
+                        {
+                          "custom": {
+                            "imports": [
+                              {
+                                "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                              }
+                            ],
+                            "schema_definition": "stringvalidator.OneOf(\n\"ENTITLEMENT\",\n)"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The id of the Role. This field must be left null when creating an Role, otherwise a 400 Bad Request error will result."
+            }
+          },
+          {
+            "name": "legacy_membership_info",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "description": "This field is not directly modifiable and is generally expected to be *null*. In very rare instances, some Roles may have been created using membership selection criteria that are no longer fully supported. While these Roles will still work, they should be migrated to STANDARD or IDENTITY_LIST selection criteria. This field exists for informational purposes as an aid to such migration."
+            }
+          },
+          {
+            "name": "membership",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "criteria",
+                  "single_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "attributes": [
+                      {
+                        "name": "children",
+                        "list_nested": {
+                          "computed_optional_required": "computed_optional",
+                          "nested_object": {
+                            "attributes": [
+                              {
+                                "name": "grandchildren",
+                                "list_nested": {
+                                  "computed_optional_required": "computed_optional",
+                                  "nested_object": {
+                                    "attributes": [
+                                      {
+                                        "name": "grandchild_key",
+                                        "single_nested": {
+                                          "computed_optional_required": "computed_optional",
+                                          "attributes": [
+                                            {
+                                              "name": "property",
+                                              "string": {
+                                                "computed_optional_required": "required",
+                                                "description": "The name of the attribute or entitlement to which the associated criteria applies."
+                                              }
+                                            },
+                                            {
+                                              "name": "source_id",
+                                              "string": {
+                                                "computed_optional_required": "computed_optional",
+                                                "description": "ID of the Source from which an account attribute or entitlement is drawn. Required if type is ACCOUNT or ENTITLEMENT"
+                                              }
+                                            },
+                                            {
+                                              "name": "type",
+                                              "string": {
+                                                "computed_optional_required": "required",
+                                                "description": "Indicates whether the associated criteria represents an expression on identity attributes, account attributes, or entitlements, respectively.",
+                                                "validators": [
+                                                  {
+                                                    "custom": {
+                                                      "imports": [
+                                                        {
+                                                          "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                                        }
+                                                      ],
+                                                      "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n\"ACCOUNT\",\n\"ENTITLEMENT\",\n)"
+                                                    }
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          ],
+                                          "description": "Refers to a specific Identity attribute, Account attibute, or Entitlement used in Role membership criteria",
+                                          "associated_external_type": {
+                                            "import": {
+                                              "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                                            },
+                                            "type": "*api_beta.RoleCriteriaKey"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "name": "operation",
+                                        "string": {
+                                          "computed_optional_required": "computed_optional",
+                                          "description": "An operation",
+                                          "validators": [
+                                            {
+                                              "custom": {
+                                                "imports": [
+                                                  {
+                                                    "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                                  }
+                                                ],
+                                                "schema_definition": "stringvalidator.OneOf(\n\"EQUALS\",\n\"NOT_EQUALS\",\n\"CONTAINS\",\n\"DOES_NOT_CONTAIN\",\n\"STARTS_WITH\",\n\"ENDS_WITH\",\n\"GREATER_THAN\",\n\"LESS_THAN\",\n\"GREATER_THAN_EQUALS\",\n\"LESS_THAN_EQUALS\",\n\"AND\",\n\"OR\",\n)"
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "name": "string_value",
+                                        "string": {
+                                          "computed_optional_required": "computed_optional",
+                                          "description": "String value to test the Identity attribute, Account attribute, or Entitlement specified in the key w/r/t the specified operation. If this criteria is a leaf node, that is, if the operation is one of EQUALS, NOT_EQUALS, CONTAINS, DOES_NOT_CONTAIN, STARTS_WITH, or ENDS_WITH, this field is required. Otherwise, specifying it is an error."
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "description": "Array of child criteria. Required if the operation is AND or OR, otherwise it must be left null. A maximum of three levels of criteria are supported, including leaf nodes. Additionally, AND nodes can only be children or OR nodes and vice-versa."
+                                }
+                              },
+                              {
+                                "name": "child_key",
+                                "single_nested": {
+                                  "computed_optional_required": "computed_optional",
+                                  "attributes": [
+                                    {
+                                      "name": "property",
+                                      "string": {
+                                        "computed_optional_required": "required",
+                                        "description": "The name of the attribute or entitlement to which the associated criteria applies."
+                                      }
+                                    },
+                                    {
+                                      "name": "source_id",
+                                      "string": {
+                                        "computed_optional_required": "computed_optional",
+                                        "description": "ID of the Source from which an account attribute or entitlement is drawn. Required if type is ACCOUNT or ENTITLEMENT"
+                                      }
+                                    },
+                                    {
+                                      "name": "type",
+                                      "string": {
+                                        "computed_optional_required": "required",
+                                        "description": "Indicates whether the associated criteria represents an expression on identity attributes, account attributes, or entitlements, respectively.",
+                                        "validators": [
+                                          {
+                                            "custom": {
+                                              "imports": [
+                                                {
+                                                  "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                                }
+                                              ],
+                                              "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n\"ACCOUNT\",\n\"ENTITLEMENT\",\n)"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ],
+                                  "description": "Refers to a specific Identity attribute, Account attibute, or Entitlement used in Role membership criteria",
+                                  "associated_external_type": {
+                                    "import": {
+                                      "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                                    },
+                                    "type": "*api_beta.RoleCriteriaKey"
+                                  }
+                                }
+                              },
+                              {
+                                "name": "operation",
+                                "string": {
+                                  "computed_optional_required": "computed_optional",
+                                  "description": "An operation",
+                                  "validators": [
+                                    {
+                                      "custom": {
+                                        "imports": [
+                                          {
+                                            "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                          }
+                                        ],
+                                        "schema_definition": "stringvalidator.OneOf(\n\"EQUALS\",\n\"NOT_EQUALS\",\n\"CONTAINS\",\n\"DOES_NOT_CONTAIN\",\n\"STARTS_WITH\",\n\"ENDS_WITH\",\n\"GREATER_THAN\",\n\"LESS_THAN\",\n\"GREATER_THAN_EQUALS\",\n\"LESS_THAN_EQUALS\",\n\"AND\",\n\"OR\",\n)"
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "name": "string_value",
+                                "string": {
+                                  "computed_optional_required": "computed_optional",
+                                  "description": "String value to test the Identity attribute, Account attribute, or Entitlement specified in the key w/r/t the specified operation. If this criteria is a leaf node, that is, if the operation is one of EQUALS, NOT_EQUALS, CONTAINS, DOES_NOT_CONTAIN, STARTS_WITH, or ENDS_WITH, this field is required. Otherwise, specifying it is an error."
+                                }
+                              }
+                            ]
+                          },
+                          "description": "Array of child criteria. Required if the operation is AND or OR, otherwise it must be left null. A maximum of three levels of criteria are supported, including leaf nodes. Additionally, AND nodes can only be children or OR nodes and vice-versa."
+                        }
+                      },
+                      {
+                        "name": "key",
+                        "single_nested": {
+                          "computed_optional_required": "computed_optional",
+                          "attributes": [
+                            {
+                              "name": "property",
+                              "string": {
+                                "computed_optional_required": "required",
+                                "description": "The name of the attribute or entitlement to which the associated criteria applies."
+                              }
+                            },
+                            {
+                              "name": "source_id",
+                              "string": {
+                                "computed_optional_required": "computed_optional",
+                                "description": "ID of the Source from which an account attribute or entitlement is drawn. Required if type is ACCOUNT or ENTITLEMENT"
+                              }
+                            },
+                            {
+                              "name": "type",
+                              "string": {
+                                "computed_optional_required": "required",
+                                "description": "Indicates whether the associated criteria represents an expression on identity attributes, account attributes, or entitlements, respectively.",
+                                "validators": [
+                                  {
+                                    "custom": {
+                                      "imports": [
+                                        {
+                                          "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                        }
+                                      ],
+                                      "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n\"ACCOUNT\",\n\"ENTITLEMENT\",\n)"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ],
+                          "description": "Refers to a specific Identity attribute, Account attibute, or Entitlement used in Role membership criteria",
+                          "associated_external_type": {
+                            "import": {
+                              "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                            },
+                            "type": "*api_beta.RoleCriteriaKey"
+                          }
+                        }
+                      },
+                      {
+                        "name": "operation",
+                        "string": {
+                          "computed_optional_required": "computed_optional",
+                          "description": "An operation",
+                          "validators": [
+                            {
+                              "custom": {
+                                "imports": [
+                                  {
+                                    "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                  }
+                                ],
+                                "schema_definition": "stringvalidator.OneOf(\n\"EQUALS\",\n\"NOT_EQUALS\",\n\"CONTAINS\",\n\"DOES_NOT_CONTAIN\",\n\"STARTS_WITH\",\n\"ENDS_WITH\",\n\"GREATER_THAN\",\n\"LESS_THAN\",\n\"GREATER_THAN_EQUALS\",\n\"LESS_THAN_EQUALS\",\n\"AND\",\n\"OR\",\n)"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "name": "string_value",
+                        "string": {
+                          "computed_optional_required": "computed_optional",
+                          "description": "String value to test the Identity attribute, Account attribute, or Entitlement specified in the key w/r/t the specified operation. If this criteria is a leaf node, that is, if the operation is one of EQUALS, NOT_EQUALS, CONTAINS, DOES_NOT_CONTAIN, STARTS_WITH, or ENDS_WITH, this field is required. Otherwise, specifying it is an error."
+                        }
+                      }
+                    ],
+                    "description": "Defines STANDARD type Role membership"
+                  }
+                },
+                {
+                  "name": "identities",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "alias_name",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "User name of the Identity"
+                          }
+                        },
+                        {
+                          "name": "id",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Identity id"
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Human-readable display name of the Identity."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "An enumeration of the types of DTOs supported within the IdentityNow infrastructure.",
+                            "validators": [
+                              {
+                                "custom": {
+                                  "imports": [
+                                    {
+                                      "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                    }
+                                  ],
+                                  "schema_definition": "stringvalidator.OneOf(\n\"ACCOUNT_CORRELATION_CONFIG\",\n\"ACCESS_PROFILE\",\n\"ACCESS_REQUEST_APPROVAL\",\n\"ACCOUNT\",\n\"APPLICATION\",\n\"CAMPAIGN\",\n\"CAMPAIGN_FILTER\",\n\"CERTIFICATION\",\n\"CLUSTER\",\n\"CONNECTOR_SCHEMA\",\n\"ENTITLEMENT\",\n\"GOVERNANCE_GROUP\",\n\"IDENTITY\",\n\"IDENTITY_PROFILE\",\n\"IDENTITY_REQUEST\",\n\"MACHINE_IDENTITY\",\n\"LIFECYCLE_STATE\",\n\"PASSWORD_POLICY\",\n\"ROLE\",\n\"RULE\",\n\"SOD_POLICY\",\n\"SOURCE\",\n\"TAG\",\n\"TAG_CATEGORY\",\n\"TASK_RESULT\",\n\"REPORT_RESULT\",\n\"SOD_VIOLATION\",\n\"ACCOUNT_ACTIVITY\",\n\"WORKGROUP\",\n)"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.RoleMembershipIdentity"
+                      }
+                    },
+                    "description": "Defines role membership as being exclusive to the specified Identities, when type is IDENTITY_LIST."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "This enum characterizes the type of a Role's membership selector. Only the following two are fully supported:\n\nSTANDARD: Indicates that Role membership is defined in terms of a criteria expression\n\nIDENTITY_LIST: Indicates that Role membership is conferred on the specific identities listed",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"STANDARD\",\n\"IDENTITY_LIST\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "description": "When present, specifies that the Role is to be granted to Identities which either satisfy specific criteria or which are members of a given list of Identities."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Date the Role was last modified."
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The human-readable display name of the Role",
+              "validators": [
+                {
+                  "custom": {
+                    "imports": [
+                      {
+                        "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                      }
+                    ],
+                    "schema_definition": "stringvalidator.LengthAtMost(128)"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "required",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's identity ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's name. It may be left null or omitted in a POST or PATCH. If set, it must match the current value of the owner's display name, otherwise a 400 Bad Request error will result."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner type. This field must be either left null or set to 'IDENTITY' on input, otherwise a 400 Bad Request error will result.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "description": "Owner of the object.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.OwnerReference"
+              }
+            }
+          },
+          {
+            "name": "privilege_level",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The privilege level of the role, if applicable."
+            }
+          },
+          {
+            "name": "requestable",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "Whether the Role can be the target of access requests."
+            }
+          },
+          {
+            "name": "revocation_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "revocation_approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Id of the specific approver, used when approverType is GOVERNANCE_GROUP, WORKFLOW, or ADDITIONAL_GOVERNANCE_GROUP."
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Describes the individual or group that is responsible for an approval step. Values are as follows.\n\n**OWNER**: Owner of the associated Role\n\n**MANAGER**: Manager of the Identity making the request\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field. Workflow is exclusive to other types of approvals and License required.\n\n**ALL_OWNERS**: All owners of the Role, including the primary owner and any secondary owners\n\n**ADDITIONAL_OWNER**: An additional owner of the Role, the ID of which is specified by the **approverId** field\n\n**ADDITIONAL_GOVERNANCE_GROUP**: An additional Governance Group, the ID of which is specified by the **approverId** field",
+                            "validators": [
+                              {
+                                "custom": {
+                                  "imports": [
+                                    {
+                                      "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                    }
+                                  ],
+                                  "schema_definition": "stringvalidator.OneOf(\n\"OWNER\",\n\"MANAGER\",\n\"GOVERNANCE_GROUP\",\n\"WORKFLOW\",\n\"ALL_OWNERS\",\n\"ADDITIONAL_OWNER\",\n\"ADDITIONAL_GOVERNANCE_GROUP\",\n)"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.ApprovalSchemeForRole"
+                      }
+                    },
+                    "description": "List describing the steps in approving the revocation request"
+                  }
+                },
+                {
+                  "name": "comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Whether the requester of the containing object must provide comments justifying the request"
+                  }
+                },
+                {
+                  "name": "denial_comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Whether an approver must provide comments when denying the request"
+                  }
+                }
+              ],
+              "description": "Revocation request configuration for this object."
+            }
+          },
+          {
+            "name": "segments",
+            "list": {
+              "computed_optional_required": "computed_optional",
+              "element_type": {
+                "string": {}
+              },
+              "description": "List of IDs of segments, if any, to which this Role is assigned."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

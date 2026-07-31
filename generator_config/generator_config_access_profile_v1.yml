@@ -1,0 +1,22 @@
+provider:
+  name: identitynow
+resources:
+  access_profile:
+    create:
+      path: /access-profiles/v1
+      method: POST
+    read:
+      path: /access-profiles/v1/{id}
+      method: GET
+    update:
+      path: /access-profiles/v1/{id}
+      method: PATCH
+    delete:
+      path: /access-profiles/v1/{id}
+      method: DELETE
+
+data_sources:
+  access_profile:
+    read:
+      path: /access-profiles/v1/{id}
+      method: GET

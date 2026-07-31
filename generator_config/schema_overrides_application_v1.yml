@@ -1,0 +1,46 @@
+required_overrides:
+  # "owner" is generated fully Computed (not even Optional) because
+  # createSourceAppV1's request body (SourceAppCreateDto) doesn't accept an
+  # owner at all - only patchSourceAppV1 can set/replace it (see the spec's
+  # patch doc: "The following fields are patchable: name, description,
+  # enabled, owner, provisionRequestEnabled, appCenterEnabled, accountSource,
+  # matchAllAccounts and accessProfiles."). Force it to computed_optional so
+  # practitioners can actually configure it; resource_application.go's
+  # Create() sends it via an immediate follow-up PATCH after the initial
+  # POST (same "can't set at create time, must PATCH after" shape as
+  # access_profile_ids - see the package doc).
+  - path: "owner"
+    scope: resource
+    required: false
+
+  # Once "owner" itself is Optional (see above), its "id"/"type" leaf
+  # attributes still need to be settable when the practitioner does
+  # configure an owner - tfplugingen-openapi generated them Computed-only
+  # (matching BaseReferenceDto's fully-optional API shape), which would
+  # otherwise make it impossible to actually populate an owner at all.
+  # Mirrors identity_profile_v1/governance_group_v1/role_v1's established
+  # "owner.id"/"owner.type" Required, "owner.name" Computed-only (echoed
+  # back by the API) shape.
+  - path: "owner.id"
+    scope: resource
+    required: true
+
+  - path: "owner.type"
+    scope: resource
+    required: true
+
+strip_defaults:
+  # "account_source.use_for_password_management" is Computed-optional with a
+  # spec-declared static default of `false`, but live testing (first
+  # `terraform apply` against the sandbox) showed the real API can return
+  # `true` for a freshly created application when the practitioner hasn't
+  # configured this field - "Provider produced inconsistent result after
+  # apply" ( .account_source.use_for_password_management: was cty.False,
+  # but now cty.True). This is server-computed (reflects the account
+  # source's actual password-management configuration, not a stable
+  # client-side default), so the static default is misleading - same bug
+  # class as sources_v1's "healthy" field. Stripping it leaves the attribute
+  # planning as Unknown (rather than a specific predicted value) when not
+  # configured, matching what the API actually returns.
+  - path: "account_source.use_for_password_management"
+    scope: resource

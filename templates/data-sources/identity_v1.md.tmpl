@@ -1,0 +1,37 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Identities"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+Exactly one of `id`, `alias`, or `email_address` must be set.
+`alias`/`email_address` lookups use exact-match server-side filters and return
+an error if zero or multiple identities match; use `id` if the alternate key
+is not stable or unique enough in your tenant.
+
+`attributes` is intentionally hand-written only on the singular data source as
+a normalized JSON string because the API returns a connector-derived dynamic
+map that was excluded from Phase 1 codegen.
+
+The reference provider's `use_caller_identity` / `caller_identity_used`
+fallback is intentionally **not** implemented in this pilot because no clear
+"get current caller identity" endpoint was found in the scoped v1 identities
+spec. Revisit this only if a concrete practitioner need emerges.

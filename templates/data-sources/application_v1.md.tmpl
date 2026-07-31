@@ -1,0 +1,28 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Applications"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+See the [`identitynow_application_v1` resource documentation](../resources/application_v1.md#known-limitations--live-testing-notes)
+for the full list of limitations shared by both the resource and this data
+source (both are backed by the same underlying model/conversion code),
+including how `access_profile_ids` is populated via a separate API call.

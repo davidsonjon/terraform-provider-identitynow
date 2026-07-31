@@ -1,0 +1,71 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Segments"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Design Notes
+
+This resource is the repo's second **fully hand-written, no-codegen**
+resource (after `identitynow_source_load_entitlement_wait_v1`): there is
+no real live segment-side batch endpoint for this association, so the
+provider implements writes by reconciling each referenced object from the
+Role/Access Profile side instead.
+
+- **This resource manages assignments on an existing Segment; it does not
+  create or delete the Segment itself.** Use `identitynow_segment_v1` for
+  the Segment lifecycle, and this resource only for its Role/Access Profile
+  membership.
+- **Only `ROLE` and `ACCESS_PROFILE` assignments are supported.** This is a
+  hard restriction of the real write mechanism: this resource updates the
+  `/segments` list on Roles and Access Profiles, so only those two object
+  types can actually be managed from here. Accordingly, the schema rejects
+  any other `assignments[*].type` value.
+- **ENTITLEMENT is deliberately excluded from `Read`, unlike the reference
+  `davidsonjon/identitynow` provider.** Even if some other API surface can
+  report entitlement/segment relationships, this resource's actual write
+  path cannot create or remove them. Surfacing ENTITLEMENTs in `Read` would
+  therefore create permanent, uncorrectable drift.
+- **There is no direct GET endpoint for "segment access."** Drift detection
+  is real, but it is reconstructed: `Read` calls
+  `ListAccessProfiles(...).ForSegmentIds(segment_id).IncludeUnsegmented(false)`
+  and `ListRoles(...).ForSegmentIds(segment_id).IncludeUnsegmented(false)`,
+  then unions those results into the `assignments` set.
+- **Create/Update/Delete perform per-object GET+PATCH reconciliation.** For
+  each assignment being added or removed, the provider first GETs the
+  current Role or Access Profile, computes a new full `/segments` list that
+  only adds or removes this resource's own `segment_id`, and then PATCHes
+  that object with a single `replace` operation on `/segments`. Existing
+  unrelated segment ids on the object are preserved.
+- **Operational cost is linear in the number of changed assignments.** A
+  create of N assignments typically makes N GET calls plus up to N PATCH
+  calls; an update makes the same per-changed-assignment GET+PATCH pair only
+  for the diff, and a no-op update skips all API calls. Large applies are
+  therefore chatty even though they are correct.
+- **Write propagation depends on the underlying Role/Access Profile PATCH
+  endpoints.** This resource does not have its own bulk transaction or
+  polling API; if one assignment PATCH succeeds and a later one fails, the
+  already-patched objects remain changed and the next Terraform run will
+  reconcile from the live per-object state.
+- **`segment_id` forces replacement.** Changing which Segment this resource
+  manages is modeled as a different resource instance rather than an
+  in-place migration.
+- **Import** accepts a plain Segment id. Import sets both `id` and
+  `segment_id` to that value, then the subsequent `Read` discovers the
+  current live `assignments` set from the API.

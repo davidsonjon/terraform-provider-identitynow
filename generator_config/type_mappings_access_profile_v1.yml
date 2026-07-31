@@ -1,0 +1,66 @@
+# Durable type-linking config for the access_profile_v1 target, reconstructed
+# 2026-07-27 from the associated_external_type mappings already present in
+# the committed openapi_code_spec/openapi_code_spec_access_profile_v1.json
+# (applied originally via a one-off inline script during that target's
+# pipeline run). Captured here so a future `make gen-api-v1 TARGET=access_profile
+# SERVICE=access-profiles` re-run (e.g. after refreshing the upstream spec)
+# can replay the exact same type-linking decisions non-interactively via:
+#
+#   python3 scripts/apply_codespec_type_mappings.py --target access_profile_v1
+#
+# Dotted paths were confirmed against the current code spec with:
+#   python3 scripts/apply_codespec_type_mappings.py --target access_profile_v1 --dump-paths
+#
+# Tried-and-rejected 2026-07-28: `additional_owners` -> `AdditionalOwnerRef`
+# was attempted (to replace the hand-written field-by-field conversion in the
+# CRUD code with a generated ToApi_beta.../FromApi_beta... converter, matching
+# every other mapped field on this target) and reverted. `AdditionalOwnerRef`'s
+# `Name` field is `api_beta.NullableString`, not a plain `*string` - this hits
+# the tfplugingen-openapi-type-reviewer's documented "NullableString
+# incompatibility" pitfall (see that agent's Workflow step 2, and the SDK
+# type-shape reference catalog's `AdditionalOwnerRef`/`EntitlementRef`
+# entries): the generated converter fails to compile
+# (`cannot use v.Name.ValueStringPointer() ... as api_beta.NullableString
+# value`). Confirmed via a full regenerate-then-revert round trip (backed up
+# internal/provider/access_profile_v1/ and the code spec JSON first, applied
+# the mapping, ran `make gen-framework-api-v1 TARGET=access_profile`,
+# observed the exact predicted compile error, then restored both from
+# backup). Do not re-attempt this mapping unless the SDK changes
+# `AdditionalOwnerRef.Name` to a plain `*string` in a future version - the
+# existing hand-written field-by-field conversion in
+# `resource_access_profile.go`/`access_profile_data_source.go` is the correct,
+# intentional design for this field, not a gap.
+#
+# All six mappings below are leaf single_nested/list_nested blocks whose only
+# children are plain scalars, per the tfplugingen-openapi-type-reviewer's
+# "leaf-only mapping" rule (mapping a parent block that itself contains
+# nested list_nested/single_nested children breaks tfplugingen-framework
+# generate - confirmed on the `role` target).
+external_type_mappings:
+  - path: "access_model_metadata.attributes.values"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.AttributeValueDTO"
+  - path: "access_request_config.approval_schemes"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.AccessProfileApprovalScheme"
+  - path: "access_request_config.max_permitted_access_duration"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.AccessDuration"
+  - path: "owner"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.OwnerReference"
+  - path: "revocation_request_config.revocation_approval_schemes"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.AccessProfileApprovalScheme"
+  - path: "source"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.AccessProfileSourceRef"
+
+# No symbol collisions were encountered for this target's mapped types.
+symbol_renames: []

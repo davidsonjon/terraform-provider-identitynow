@@ -1,0 +1,1243 @@
+{
+  "datasources": [
+    {
+      "name": "access_profile",
+      "schema": {
+        "attributes": [
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "ID of the Access Profile"
+            }
+          },
+          {
+            "name": "access_model_metadata",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "attributes",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "description",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The description of the Attribute."
+                          }
+                        },
+                        {
+                          "name": "key",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Technical name of the Attribute. This is unique and cannot be changed after creation."
+                          }
+                        },
+                        {
+                          "name": "multiselect",
+                          "bool": {
+                            "computed_optional_required": "computed",
+                            "description": "Indicates whether the attribute can have multiple values."
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The display name of the key."
+                          }
+                        },
+                        {
+                          "name": "object_types",
+                          "list": {
+                            "computed_optional_required": "computed",
+                            "element_type": {
+                              "string": {}
+                            },
+                            "description": "An array of object types this attributes values can be applied to. Possible values are \"all\" or \"entitlement\". Value \"all\" means this attribute can be used with all object types that are supported."
+                          }
+                        },
+                        {
+                          "name": "status",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The status of the Attribute."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "The type of the Attribute. This can be either \"custom\" or \"governance\"."
+                          }
+                        },
+                        {
+                          "name": "values",
+                          "list_nested": {
+                            "computed_optional_required": "computed",
+                            "nested_object": {
+                              "attributes": [
+                                {
+                                  "name": "name",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "The display name of the Attribute value."
+                                  }
+                                },
+                                {
+                                  "name": "status",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "The status of the Attribute value."
+                                  }
+                                },
+                                {
+                                  "name": "value",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "Technical name of the Attribute value. This is unique and cannot be changed after creation."
+                                  }
+                                }
+                              ],
+                              "associated_external_type": {
+                                "import": {
+                                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                                },
+                                "type": "*api_beta.AttributeValueDTO"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "description": "This field must be left null or empty when creating an Role, otherwise a 400 Bad Request error will result."
+            }
+          },
+          {
+            "name": "access_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Id of the specific approver, used when approverType is GOVERNANCE_GROUP, WORKFLOW, or ADDITIONAL_GOVERNANCE_GROUP."
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Describes the individual or group that is responsible for an approval step. These are the possible values:\n**APP_OWNER**: The owner of the Application\n\n**OWNER**: Owner of the associated Access Profile or Role\n\n**SOURCE_OWNER**: Owner of the Source associated with an Access Profile\n\n**MANAGER**: Manager of the Identity making the request\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field. Workflow is exclusive to other types of approvals and License required.\n\n**ALL_OWNERS**: All owners of the Access Profile, including the primary owner and any secondary owners\n\n**ADDITIONAL_OWNER**: An additional owner of the Access Profile, the ID of which is specified by the **approverId** field\n\n**ADDITIONAL_GOVERNANCE_GROUP**: An additional Governance Group, the ID of which is specified by the **approverId** field"
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.AccessProfileApprovalScheme"
+                      }
+                    },
+                    "description": "List describing the steps involved in approving the request."
+                  }
+                },
+                {
+                  "name": "comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Indicates whether the requester of the containing object must provide comments justifying the request."
+                  }
+                },
+                {
+                  "name": "denial_comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Indicates whether an approver must provide comments when denying the request."
+                  }
+                },
+                {
+                  "name": "max_permitted_access_duration",
+                  "single_nested": {
+                    "computed_optional_required": "computed",
+                    "attributes": [
+                      {
+                        "name": "time_unit",
+                        "string": {
+                          "computed_optional_required": "computed",
+                          "description": "The unit of time that corresponds to the **value**. It defines the scale of the time period."
+                        }
+                      },
+                      {
+                        "name": "value",
+                        "int64": {
+                          "computed_optional_required": "computed",
+                          "description": "The numeric value representing the amount of time, which is defined in the **timeUnit**."
+                        }
+                      }
+                    ],
+                    "associated_external_type": {
+                      "import": {
+                        "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                      },
+                      "type": "*api_beta.AccessDuration"
+                    }
+                  }
+                },
+                {
+                  "name": "reauthorization_required",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Indicates whether reauthorization is required for the request."
+                  }
+                },
+                {
+                  "name": "require_end_date",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "Indicates whether the requester of the containing object must provide access end date."
+                  }
+                }
+              ],
+              "description": "Access request configuration for the object."
+            }
+          },
+          {
+            "name": "additional_owners",
+            "list_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "ID of the identity or governance group."
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Display name. It may be left null or omitted on input. If set, it must match the current display name of the identity or governance group, otherwise a 400 Bad Request error may result."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Type of the additional owner; IDENTITY for an identity, GOVERNANCE_GROUP for a governance group."
+                    }
+                  }
+                ]
+              },
+              "description": "List of additional owner references beyond the primary owner. Each entry may be an identity (IDENTITY) or a governance group (GOVERNANCE_GROUP)."
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Date and time when the access profile was created."
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Access profile description."
+            }
+          },
+          {
+            "name": "enabled",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "Indicates whether the access profile is enabled. If it's enabled, you must include at least one entitlement."
+            }
+          },
+          {
+            "name": "entitlements",
+            "list_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Entitlement's ID."
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Entitlement's display name."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Entitlement's DTO type."
+                    }
+                  }
+                ]
+              },
+              "description": "List of entitlements associated with the access profile. If `enabled` is false, this can be empty. Otherwise, it must contain at least one entitlement."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Date and time when the access profile was last modified."
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Access profile name."
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's identity ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's name. It may be left null or omitted in a POST or PATCH. If set, it must match the current value of the owner's display name, otherwise a 400 Bad Request error will result."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner type. This field must be either left null or set to 'IDENTITY' on input, otherwise a 400 Bad Request error will result."
+                  }
+                }
+              ],
+              "description": "Access profile owner.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.OwnerReference"
+              }
+            }
+          },
+          {
+            "name": "provisioning_criteria",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "attribute",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Name of the account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it results in an error."
+                  }
+                },
+                {
+                  "name": "children",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "attribute",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Name of the account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it results in an error."
+                          }
+                        },
+                        {
+                          "name": "grandchildren",
+                          "list_nested": {
+                            "computed_optional_required": "computed",
+                            "nested_object": {
+                              "attributes": [
+                                {
+                                  "name": "attribute",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "Name of the account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it results in an error."
+                                  }
+                                },
+                                {
+                                  "name": "children",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "Array of child criteria. This field is required if the operation is `AND` or `OR`. Otherwise, it must be left null. A maximum of three levels of criteria are supported, including leaf nodes."
+                                  }
+                                },
+                                {
+                                  "name": "operation",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "Supported operations on `ProvisioningCriteria`."
+                                  }
+                                },
+                                {
+                                  "name": "value",
+                                  "string": {
+                                    "computed_optional_required": "computed",
+                                    "description": "String value to test the account attribute w/r/t the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it results in an error. If the attribute is not string-typed, the API will convert it to the appropriate type."
+                                  }
+                                }
+                              ]
+                            },
+                            "description": "Array of child criteria. This field is required if the operation is `AND` or `OR`. Otherwise, it must be left null. A maximum of three levels of criteria are supported, including leaf nodes."
+                          }
+                        },
+                        {
+                          "name": "operation",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Supported operations on `ProvisioningCriteria`."
+                          }
+                        },
+                        {
+                          "name": "value",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "String value to test the account attribute w/r/t the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it results in an error. If the attribute is not string-typed, the API will convert it to the appropriate type."
+                          }
+                        }
+                      ]
+                    },
+                    "description": "Array of child criteria. This field is required if the operation is `AND` or `OR`. Otherwise, it must be left null. A maximum of three levels of criteria are supported, including leaf nodes."
+                  }
+                },
+                {
+                  "name": "operation",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Supported operations on `ProvisioningCriteria`."
+                  }
+                },
+                {
+                  "name": "value",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "String value to test the account attribute w/r/t the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it results in an error. If the attribute is not string-typed, the API will convert it to the appropriate type."
+                  }
+                }
+              ],
+              "description": "When an identity has multiple accounts on the source the access profile is associated with, the API evaluates this expression against those accounts to choose one to provision with the access profile."
+            }
+          },
+          {
+            "name": "requestable",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "Indicates whether the access profile is requestable by access request. Currently, making an access profile non-requestable is only supported  for customers enabled with the new Request Center. Otherwise, attempting to create an access profile with a value  **false** in this field results in a 400 error."
+            }
+          },
+          {
+            "name": "revocation_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "revocation_approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Id of the specific approver, used when approverType is GOVERNANCE_GROUP, WORKFLOW, or ADDITIONAL_GOVERNANCE_GROUP."
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Describes the individual or group that is responsible for an approval step. These are the possible values:\n**APP_OWNER**: The owner of the Application\n\n**OWNER**: Owner of the associated Access Profile or Role\n\n**SOURCE_OWNER**: Owner of the Source associated with an Access Profile\n\n**MANAGER**: Manager of the Identity making the request\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field. Workflow is exclusive to other types of approvals and License required.\n\n**ALL_OWNERS**: All owners of the Access Profile, including the primary owner and any secondary owners\n\n**ADDITIONAL_OWNER**: An additional owner of the Access Profile, the ID of which is specified by the **approverId** field\n\n**ADDITIONAL_GOVERNANCE_GROUP**: An additional Governance Group, the ID of which is specified by the **approverId** field"
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.AccessProfileApprovalScheme"
+                      }
+                    },
+                    "description": "List describing the steps involved in approving the revocation request."
+                  }
+                }
+              ],
+              "description": "Revocation request configuration for the object."
+            }
+          },
+          {
+            "name": "segments",
+            "list": {
+              "computed_optional_required": "computed",
+              "element_type": {
+                "string": {}
+              },
+              "description": "List of segment IDs, if any, that the access profile is assigned to."
+            }
+          },
+          {
+            "name": "source",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "ID of the source the access profile is associated with."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Source name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Source's DTO type."
+                  }
+                }
+              ],
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.AccessProfileSourceRef"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "access_profile",
+      "schema": {
+        "attributes": [
+          {
+            "name": "access_model_metadata",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "attributes",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "description",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "The description of the Attribute."
+                          }
+                        },
+                        {
+                          "name": "key",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Technical name of the Attribute. This is unique and cannot be changed after creation."
+                          }
+                        },
+                        {
+                          "name": "multiselect",
+                          "bool": {
+                            "computed_optional_required": "computed_optional",
+                            "default": {
+                              "static": false
+                            },
+                            "description": "Indicates whether the attribute can have multiple values."
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "The display name of the key."
+                          }
+                        },
+                        {
+                          "name": "object_types",
+                          "list": {
+                            "computed_optional_required": "computed_optional",
+                            "element_type": {
+                              "string": {}
+                            },
+                            "description": "An array of object types this attributes values can be applied to. Possible values are \"all\" or \"entitlement\". Value \"all\" means this attribute can be used with all object types that are supported."
+                          }
+                        },
+                        {
+                          "name": "status",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "The status of the Attribute."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "The type of the Attribute. This can be either \"custom\" or \"governance\"."
+                          }
+                        },
+                        {
+                          "name": "values",
+                          "list_nested": {
+                            "computed_optional_required": "computed_optional",
+                            "nested_object": {
+                              "attributes": [
+                                {
+                                  "name": "name",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "The display name of the Attribute value."
+                                  }
+                                },
+                                {
+                                  "name": "status",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "The status of the Attribute value."
+                                  }
+                                },
+                                {
+                                  "name": "value",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "Technical name of the Attribute value. This is unique and cannot be changed after creation."
+                                  }
+                                }
+                              ],
+                              "associated_external_type": {
+                                "import": {
+                                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                                },
+                                "type": "*api_beta.AttributeValueDTO"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "description": "This field must be left null or empty when creating an Role, otherwise a 400 Bad Request error will result."
+            }
+          },
+          {
+            "name": "access_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Id of the specific approver, used when approverType is GOVERNANCE_GROUP, WORKFLOW, or ADDITIONAL_GOVERNANCE_GROUP."
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Describes the individual or group that is responsible for an approval step. These are the possible values:\n**APP_OWNER**: The owner of the Application\n\n**OWNER**: Owner of the associated Access Profile or Role\n\n**SOURCE_OWNER**: Owner of the Source associated with an Access Profile\n\n**MANAGER**: Manager of the Identity making the request\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field. Workflow is exclusive to other types of approvals and License required.\n\n**ALL_OWNERS**: All owners of the Access Profile, including the primary owner and any secondary owners\n\n**ADDITIONAL_OWNER**: An additional owner of the Access Profile, the ID of which is specified by the **approverId** field\n\n**ADDITIONAL_GOVERNANCE_GROUP**: An additional Governance Group, the ID of which is specified by the **approverId** field",
+                            "validators": [
+                              {
+                                "custom": {
+                                  "imports": [
+                                    {
+                                      "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                    }
+                                  ],
+                                  "schema_definition": "stringvalidator.OneOf(\n\"APP_OWNER\",\n\"OWNER\",\n\"SOURCE_OWNER\",\n\"MANAGER\",\n\"GOVERNANCE_GROUP\",\n\"WORKFLOW\",\n\"ALL_OWNERS\",\n\"ADDITIONAL_OWNER\",\n\"ADDITIONAL_GOVERNANCE_GROUP\",\n)"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.AccessProfileApprovalScheme"
+                      }
+                    },
+                    "description": "List describing the steps involved in approving the request."
+                  }
+                },
+                {
+                  "name": "comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Indicates whether the requester of the containing object must provide comments justifying the request."
+                  }
+                },
+                {
+                  "name": "denial_comments_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Indicates whether an approver must provide comments when denying the request."
+                  }
+                },
+                {
+                  "name": "max_permitted_access_duration",
+                  "single_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "attributes": [
+                      {
+                        "name": "time_unit",
+                        "string": {
+                          "computed_optional_required": "computed_optional",
+                          "description": "The unit of time that corresponds to the **value**. It defines the scale of the time period.",
+                          "validators": [
+                            {
+                              "custom": {
+                                "imports": [
+                                  {
+                                    "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                  }
+                                ],
+                                "schema_definition": "stringvalidator.OneOf(\n\"HOURS\",\n\"DAYS\",\n\"WEEKS\",\n\"MONTHS\",\n)"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "name": "value",
+                        "int64": {
+                          "computed_optional_required": "computed_optional",
+                          "description": "The numeric value representing the amount of time, which is defined in the **timeUnit**."
+                        }
+                      }
+                    ],
+                    "associated_external_type": {
+                      "import": {
+                        "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                      },
+                      "type": "*api_beta.AccessDuration"
+                    }
+                  }
+                },
+                {
+                  "name": "reauthorization_required",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Indicates whether reauthorization is required for the request."
+                  }
+                },
+                {
+                  "name": "require_end_date",
+                  "bool": {
+                    "computed_optional_required": "computed_optional",
+                    "default": {
+                      "static": false
+                    },
+                    "description": "Indicates whether the requester of the containing object must provide access end date."
+                  }
+                }
+              ],
+              "description": "Access request configuration for the object."
+            }
+          },
+          {
+            "name": "additional_owners",
+            "list_nested": {
+              "computed_optional_required": "computed_optional",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "ID of the identity or governance group."
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Display name. It may be left null or omitted on input. If set, it must match the current display name of the identity or governance group, otherwise a 400 Bad Request error may result."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Type of the additional owner; IDENTITY for an identity, GOVERNANCE_GROUP for a governance group.",
+                      "validators": [
+                        {
+                          "custom": {
+                            "imports": [
+                              {
+                                "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                              }
+                            ],
+                            "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n\"GOVERNANCE_GROUP\",\n)"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "description": "List of additional owner references beyond the primary owner. Each entry may be an identity (IDENTITY) or a governance group (GOVERNANCE_GROUP)."
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Date and time when the access profile was created."
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Access profile description."
+            }
+          },
+          {
+            "name": "enabled",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "Indicates whether the access profile is enabled. If it's enabled, you must include at least one entitlement."
+            }
+          },
+          {
+            "name": "entitlements",
+            "list_nested": {
+              "computed_optional_required": "computed_optional",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Entitlement's ID."
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Entitlement's display name."
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "Entitlement's DTO type.",
+                      "validators": [
+                        {
+                          "custom": {
+                            "imports": [
+                              {
+                                "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                              }
+                            ],
+                            "schema_definition": "stringvalidator.OneOf(\n\"ENTITLEMENT\",\n)"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "description": "List of entitlements associated with the access profile. If `enabled` is false, this can be empty. Otherwise, it must contain at least one entitlement."
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Access profile ID."
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Date and time when the access profile was last modified."
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "Access profile name."
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "required",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's identity ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's name. It may be left null or omitted in a POST or PATCH. If set, it must match the current value of the owner's display name, otherwise a 400 Bad Request error will result."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner type. This field must be either left null or set to 'IDENTITY' on input, otherwise a 400 Bad Request error will result.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "description": "Access profile owner.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.OwnerReference"
+              }
+            }
+          },
+          {
+            "name": "provisioning_criteria",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "attribute",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Name of the account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it results in an error."
+                  }
+                },
+                {
+                  "name": "children",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "attribute",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Name of the account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it results in an error."
+                          }
+                        },
+                        {
+                          "name": "grandchildren",
+                          "list_nested": {
+                            "computed_optional_required": "computed_optional",
+                            "nested_object": {
+                              "attributes": [
+                                {
+                                  "name": "attribute",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "Name of the account attribute to be tested. If **operation** is one of `EQUALS`, `NOT_EQUALS`, `CONTAINS`, or `HAS`, this field is required. Otherwise, specifying it results in an error."
+                                  }
+                                },
+                                {
+                                  "name": "children",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "Array of child criteria. This field is required if the operation is `AND` or `OR`. Otherwise, it must be left null. A maximum of three levels of criteria are supported, including leaf nodes."
+                                  }
+                                },
+                                {
+                                  "name": "operation",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "Supported operations on `ProvisioningCriteria`.",
+                                    "validators": [
+                                      {
+                                        "custom": {
+                                          "imports": [
+                                            {
+                                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                            }
+                                          ],
+                                          "schema_definition": "stringvalidator.OneOf(\n\"EQUALS\",\n\"NOT_EQUALS\",\n\"CONTAINS\",\n\"HAS\",\n\"AND\",\n\"OR\",\n)"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "name": "value",
+                                  "string": {
+                                    "computed_optional_required": "computed_optional",
+                                    "description": "String value to test the account attribute w/r/t the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it results in an error. If the attribute is not string-typed, the API will convert it to the appropriate type."
+                                  }
+                                }
+                              ]
+                            },
+                            "description": "Array of child criteria. This field is required if the operation is `AND` or `OR`. Otherwise, it must be left null. A maximum of three levels of criteria are supported, including leaf nodes."
+                          }
+                        },
+                        {
+                          "name": "operation",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Supported operations on `ProvisioningCriteria`.",
+                            "validators": [
+                              {
+                                "custom": {
+                                  "imports": [
+                                    {
+                                      "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                    }
+                                  ],
+                                  "schema_definition": "stringvalidator.OneOf(\n\"EQUALS\",\n\"NOT_EQUALS\",\n\"CONTAINS\",\n\"HAS\",\n\"AND\",\n\"OR\",\n)"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "value",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "String value to test the account attribute w/r/t the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it results in an error. If the attribute is not string-typed, the API will convert it to the appropriate type."
+                          }
+                        }
+                      ]
+                    },
+                    "description": "Array of child criteria. This field is required if the operation is `AND` or `OR`. Otherwise, it must be left null. A maximum of three levels of criteria are supported, including leaf nodes."
+                  }
+                },
+                {
+                  "name": "operation",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Supported operations on `ProvisioningCriteria`.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"EQUALS\",\n\"NOT_EQUALS\",\n\"CONTAINS\",\n\"HAS\",\n\"AND\",\n\"OR\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "value",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "String value to test the account attribute w/r/t the specified operation. If the operation is one of `EQUALS`, `NOT_EQUALS`, or `CONTAINS`, this field is required. Otherwise, specifying it results in an error. If the attribute is not string-typed, the API will convert it to the appropriate type."
+                  }
+                }
+              ],
+              "description": "When an identity has multiple accounts on the source the access profile is associated with, the API evaluates this expression against those accounts to choose one to provision with the access profile."
+            }
+          },
+          {
+            "name": "requestable",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": true
+              },
+              "description": "Indicates whether the access profile is requestable by access request. Currently, making an access profile non-requestable is only supported  for customers enabled with the new Request Center. Otherwise, attempting to create an access profile with a value  **false** in this field results in a 400 error."
+            }
+          },
+          {
+            "name": "revocation_request_config",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "revocation_approval_schemes",
+                  "list_nested": {
+                    "computed_optional_required": "computed_optional",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "approver_id",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Id of the specific approver, used when approverType is GOVERNANCE_GROUP, WORKFLOW, or ADDITIONAL_GOVERNANCE_GROUP."
+                          }
+                        },
+                        {
+                          "name": "approver_type",
+                          "string": {
+                            "computed_optional_required": "computed_optional",
+                            "description": "Describes the individual or group that is responsible for an approval step. These are the possible values:\n**APP_OWNER**: The owner of the Application\n\n**OWNER**: Owner of the associated Access Profile or Role\n\n**SOURCE_OWNER**: Owner of the Source associated with an Access Profile\n\n**MANAGER**: Manager of the Identity making the request\n\n**GOVERNANCE_GROUP**: A Governance Group, the ID of which is specified by the **approverId** field\n\n**WORKFLOW**: A Workflow, the ID of which is specified by the **approverId** field. Workflow is exclusive to other types of approvals and License required.\n\n**ALL_OWNERS**: All owners of the Access Profile, including the primary owner and any secondary owners\n\n**ADDITIONAL_OWNER**: An additional owner of the Access Profile, the ID of which is specified by the **approverId** field\n\n**ADDITIONAL_GOVERNANCE_GROUP**: An additional Governance Group, the ID of which is specified by the **approverId** field",
+                            "validators": [
+                              {
+                                "custom": {
+                                  "imports": [
+                                    {
+                                      "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                                    }
+                                  ],
+                                  "schema_definition": "stringvalidator.OneOf(\n\"APP_OWNER\",\n\"OWNER\",\n\"SOURCE_OWNER\",\n\"MANAGER\",\n\"GOVERNANCE_GROUP\",\n\"WORKFLOW\",\n\"ALL_OWNERS\",\n\"ADDITIONAL_OWNER\",\n\"ADDITIONAL_GOVERNANCE_GROUP\",\n)"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "associated_external_type": {
+                        "import": {
+                          "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                        },
+                        "type": "*api_beta.AccessProfileApprovalScheme"
+                      }
+                    },
+                    "description": "List describing the steps involved in approving the revocation request."
+                  }
+                }
+              ],
+              "description": "Revocation request configuration for the object."
+            }
+          },
+          {
+            "name": "segments",
+            "list": {
+              "computed_optional_required": "computed_optional",
+              "element_type": {
+                "string": {}
+              },
+              "description": "List of segment IDs, if any, that the access profile is assigned to."
+            }
+          },
+          {
+            "name": "source",
+            "single_nested": {
+              "computed_optional_required": "required",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "ID of the source the access profile is associated with."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Source name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Source's DTO type.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"SOURCE\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.AccessProfileSourceRef"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

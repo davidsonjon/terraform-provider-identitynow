@@ -1,0 +1,38 @@
+external_type_mappings: []
+  # No external type mappings applied for this target - both single_nested
+  # candidates were reviewed and rejected per the
+  # tfplugingen-openapi-type-reviewer's leaf-only-mapping rule (confirmed via
+  # direct SDK source inspection,
+  # `go list -m -f '{{.Dir}}' github.com/sailpoint-oss/golang-sdk/v2`, then
+  # `grep -A15 "^type <Name> struct"` against api_beta/model_*.go):
+  #   - "owner" -> api_beta.BaseReferenceDto has a `Type *DtoType` field (a
+  #     generated enum wrapper type, not a plain `*string` like every prior
+  #     target's owner-shaped ref types - e.g. identity_profile_v1's
+  #     `IdentityProfileAllOfOwner.Type` is `*string`). The generated
+  #     FromApi_beta<Type> converter template assumes plain `*string` leaf
+  #     fields it can pass straight to `types.StringPointerValue` - mapping
+  #     this would very likely reproduce the same "leaf field type
+  #     incompatibility" failure class documented for sources_v1's rejected
+  #     `cluster` mapping (there the trigger was required-non-pointer
+  #     strings; here it's an enum-typed pointer instead - same failure
+  #     class, different trigger).
+  #   - "account_source" -> api_beta.SourceAppAccountSource's own top-level
+  #     fields (Id/Type/Name/UseForPasswordManagement) ARE plain
+  #     pointer-safe, but it also carries a nested
+  #     `PasswordPolicies []BaseReferenceDto` list child - i.e. this is not a
+  #     leaf-only single_nested block at all (it has its own nested list of
+  #     objects), which independently disqualifies it from the leaf-only
+  #     mapping rule regardless of the DtoType issue above.
+  # Both are hand-converted directly in resource_application.go instead
+  # (ownerToApi/ownerFromAPI, accountSourceToApi/accountSourceFromAPI),
+  # mirroring the precedent already established for sources_v1's rejected
+  # `cluster` mapping (clusterFromAPI/datasourceClusterFromAPI helpers using
+  # the generator's own `NewClusterValueNull()`/`NewClusterValue(...)`
+  # constructors).
+
+symbol_renames: []
+  # No collisions found: "owner" and "account_source" are the only
+  # single_nested blocks in this target's schema, each appearing once in the
+  # resource tree and once in the data source tree (account_source also
+  # nests one list_nested child, "password_policies", which is likewise
+  # unique).

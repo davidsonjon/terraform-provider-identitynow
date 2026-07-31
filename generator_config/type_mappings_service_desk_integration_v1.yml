@@ -1,0 +1,35 @@
+# Durable type-linking config for the service_desk_integration_v1 target,
+# backfilled 2026-07-28 from the associated_external_type mappings already
+# present in the committed
+# openapi_code_spec/openapi_code_spec_service_desk_integration_v1.json
+# (applied originally via a one-off inline script during that target's
+# pipeline run - the first per-service v1 pilot, predating
+# scripts/apply_codespec_type_mappings.py). Captured here so a future
+# `make gen-api-v1 TARGET=service_desk_integration SERVICE=service-desk-integration`
+# re-run (e.g. after refreshing the upstream spec) can replay the exact same
+# type-linking decisions non-interactively via:
+#
+#   python3 scripts/apply_codespec_type_mappings.py --target service_desk_integration_v1
+#
+# Dotted paths were confirmed against the current code spec with:
+#   python3 scripts/apply_codespec_type_mappings.py --target service_desk_integration_v1 --dump-paths
+#
+# All 3 mappings are leaf single_nested blocks (each SDK-side "Dto" ref type
+# contains only scalar fields, per the type-reviewer's leaf-only-mapping
+# rule).
+external_type_mappings:
+  - path: "before_provisioning_rule"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.BeforeProvisioningRuleDto"
+  - path: "cluster_ref"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.SourceClusterDto"
+  - path: "owner_ref"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.OwnerDto"
+
+# No symbol collisions were encountered for this target's mapped types.
+symbol_renames: []

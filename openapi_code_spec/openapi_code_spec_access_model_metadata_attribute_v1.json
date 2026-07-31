@@ -1,0 +1,205 @@
+{
+  "datasources": [
+    {
+      "name": "access_model_metadata_attribute",
+      "schema": {
+        "attributes": [
+          {
+            "name": "key",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "Technical name of the Attribute."
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The description of the Attribute."
+            }
+          },
+          {
+            "name": "multiselect",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "Indicates whether the attribute can have multiple values."
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The display name of the key."
+            }
+          },
+          {
+            "name": "object_types",
+            "list": {
+              "computed_optional_required": "computed",
+              "element_type": {
+                "string": {}
+              },
+              "description": "An array of object types this attributes values can be applied to. Possible values are \"all\" or \"entitlement\". Value \"all\" means this attribute can be used with all object types that are supported."
+            }
+          },
+          {
+            "name": "status",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The status of the Attribute."
+            }
+          },
+          {
+            "name": "type",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The type of the Attribute. This can be either \"custom\" or \"governance\"."
+            }
+          },
+          {
+            "name": "values",
+            "list_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The display name of the Attribute value."
+                    }
+                  },
+                  {
+                    "name": "status",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The status of the Attribute value."
+                    }
+                  },
+                  {
+                    "name": "value",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Technical name of the Attribute value. This is unique and cannot be changed after creation."
+                    }
+                  }
+                ],
+                "associated_external_type": {
+                  "import": {
+                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  },
+                  "type": "*api_beta.AttributeValueDTO"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "access_model_metadata_attribute",
+      "schema": {
+        "attributes": [
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The description of the Attribute."
+            }
+          },
+          {
+            "name": "key",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "Technical name of the Attribute. This is unique and cannot be changed after creation."
+            }
+          },
+          {
+            "name": "multiselect",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "Indicates whether the attribute can have multiple values."
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The display name of the key."
+            }
+          },
+          {
+            "name": "object_types",
+            "list": {
+              "computed_optional_required": "computed_optional",
+              "element_type": {
+                "string": {}
+              },
+              "description": "An array of object types this attributes values can be applied to. Possible values are \"all\" or \"entitlement\". Value \"all\" means this attribute can be used with all object types that are supported."
+            }
+          },
+          {
+            "name": "status",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The status of the Attribute."
+            }
+          },
+          {
+            "name": "type",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The type of the Attribute. This can be either \"custom\" or \"governance\"."
+            }
+          },
+          {
+            "name": "values",
+            "list_nested": {
+              "computed_optional_required": "computed_optional",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "required",
+                      "description": "The display name of the Attribute value."
+                    }
+                  },
+                  {
+                    "name": "status",
+                    "string": {
+                      "computed_optional_required": "computed_optional",
+                      "description": "The status of the Attribute value."
+                    }
+                  },
+                  {
+                    "name": "value",
+                    "string": {
+                      "computed_optional_required": "required",
+                      "description": "Technical name of the Attribute value. This is unique and cannot be changed after creation."
+                    }
+                  }
+                ],
+                "associated_external_type": {
+                  "import": {
+                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  },
+                  "type": "*api_beta.AttributeValueDTO"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

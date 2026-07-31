@@ -1,0 +1,36 @@
+# Durable type-linking config for the segment_v1 target.
+#
+# Applied non-interactively via:
+#   python3 scripts/apply_codespec_type_mappings.py --target segment_v1
+#
+# `owner` is a genuine 1:1 structural match to the SDK's
+# OwnerReferenceSegments type (all-scalar children: type/id/name, all plain
+# *string, no NullableString outliers) - reduces hand-written conversion
+# boilerplate with zero collision risk (it appears once per schema, not
+# recursively).
+#
+# Only mapped for the `segment` resource and singular `segment` data source,
+# NOT for the plural `segments` data source: `tfplugingen-framework` does
+# not honor `associated_external_type` on an attribute nested inside a
+# `set_nested`/`list_nested` collection (confirmed by trying it - the
+# generated `segments_data_source_gen.go` still emitted a plain
+# `basetypes.ObjectValue` for `owner` with no `ToApi_beta.../FromApi_beta...`
+# methods, leaving the `api_beta` import unused and failing to build). The
+# plural data source's `owner` field is therefore hand-converted directly
+# via the generated `OwnerValue` struct's own fields in
+# segments_data_source.go, not via this mapping.
+#
+# `visibility_criteria` (and everything under it) is deliberately NOT
+# mapped/generated at all here - see generator_config_segment_v1.yml's
+# `schema.ignores` comment for why (a genuine tfplugingen-framework
+# same-attribute-name-at-different-depths collision on "value", not fixable
+# via type mapping). It's hand-written directly in
+# resource_segment.go/segment_data_source.go/segments_data_source.go.
+external_type_mappings:
+  - path: "owner"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.OwnerReferenceSegments"
+
+# No symbol collisions were encountered for this mapped type.
+symbol_renames: []

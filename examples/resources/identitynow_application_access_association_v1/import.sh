@@ -1,0 +1,2 @@
+terraform import identitynow_application_access_association_v1.example \
+  2c91808a7813090a017814121e121518,2c91808576ddc7060176de5040574ac0/2c91808576ddc7060176de5040574ad0

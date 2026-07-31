@@ -1,0 +1,37 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Segments"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+Each entry in `segments` is populated by the same conversion code as the
+singular [`identitynow_segment_v1` data source](../data-sources/segment_v1.md) -
+see its "Known Limitations & Live Testing Notes" section for the full list
+of limitations shared by both.
+
+`GET /segments/v1` has no `filters` query parameter (unlike some other
+plural data sources in this provider, e.g. `identitynow_governance_groups_v1`) -
+only `limit`/`offset` pagination is supported in this schema (the API's own
+`count` query param, an X-Total-Count-header toggle, is intentionally
+dropped from this schema entirely - `count` is a reserved root
+attribute/block name in Terraform, matching `governance_groups_v1`'s
+equivalent precedent). Filter client-side with a Terraform `for` expression
+if you need a subset (see the example above).

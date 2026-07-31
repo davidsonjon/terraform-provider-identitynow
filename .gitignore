@@ -1,0 +1,28 @@
+# Ephemeral AI caches — never commit
+.ai-cache/
+
+# Vendored codegen docs (committed separately)
+# docs/vendor/codegen/  ← intentionally tracked
+
+# Go build outputs
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+
+# api-specs/ IS git-tracked (see api-specs/README.md) - it only holds this
+# project's own derived spec outputs, not a copy of the upstream
+# sailpoint-oss/api-specs tree (that's read directly from an external,
+# separately git-managed clone via the API_SPECS_SOURCE GNUmakefile variable).
+api-specs-main/**
+test/
+tests/
+
+# goreleaser local build/snapshot output (never committed — real releases
+# are produced by .github/workflows/release.yml on a pushed `v*` tag)
+dist/
+

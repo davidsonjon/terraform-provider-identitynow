@@ -1,0 +1,65 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Applications"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import identitynow_application_access_association_v1.example <application_id>,<access_profile_id>/<access_profile_id>/...
+```
+
+## Design Notes
+
+This resource is a **fully hand-written, no-codegen** subset manager for
+Application access profile membership. SailPoint does not expose a distinct
+"application access association" CRUD object; instead, writes reuse the same
+`PATCH /source-apps/v1/{id}` `/accessProfiles` field already used by
+`identitynow_application_v1`.
+
+- **This resource manages only the subset in `access_profile_ids`, not the
+  application's entire live access profile list.** Create first lists the
+  application's current access profiles, then unions in this resource's
+  desired ids and PATCHes the full resulting list back with JSON Patch
+  `op: add` on `/accessProfiles`.
+- **Update removes only this resource's previously tracked ids before adding
+  the new desired ids.** Concretely, it computes `(current live list -
+  old state ids) ∪ new plan ids`, then PATCHes that full list. This avoids
+  the buggy slice-index removal logic present in the reference
+  `davidsonjon/identitynow` provider's equivalent resource.
+- **Delete removes only this resource's tracked ids.** Any access profile
+  ids added by `identitynow_application_v1` or by other
+  `identitynow_application_access_association_v1` resources are left
+  untouched.
+- **Read self-heals partial drift instead of destroying the whole resource.**
+  If some tracked ids were removed outside Terraform, state is narrowed to
+  the intersection of the resource's prior `access_profile_ids` and the
+  application's current live list.
+- **Use `lifecycle { ignore_changes = [access_profile_ids] }` on
+  `identitynow_application_v1` when both resources manage the same
+  Application.** They share the same upstream `/accessProfiles` field, so
+  ignoring direct drift on the main Application resource avoids plan
+  conflicts while this additive helper independently manages its own slice.
+- **Import** uses the composite format
+  `<application_id>,<access_profile_id>/<access_profile_id>/...` so
+  Terraform state can adopt both the target Application id and the subset of
+  access profile ids this resource should track.

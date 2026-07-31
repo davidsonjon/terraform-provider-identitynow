@@ -1,0 +1,15 @@
+required_overrides:
+  # WorkgroupDto.owner is generated as computed_optional (see the OpenAPI
+  # spec's createWorkgroupV1 request body, which has no top-level `required`
+  # array at all), but the live POST /workgroups/v1 API actually rejects a
+  # create request with owner omitted:
+  #   HTTP 400 "Required field \"owner\" was missing or empty."
+  # (confirmed via a live apply on 2026-07-28 - see
+  # .github/agents/identitynow-terraform-provider-developer.knowledge.md).
+  # Force it to `required` on the resource schema so Terraform surfaces this
+  # at plan time (a local, static validation error) instead of deferring to
+  # a live apply-time API 400. Left as computed-only on the data source
+  # schema (scope: resource) since GET responses always include it.
+  - path: "owner"
+    scope: resource
+    required: true

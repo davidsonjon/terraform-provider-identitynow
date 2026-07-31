@@ -1,0 +1,26 @@
+provider:
+  name: identitynow
+resources:
+  application:
+    create:
+      path: /source-apps/v1
+      method: POST
+    read:
+      path: /source-apps/v1/{id}
+      method: GET
+    update:
+      # patchSourceAppV1 - RFC 6902 JSON Patch, same convention as every
+      # other _v1 target. Per the spec's own description, the patchable
+      # fields are: name, description, enabled, owner, provisionRequestEnabled,
+      # appCenterEnabled, accountSource, matchAllAccounts, accessProfiles.
+      path: /source-apps/v1/{id}
+      method: PATCH
+    delete:
+      path: /source-apps/v1/{id}
+      method: DELETE
+
+data_sources:
+  application:
+    read:
+      path: /source-apps/v1/{id}
+      method: GET

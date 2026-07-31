@@ -1,0 +1,92 @@
+# Type-linking review for sources_v1 (see
+# .github/agents/tfplugingen-openapi-type-reviewer.agent.md for the review
+# methodology, and .github/agents/identitynow-terraform-provider-developer
+# .sdk-type-reference.md for the confirmed struct shapes cited below).
+#
+# All 10 mapped attributes below are leaf single_nested/list_nested blocks
+# (their schema children are plain scalars only - no further nested
+# single/list children), satisfying the type-reviewer's leaf-only-mapping
+# rule. Every candidate SDK struct was confirmed via direct source inspection
+# (`go list -m -f '{{.Dir}}' github.com/sailpoint-oss/golang-sdk/v2`, then
+# grep -A15 "^type <Name> struct"` against api_beta/model_*.go) to have no
+# NullableString outliers on any field - all are simple {type,id,name}-shaped
+# (or, for cluster, the same shape but with required non-pointer string
+# fields) reference DTOs, or (manager_correlation_mapping) a simple
+# two-plain-string-field DTO. Symbol-collision scan: none of these 10 mapped
+# type names collide with any other target's mapped/generated symbols in
+# this package (each lives in its own internal/provider/sources_v1 package).
+#
+# Two structurally-identical-looking "rule reference" schema properties
+# (manager_correlation_rule, before_provisioning_rule, account_correlation_rule)
+# map to three DISTINCT SDK types despite an identical {type,id,name} shape -
+# do not conflate them:
+#   - before_provisioning_rule -> MultiHostSourcesBeforeProvisioningRule (NOT
+#     api_beta.BeforeProvisioningRuleDto, which is the type used by
+#     service_desk_integration_v1's own before_provisioning_rule field - a
+#     different SDK struct entirely, despite the near-identical Terraform
+#     attribute name/shape. Confirmed via direct source inspection that the
+#     two Go types are not aliases of one another.
+#   - manager_correlation_rule -> MultiHostSourcesManagerCorrelationRule
+#   - account_correlation_rule -> MultiHostSourcesAccountCorrelationRule
+#
+# NOT mapped: connector_attributes (schema.ignores'd in generator_config -
+# hand-added as a jsontypes.Normalized CustomType instead, per the dynamic/
+# discriminated-union-field pattern piloted on transform_v1).
+#
+# NOT mapped (tried and reverted): "cluster". Source.yaml's cluster
+# properties (id/name/type) are all listed in the *nested* object's own
+# `required` array, so the SDK's api_beta.MultiHostIntegrationsCluster
+# struct generates those three fields as plain `string` (not `*string`) -
+# unlike every other {type,id,name} ref DTO in this file (and unlike
+# service_desk_integration_v1's differently-shaped api_beta.SourceClusterDto,
+# whose fields ARE all *string, because that service's schema doesn't mark
+# them required). tfplugingen-framework's generated
+# ToApi_betaMultiHostIntegrationsCluster/FromApi_beta... converters assume a
+# plain-pointer field (calling `.ValueStringPointer()`/
+# `types.StringPointerValue(...)`), so mapping this attribute produces a
+# real compile error (confirmed via a full regenerate-then-revert round
+# trip, same failure shape as the AdditionalOwnerRef/NullableString
+# precedent, but caused by required-ness rather than NullableString).
+# "cluster" is therefore hand-converted field-by-field in
+# resource_source.go/datasource_source.go instead - do not re-attempt this
+# mapping unless a future SDK version changes MultiHostIntegrationsCluster's
+# field types to pointers.
+external_type_mappings:
+  - path: "owner"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.SourceOwner"
+  - path: "account_correlation_config"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.MultiHostSourcesAccountCorrelationConfig"
+  - path: "account_correlation_rule"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.MultiHostSourcesAccountCorrelationRule"
+  - path: "manager_correlation_mapping"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.ManagerCorrelationMapping"
+  - path: "manager_correlation_rule"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.MultiHostSourcesManagerCorrelationRule"
+  - path: "before_provisioning_rule"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.MultiHostSourcesBeforeProvisioningRule"
+  - path: "management_workgroup"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.MultiHostIntegrationsManagementWorkgroup"
+  - path: "schemas"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.MultiHostSourcesSchemasInner"
+  - path: "password_policies"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.MultiHostSourcesPasswordPoliciesInner"
+
+symbol_renames: []

@@ -1,0 +1,42 @@
+external_type_mappings:
+  # All 3 mapping candidates below are leaf single_nested blocks (their
+  # schema children are plain scalars only - id/name/type or
+  # taskResultId/reportName - no further nested single/list children),
+  # satisfying the tfplugingen-openapi-type-reviewer's leaf-only-mapping
+  # rule. Confirmed via direct SDK source inspection
+  # (`go list -m -f '{{.Dir}}' github.com/sailpoint-oss/golang-sdk/v2`, then
+  # grep -A15 "^type <Name> struct"` against api_beta/model_*.go): all
+  # fields on all 3 candidate structs are plain `*string` (no NullableString
+  # outliers, and no required-non-pointer-field variant like sources_v1's
+  # rejected `cluster` case).
+  - path: "owner"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.IdentityProfileAllOfOwner"
+
+  # authoritativeSource itself is a Required (non-Nullable-wrapped) field on
+  # api_beta.IdentityProfile (`AuthoritativeSource
+  # IdentityProfileAllOfAuthoritativeSource`, not
+  # `NullableIdentityProfileAllOfAuthoritativeSource` like `owner`/
+  # `identityExceptionReportReference`) - but that's a top-level
+  # nullability difference, not a leaf-field-pointer issue (unlike
+  # sources_v1's rejected `cluster` mapping, where the *leaf fields
+  # themselves* were required non-pointer strings). Its own id/name/type
+  # fields are plain `*string`, so per-field conversion is unaffected and
+  # this mapping is safe.
+  - path: "authoritative_source"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.IdentityProfileAllOfAuthoritativeSource"
+
+  - path: "identity_exception_report_reference"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.IdentityExceptionReportReference"
+
+symbol_renames: []
+  # No collisions found: owner/authoritative_source/identity_exception_report_reference
+  # are the only single_nested/list_nested blocks in this target's schema,
+  # each appearing once in the resource tree and once in the data source
+  # tree - confirmed via a full recursive nested-block name scan (same
+  # methodology as governance_group_v1/sources_v1's precedent).

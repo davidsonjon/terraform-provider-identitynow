@@ -1,0 +1,48 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Entitlements"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+This resource is a `_v1` pilot following the same **adopt-existing**
+pattern as `identitynow_entitlement_v1`: schema/model types are generated
+by `tfplugingen-framework` from SailPoint's per-service `/entitlements/v1`
+OpenAPI spec, but Create/Read/Update/Delete are hand-written against the
+`golang-sdk`'s `api_beta.EntitlementsAPI` client.
+
+- **There is no standalone create/delete lifecycle for this object.**
+  Entitlement request configuration is managed under an existing
+  entitlement id. Create and Update both call
+  `PUT /entitlements/v1/{id}/entitlement-request-config`; Delete only
+  removes Terraform state and must not delete the underlying entitlement
+  or attempt to reset its request configuration.
+- **Unconfigured Optional+Computed fields are preserved from the live API
+  object during PUT.** Because the generated schema exposes these nested
+  blocks as Optional+Computed, the provider first reads the current live
+  config, overlays the configured plan onto it, and only then performs the
+  full-document replace. This avoids accidentally erasing omitted nested
+  fields during adoption or update.
+- **`revocation_approval_schemes` is a Terraform-only rename.** The real
+  API field is still `revocationRequestConfig.approvalSchemes`, but this
+  provider had to rename the Terraform attribute to
+  `revocation_request_config.revocation_approval_schemes` to avoid a
+  duplicate generated Go type name collision with
+  `access_request_config.approval_schemes`.

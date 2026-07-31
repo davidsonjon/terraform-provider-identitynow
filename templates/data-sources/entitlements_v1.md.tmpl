@@ -1,0 +1,43 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Entitlements"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+Each entry in `entitlements` is populated by the same conversion code as the
+singular [`identitynow_entitlement_v1` data source](../data-sources/entitlement_v1.md) -
+see the [`identitynow_entitlement_v1` resource](../resources/entitlement_v1.md)'s
+"Known Limitations & Live Testing Notes" section for details on `attributes`,
+`manually_updated_fields`, and `access_model_metadata`.
+
+The API's documented maximum `limit` for `GET /entitlements/v1` is 250;
+requested limits above that are capped with a warning rather than an error.
+
+### Eventual consistency after source aggregation
+
+Entitlements only exist once a source aggregation has imported them. Because
+Terraform data sources are read exactly once per plan/apply with no built-in
+retry/backoff, reading this data source too soon after triggering an
+aggregation (e.g. via the future `identitynow_source_load_entitlement_wait_v1`
+helper resource) can return fewer entitlements than expected. See
+`examples/data-sources/identitynow_entitlements_v1/data-source.tf` for the
+recommended `depends_on`-based ordering and an optional `lifecycle.postcondition`
+guard against silently under-provisioning from an incomplete result.

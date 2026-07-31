@@ -1,0 +1,32 @@
+drop_attributes:
+  # "identityprofileid" is a duplicate id attribute tfplugingen-openapi
+  # synthesizes from the path parameter name ("{identity-profile-id}",
+  # unlike most other _v1 targets' plain "{id}") - it doesn't correlate this
+  # with the response body's own real "id" property (from basecommondto, via
+  # the flattened allOf - see scripts/flatten_openapi_allof.py), so both end
+  # up as separate top-level attributes. `schema.ignores` in
+  # generator_config_identity_profile_v1.yml cannot remove this (ignores
+  # only filters real body-schema properties, not path-param-derived ones),
+  # so it's dropped here instead. "id" remains the sole identity attribute,
+  # exactly like every other _v1 target.
+  - path: "identityprofileid"
+    scope: both
+
+strip_defaults:
+  # The OpenAPI spec declares `default: false` on this attribute (see
+  # api-specs/dereferenced/deref-identity-profiles.v1.yaml's IdentityProfile
+  # schema), which tfplugingen-openapi faithfully carried into a static
+  # `Default: booldefault.StaticBool(false)` on the resource schema. This
+  # attribute is genuinely a server-computed status field (whether an
+  # identity refresh is currently needed) whose real live value is not
+  # reliably `false` for a freshly created profile - confirmed live via
+  # `terraform apply` against a real sandbox tenant, which failed with
+  # "Provider produced inconsistent result after apply" (planned
+  # `identity_refresh_required = false` vs. actual `true`, returned
+  # immediately on Create after binding a new authoritative source). This is
+  # the exact same pattern as sources_v1's "healthy" attribute fix (see
+  # generator_config/schema_overrides_sources_v1.yml). Stripping the default
+  # lets this plan as Unknown when unconfigured, which is always compatible
+  # with whatever the live API actually returns.
+  - path: "identity_refresh_required"
+    scope: resource

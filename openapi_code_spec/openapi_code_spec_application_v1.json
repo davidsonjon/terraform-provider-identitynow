@@ -1,0 +1,372 @@
+{
+  "datasources": [
+    {
+      "name": "application",
+      "schema": {
+        "attributes": [
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "ID of the source app"
+            }
+          },
+          {
+            "name": "account_source",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The source ID"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The source name"
+                  }
+                },
+                {
+                  "name": "password_policies",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "ID of the object to which this reference applies"
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Human-readable display name of the object to which this reference applies"
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "DTO type"
+                          }
+                        }
+                      ]
+                    },
+                    "description": "The password policies for the source"
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "The source type, will always be \"SOURCE\""
+                  }
+                },
+                {
+                  "name": "use_for_password_management",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "If the source is used for password management"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "app_center_enabled",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "True if the app is visible in the request center"
+            }
+          },
+          {
+            "name": "cloud_app_id",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The deprecated source app id"
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Time when the source app was created"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The description of the source app"
+            }
+          },
+          {
+            "name": "enabled",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "True if the source app is enabled"
+            }
+          },
+          {
+            "name": "match_all_accounts",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "True if the source app match all accounts"
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Time when the source app was last modified"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The source app name"
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "ID of the object to which this reference applies"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Human-readable display name of the object to which this reference applies"
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "DTO type"
+                  }
+                }
+              ],
+              "description": "The owner of source app"
+            }
+          },
+          {
+            "name": "provision_request_enabled",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "True if the app allows access request"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "application",
+      "schema": {
+        "attributes": [
+          {
+            "name": "account_source",
+            "single_nested": {
+              "computed_optional_required": "required",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "required",
+                    "description": "The source ID"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "The source name"
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "The source type, will always be \"SOURCE\""
+                  }
+                },
+                {
+                  "name": "password_policies",
+                  "list_nested": {
+                    "computed_optional_required": "computed",
+                    "nested_object": {
+                      "attributes": [
+                        {
+                          "name": "id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "ID of the object to which this reference applies"
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Human-readable display name of the object to which this reference applies"
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "DTO type"
+                          }
+                        }
+                      ]
+                    },
+                    "description": "The password policies for the source"
+                  }
+                },
+                {
+                  "name": "use_for_password_management",
+                  "bool": {
+                    "computed_optional_required": "computed",
+                    "description": "If the source is used for password management"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The description of the source app"
+            }
+          },
+          {
+            "name": "match_all_accounts",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "True if the source app match all accounts"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The source app name"
+            }
+          },
+          {
+            "name": "app_center_enabled",
+            "bool": {
+              "computed_optional_required": "computed",
+              "default": {
+                "static": true
+              },
+              "description": "True if the app is visible in the request center"
+            }
+          },
+          {
+            "name": "cloud_app_id",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The deprecated source app id"
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Time when the source app was created"
+            }
+          },
+          {
+            "name": "enabled",
+            "bool": {
+              "computed_optional_required": "computed",
+              "default": {
+                "static": false
+              },
+              "description": "True if the source app is enabled"
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The source app id"
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Time when the source app was last modified"
+            }
+          },
+          {
+            "name": "owner",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "required",
+                    "description": "ID of the object to which this reference applies"
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Human-readable display name of the object to which this reference applies"
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "required",
+                    "description": "DTO type"
+                  }
+                }
+              ],
+              "description": "The owner of source app"
+            }
+          },
+          {
+            "name": "provision_request_enabled",
+            "bool": {
+              "computed_optional_required": "computed",
+              "default": {
+                "static": false
+              },
+              "description": "True if the app allows access request"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}
