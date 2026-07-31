@@ -16,6 +16,16 @@ permissions:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+    # This provider now cross-compiles ~14 GOOS/GOARCH targets against a much
+    # larger dependency tree (sailpoint-oss/golang-sdk) than before the
+    # OpenAPI-codegen rewrite. GoReleaser's default parallelism (= NumCPU)
+    # runs that many `go build` invocations concurrently, and on a standard
+    # GitHub-hosted runner (~7GB RAM) this was observed to silently OOM-kill
+    # the runner itself twice in a row - surfacing only as an opaque
+    # "runner has received a shutdown signal" error with no compiler output,
+    # rather than a clear timeout/OOM message. An explicit timeout-minutes
+    # turns any future genuine hang into a clear diagnostic instead.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -34,7 +44,12 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
         with:
-          args: release --clean
+          # -p/--parallelism caps concurrent `go build` cross-compiles; left
+          # at the default (NumCPU) this spiked memory high enough to OOM-kill
+          # the runner on this larger codebase (see the job-level comment
+          # above) - 2 keeps peak memory well under the standard runner's
+          # ~7GB limit at a modest cost in wall-clock time.
+          args: release --clean --parallelism 2
         env:
           # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
