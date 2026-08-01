@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/segments"
 
 	"terraform-provider-identitynow/internal/provider/segment_v1/resource_segment"
 )
@@ -129,21 +129,21 @@ func TestSegmentResourceDTOToModel_RoundTrip(t *testing.T) {
 	valueType := "STRING"
 	value := "N1"
 
-	dto := &api_beta.Segment{
+	dto := &segments.Segment{
 		Id:          &segmentID,
 		Name:        &name,
 		Description: &description,
 		Active:      &active,
-		Owner: *api_beta.NewNullableOwnerReferenceSegments(&api_beta.OwnerReferenceSegments{
+		Owner: *segments.NewNullableOwnerReferenceSegments(&segments.OwnerReferenceSegments{
 			Id:   &ownerID,
 			Type: &ownerType,
 		}),
-		VisibilityCriteria: *api_beta.NewNullableVisibilityCriteria(&api_beta.VisibilityCriteria{
-			Expression: &api_beta.Expression{
+		VisibilityCriteria: *segments.NewNullableVisibilityCriteria(&segments.VisibilityCriteria{
+			Expression: &segments.Expression{
 				Operator:  &operator,
-				Attribute: *api_beta.NewNullableString(&attribute),
-				Value: *api_beta.NewNullableValue(&api_beta.Value{
-					Type:  *api_beta.NewNullableString(&valueType),
+				Attribute: *segments.NewNullableString(&attribute),
+				Value: *segments.NewNullableValue(&segments.Value{
+					Type:  *segments.NewNullableString(&valueType),
 					Value: &value,
 				}),
 			},
@@ -220,7 +220,7 @@ func TestSegmentPatchOps_ScalarChanges(t *testing.T) {
 		t.Fatalf("len(ops) = %d, want 2: %+v", len(ops), ops)
 	}
 
-	byPath := map[string]api_beta.JsonPatchOperation{}
+	byPath := map[string]segments.JsonPatchOperation{}
 	for _, op := range ops {
 		byPath[op.Path] = op
 	}
@@ -328,8 +328,8 @@ func TestSegmentVisibilityCriteriaPatchOps(t *testing.T) {
 
 func TestSegmentPatchRequestBody(t *testing.T) {
 	name := "new-name"
-	ops := []api_beta.JsonPatchOperation{
-		segmentJSONPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&name)),
+	ops := []segments.JsonPatchOperation{
+		segmentJSONPatchReplace("/name", segments.StringAsUpdateMultiHostSourcesRequestInnerValue(&name)),
 	}
 
 	body := segmentPatchRequestBody(ops)

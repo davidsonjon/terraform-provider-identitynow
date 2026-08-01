@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/segments"
 
 	"terraform-provider-identitynow/internal/provider/segment_v1/datasource_segment"
 )
@@ -125,13 +125,13 @@ func (d *segmentDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (d *segmentDataSource) lookupSegment(ctx context.Context, config segmentDataSourceModel) (*api_beta.Segment, diag.Diagnostics) {
+func (d *segmentDataSource) lookupSegment(ctx context.Context, config segmentDataSourceModel) (*segments.Segment, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if !config.Id.IsNull() && !config.Id.IsUnknown() && config.Id.ValueString() != "" {
 		tflog.Debug(ctx, "Reading Segment data source by id", map[string]interface{}{"id": config.Id.ValueString()})
-		dto, httpResp, err := d.client.Beta.SegmentsAPI.
-			GetSegment(ctx, config.Id.ValueString()).
+		dto, httpResp, err := d.client.SegmentsAPI.
+			GetSegmentV1(ctx, config.Id.ValueString()).
 			Execute()
 		if err != nil {
 			tflog.Error(ctx, "Error reading Segment data source by id", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -144,11 +144,11 @@ func (d *segmentDataSource) lookupSegment(ctx context.Context, config segmentDat
 	lookupName := strings.TrimSpace(config.Name.ValueString())
 	tflog.Debug(ctx, "Reading Segment data source by name", map[string]interface{}{"name": lookupName})
 
-	matches := make([]api_beta.Segment, 0, 2)
+	matches := make([]segments.Segment, 0, 2)
 	var offset int32
 	for {
-		items, httpResp, err := d.client.Beta.SegmentsAPI.
-			ListSegments(ctx).
+		items, httpResp, err := d.client.SegmentsAPI.
+			ListSegmentsV1(ctx).
 			Limit(segmentLookupPageSize).
 			Offset(offset).
 			Execute()
@@ -194,7 +194,7 @@ func (d *segmentDataSource) lookupSegment(ctx context.Context, config segmentDat
 	}
 }
 
-func segmentDataSourceDTOToModel(ctx context.Context, dto *api_beta.Segment, fallbackID types.String) (segmentDataSourceModel, diag.Diagnostics) {
+func segmentDataSourceDTOToModel(ctx context.Context, dto *segments.Segment, fallbackID types.String) (segmentDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	model := segmentDataSourceModel{
@@ -230,7 +230,7 @@ func segmentDataSourceDTOToModel(ctx context.Context, dto *api_beta.Segment, fal
 	diags.Append(d...)
 	model.Owner = owner
 
-	vc, d := visibilityCriteriaObjectFromAPI(ctx, dto.VisibilityCriteria.Get())
+	vc, d := visibilityCriteriaObjectFromAPI(ctx, dto.VisibilityCriteria)
 	diags.Append(d...)
 	model.VisibilityCriteria = vc
 
