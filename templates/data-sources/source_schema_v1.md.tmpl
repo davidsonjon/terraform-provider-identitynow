@@ -1,0 +1,30 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Sources"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+See `identitynow_source_schema_v1` (the resource)'s "Known Limitations &
+Live Testing Notes" section for the full rationale on the CSV-endpoint
+exclusion, the redundant `id`/`schema_id` outputs, and `configuration`
+JSON-string modeling - this data source shares the same underlying schema
+and limitations. Phase B (live testing against a real sandbox tenant) is
+pending for the same reason noted there.

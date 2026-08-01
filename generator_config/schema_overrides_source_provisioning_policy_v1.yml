@@ -1,0 +1,19 @@
+required_overrides:
+  # sourceId is a path parameter but tfplugingen-openapi merges it with the
+  # (nonexistent, since the DTO doesn't declare it) request-body property of
+  # the same name and infers computed_optional. It is the resource's
+  # required parent-object reference (analogous to entitlement_request_config_v1's
+  # source_id) - always required and immutable (a provisioning policy cannot
+  # be moved to a different source).
+  - path: "source_id"
+    scope: resource
+    required: true
+
+  # usageType is likewise a path parameter for GET/PUT/PATCH/DELETE and the
+  # sole means of identifying *which* provisioning policy on the source is
+  # being managed (see the source_provisioning_policy_v1 package doc for the
+  # full v1-vs-v2 shape decision) - always required and immutable (changing
+  # it means managing a different provisioning policy object entirely).
+  - path: "usage_type"
+    scope: resource
+    required: true

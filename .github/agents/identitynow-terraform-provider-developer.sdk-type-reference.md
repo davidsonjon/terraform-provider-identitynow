@@ -125,3 +125,31 @@ after any SDK version bump before trusting a stale entry for a new target.
 - **Shape**: `Type *string`, `Id *string`, `Name *string` - a plain task-reference DTO returned by `DELETE /sources/v1/{id}`'s `202 Accepted` response, referencing the async account-removal task IdentityNow queues before the source itself is deleted.
 - **Notes**: Not polled to completion by `sources_v1`'s `Delete()` - fire-and-forget, matching every other `_v1` pilot's Delete() convention.
 - **Used by targets**: `sources_v1` (return value discarded).
+
+### ProvisioningPolicyDto
+- **File**: `api_beta/model_provisioning_policy_dto.go`
+- **Confirmed against**: v2.7.106 (2026-08-01)
+- **Shape**: `Name NullableString` (required in the schema but Nullable in the SDK), `Description *string`, `UsageType *UsageType` (string-based enum type), `Fields []FieldDetailsDto`, plus `AdditionalProperties map[string]interface{}`. **No native `id` field at all.**
+- **Notes**: Because there's no real `id`, `source_provisioning_policy_v1`'s Terraform `id` is a hand-synthesized `<source_id>/<usage_type>` composite (matching `application_access_association_v1`'s convention), not anything derived from this DTO. `Name`'s `NullableString` typing despite being schema-required is consistent with this SDK's general pattern of top-level `required` not predicting field shape (see `Source`'s entry above).
+- **Used by targets**: `source_provisioning_policy_v1`.
+
+### FieldDetailsDto (excluded from codegen - hand-modeled as `jsontypes.Normalized`)
+- **File**: `api_beta/model_field_details_dto.go`
+- **Confirmed against**: v2.7.106 (2026-08-01)
+- **Shape**: Includes its own `Transform map[string]interface{}` (a discriminated union keyed by a sibling `type`, identical in kind to `transform_v1`'s top-level `attributes`) and `Attributes map[string]interface{}` (transform-specific parameters, also dynamic).
+- **Notes**: Because *each element* of the `fields` array has its own dynamic sub-shape, the entire array (not just one field) was excluded via `schema.ignores` and hand-added as a single `jsontypes.Normalized` JSON string on the parent resource, per the established dynamic/discriminated-union pattern - not mapped to this Go type at all.
+- **Used by targets**: `source_provisioning_policy_v1` (not directly - superseded by the JSON-string `fields` attribute).
+
+### Schema (source schema)
+- **File**: `api_beta/model_schema.go`
+- **Confirmed against**: v2.7.106 (2026-08-01)
+- **Shape**: `Id *string`, `Name *string`, `NativeObjectType *string`, `IdentityAttribute *string`, `DisplayAttribute *string`, `HierarchyAttribute NullableString`, `IncludePermissions *bool`, `Features []string`, `Configuration map[string]interface{}` (dynamic, hand-modeled as `jsontypes.Normalized`), `Attributes []AttributeDefinition`, `Created *SailPointTime` (plain pointer, NOT Nullable), `Modified NullableTime`.
+- **Notes**: `Created`/`Modified` have asymmetric shapes (`*SailPointTime` vs `NullableTime`) despite both being similarly-named timestamp fields - don't assume sibling timestamp fields share the same wrapper convention. `HierarchyAttribute` is the only plain string-ish field that's `NullableString` here; the rest are plain pointers.
+- **Used by targets**: `source_schema_v1`.
+
+### AttributeDefinition / AttributeDefinitionSchema
+- **Files**: `api_beta/model_attribute_definition.go`, `api_beta/model_attribute_definition_schema.go`
+- **Confirmed against**: v2.7.106 (2026-08-01)
+- **Shape**: `AttributeDefinition`: `Name *string`, `NativeName NullableString`, `Type *AttributeDefinitionType` (string-based enum), `Schema NullableAttributeDefinitionSchema`, `Description *string`, `IsMulti *bool`, `IsEntitlement *bool`, `IsGroup *bool`. `AttributeDefinitionSchema`: `Type *string`, `Id *string`, `Name *string` - all plain pointers, no Nullable outliers, safe to map directly if ever needed as a standalone type.
+- **Notes**: `AttributeDefinition.Schema` (a pointer to another Schema, used e.g. by an account schema's `memberOf`-style attribute referencing a group schema) is `NullableAttributeDefinitionSchema`, requiring `.Get()`/`.Set()` handling exactly like other `Nullable<Type>` wrappers in this SDK - both `AttributeDefinition` and its nested `AttributeDefinitionSchema` were hand-converted (not `associated_external_type` mapped) since `tfplugingen-framework`'s generated converter template doesn't handle the `NullableAttributeDefinitionSchema` wrapper automatically, consistent with every other `Nullable*`-typed nested-object field found in this SDK so far.
+- **Used by targets**: `source_schema_v1` (`attributes` list-nested attribute).

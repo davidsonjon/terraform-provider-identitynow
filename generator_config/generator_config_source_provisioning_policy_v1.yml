@@ -1,0 +1,48 @@
+provider:
+  name: identitynow
+resources:
+  source_provisioning_policy:
+    create:
+      path: /sources/v1/{sourceId}/provisioning-policies
+      method: POST
+    read:
+      path: /sources/v1/{sourceId}/provisioning-policies/{usageType}
+      method: GET
+    update:
+      # updateProvisioningPolicyV1 - RFC 6902 JSON Patch (as opposed to
+      # putProvisioningPolicyV1, the full-replace PUT variant) - same
+      # JSON-Patch update-helper pattern already used by source_v1/role_v1/
+      # service_desk_integration_v1.
+      path: /sources/v1/{sourceId}/provisioning-policies/{usageType}
+      method: PATCH
+    delete:
+      path: /sources/v1/{sourceId}/provisioning-policies/{usageType}
+      method: DELETE
+    schema:
+      ignores:
+        # "fields" is an array of FieldDetailsDto, each of which has its own
+        # "transform" (a discriminated union keyed by a sibling "type" -
+        # identical in shape/rationale to transform_v1's top-level
+        # "attributes" field) AND its own free-form "attributes" object
+        # (transform-specific parameters). tfplugingen-openapi cannot
+        # generate a faithful static schema for either, so the entire
+        # "fields" array is hand-added as a single jsontypes.Normalized
+        # JSON-string CustomType, matching the established
+        # dynamic/discriminated-union pattern (see the IdentityNow agent's
+        # Project Context "Dynamic/discriminated-union attributes-style
+        # fields" bullet and transform_v1's package doc).
+        - fields
+
+data_sources:
+  source_provisioning_policy:
+    read:
+      path: /sources/v1/{sourceId}/provisioning-policies/{usageType}
+      method: GET
+    schema:
+      ignores:
+        - fields
+  # A plural "list" data source (identitynow_source_provisioning_policies_v1)
+  # is hand-written directly against GET /sources/v1/{sourceId}/provisioning-policies
+  # (api_beta.SourcesAPIService.ListProvisioningPolicies), reusing the
+  # singular data source's generated schema/model types, mirroring
+  # role_v1/datasource_roles.go's pattern - not generated via this config.

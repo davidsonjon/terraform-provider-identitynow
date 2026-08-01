@@ -107,3 +107,13 @@ relevant resource's package doc).
 - **Workaround:** none — the data source's schema simply omits the attributes that would map to the missing builder methods; there is no raw-HTTP fallback for this one since the missing capability is convenience/scale, not a functional blocker (small-to-medium tenants are unaffected).
 - **Filed upstream?** No.
 - **Discovered:** 2026-07-31, `connector_rule_v1` pipeline.
+
+### 10. No v2 provisioning-policy bindings at all, despite a newer `/sources/v2/{sourceId}/provisioning-policies/{id}` API existing
+- **Status:** Open (upstream). Workaround shipped: `source_provisioning_policy_v1` uses the older v1 API instead.
+- **Package/type:** `api_beta.SourcesAPIService` — confirmed via direct grep of `api_sources.go` (through `v2.7.106`) that only v1's `CreateProvisioningPolicy`/`GetProvisioningPolicy`/`UpdateProvisioningPolicy`/`PutProvisioningPolicy`/`DeleteProvisioningPolicy`/`ListProvisioningPolicies` (all keyed by `sourceId`+`usageType`) exist. No `...V2`/`...ById`-style methods for the newer `/sources/v2/{sourceId}/provisioning-policies/{id}` endpoints (real-`id`-keyed CRUD) are present anywhere in the package.
+- **Impact:** `identitynow_source_provisioning_policy_v1` had to be built against the older, less-Terraform-friendly v1 shape (composite `sourceId`+`usageType` key, `ProvisioningPolicyDto` has no native `id` field, forcing a hand-synthesized `<source_id>/<usage_type>` composite Terraform id) instead of the cleaner v2 by-id CRUD the task's authors had originally preferred.
+- **Root cause:** the SDK simply hasn't been regenerated/extended to cover the newer v2 provisioning-policy endpoints yet. v2 also requires a mandatory `X-SailPoint-Experimental` request header that the SDK has no exposed mechanism to attach even if bindings existed, which would be a second blocker on top of the missing methods.
+- **Workaround (shipped):** built entirely against the v1 endpoints instead; documented as a deliberate, SDK-gap-driven deviation in `source_provisioning_policy_v1`'s package doc and docs template.
+- **Filed upstream?** No.
+- **Revisit trigger:** if a future `golang-sdk` release adds v2 provisioning-policy bindings (confirmed via direct source inspection, not changelog alone) AND a way to attach the `X-SailPoint-Experimental` header, revisit `source_provisioning_policy_v1` to migrate to `id`-keyed v2 CRUD — a strictly better fit for Terraform's resource model (no composite key, no synthesized id).
+- **Discovered:** 2026-08-01, `source_provisioning_policy_v1` pipeline.
