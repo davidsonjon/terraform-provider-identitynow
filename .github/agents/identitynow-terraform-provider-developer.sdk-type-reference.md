@@ -20,6 +20,17 @@ All entries below were confirmed against `v2.7.106` unless noted otherwise.
 Re-confirm (`grep -A15 "^type <Name> struct" "$(go list -m -f '{{.Dir}}' ...)/api_beta/model_<snake_name>.go"`)
 after any SDK version bump before trusting a stale entry for a new target.
 
+> **⚠️ 2026-08-02 — provider migrated to golang-sdk v3 (`/v3`, per-service packages).**
+> Every entry ABOVE the "## golang-sdk v3 (per-service packages)" section
+> below describes the **v2 `api_beta`** shapes, retained for historical
+> reference. Under v3, types moved out of the single `api_beta` package into
+> per-service packages (`sources`, `roles`, `entitlements`, `workflows`,
+> `segments`, `access_profiles`, `service_desk_integration`, …), MANY types
+> were renamed, and some field Nullable/pointer shapes changed. See the v3
+> section for the confirmed deltas. Resolve the v3 source with
+> `go list -m -f '{{.Dir}}' github.com/sailpoint-oss/golang-sdk/v3` and grep
+> under `<dir>/<service>/model_*.go`.
+
 ## Entry Template
 ```
 ### <TypeName>
@@ -200,3 +211,72 @@ after any SDK version bump before trusting a stale entry for a new target.
 - **Shape**: `AttributeDefinition`: `Name *string`, `NativeName NullableString`, `Type *AttributeDefinitionType` (string-based enum), `Schema NullableAttributeDefinitionSchema`, `Description *string`, `IsMulti *bool`, `IsEntitlement *bool`, `IsGroup *bool`. `AttributeDefinitionSchema`: `Type *string`, `Id *string`, `Name *string` - all plain pointers, no Nullable outliers, safe to map directly if ever needed as a standalone type.
 - **Notes**: `AttributeDefinition.Schema` (a pointer to another Schema, used e.g. by an account schema's `memberOf`-style attribute referencing a group schema) is `NullableAttributeDefinitionSchema`, requiring `.Get()`/`.Set()` handling exactly like other `Nullable<Type>` wrappers in this SDK - both `AttributeDefinition` and its nested `AttributeDefinitionSchema` were hand-converted (not `associated_external_type` mapped) since `tfplugingen-framework`'s generated converter template doesn't handle the `NullableAttributeDefinitionSchema` wrapper automatically, consistent with every other `Nullable*`-typed nested-object field found in this SDK so far.
 - **Used by targets**: `source_schema_v1` (`attributes` list-nested attribute).
+
+---
+
+## golang-sdk v3 (per-service packages)
+
+Confirmed against `v3.1.10` (2026-08-02, whole-repo v2→v3 migration). Resolve
+source with `go list -m -f '{{.Dir}}' github.com/sailpoint-oss/golang-sdk/v3`,
+then grep under `<dir>/<service>/model_*.go`. Only the deltas from the v2
+shapes above are catalogued here; anything not mentioned kept the same shape,
+just moved to its per-service package.
+
+### General v3 topology (applies to every entry below)
+- **No `api_beta`/`api_v3`/`api_cc`.** Each service is a top-level package
+  (`sources`, `roles`, `entitlements`, `workflows`, `segments`,
+  `access_profiles`, `identity_profiles`, `task_management`,
+  `service_desk_integration`, `governance_groups`, `sod_policies`,
+  `transforms`, `connector_rule_management`, …).
+- **Root client access:** v2 `client.Beta.<Xxx>API` → v3 `client.<Xxx>API`
+  (the `.Beta.` accessor is gone). Method names almost universally gained a
+  `V1` suffix (`GetRole`→`GetRoleV1`, etc.); a few renamed non-mechanically
+  (`UpdateConnectorRule`→`PutConnectorRuleV1`, `SourcesAPI.Delete`→`DeleteSourceV1`).
+- **Root config no longer reachable from the client.** `*sailpoint.APIClient`
+  has an unexported `cfg` and no getter. Config fields moved:
+  v2 `Configuration.{BaseURL,Token,ClientId,ClientSecret,TokenURL}` →
+  v3 `Configuration.ClientConfiguration.{BaseURL,Token,ClientId,ClientSecret,TokenURL}`;
+  `HTTPClient` stayed at `Configuration.HTTPClient`. (This provider stashes the
+  `*sailpoint.Configuration` in `provider.go` and exposes `GetClientConfig()`.)
+
+### JsonPatchOperation / JsonPatchOperationValue / ArrayInner (was #76)
+- v2 `UpdateMultiHostSourcesRequestInnerValue` → v3 **`JsonPatchOperationValue`**
+  (sensible rename). Convenience-constructor prefixes follow:
+  `StringAsJsonPatchOperationValue`, `BoolAsJsonPatchOperationValue`,
+  `MapmapOfStringAnyAsJsonPatchOperationValue`,
+  `ArrayOfArrayInnerAsJsonPatchOperationValue` (returns a value — must `&` it
+  into a var since `JsonPatchOperation.Value` is `*JsonPatchOperationValue`).
+- Each service package re-emits its own `JsonPatchOperation`/`JsonPatchOperationValue`/`ArrayInner` (e.g. `roles.JsonPatchOperation`, `access_profiles.JsonPatchOperation`) — a multi-service resource (e.g. `segment_access_v1`) needs a per-package patch helper, not one shared helper.
+- **`segments` has NO JsonPatchOperation type at all**: `segments.SourcesAPIService`... no — `PatchSegmentV1` takes a raw `RequestBody []map[string]interface{}`. Hand-roll a local `segmentJSONPatchOp{Op,Path,Value}` struct with json tags.
+
+### Source + correlation family (was #102, #109, #116)
+- `Source` moved to `sources.Source`. The `MultiHost*` prefixed leaf types were **renamed to `Source*`**: `MultiHostSourcesAccountCorrelationConfig`→`SourceAccountCorrelationConfig`, `MultiHostSourcesAccountCorrelationRule`→`SourceAccountCorrelationRule`, `MultiHostSourcesManagerCorrelationRule`→`SourceManagerCorrelationRule`, `MultiHostSourcesBeforeProvisioningRule`→`SourceBeforeProvisioningRule`, `MultiHostIntegrationsManagementWorkgroup`→`SourceManagementWorkgroup`, `MultiHostSourcesSchemasInner`→`SourceSchemasInner`, `MultiHostSourcesPasswordPoliciesInner`→`SourcePasswordPoliciesInner`, `MultiHostIntegrationsCluster`→`SourceCluster`, `ManagerCorrelationMapping`→`SourceManagerCorrelationMapping`.
+- **v3 `sources.Source` field Nullable/pointer shapes**: `Owner`, `Cluster`, `AccountCorrelationConfig`, `AccountCorrelationRule`, `ManagerCorrelationRule`, `BeforeProvisioningRule`, `ManagementWorkgroup` are all `Nullable<T>` wrappers. EXCEPTIONS: `ManagerCorrelationMapping` is a plain `*SourceManagerCorrelationMapping`; `Schemas` (`[]SourceSchemasInner`) and `PasswordPolicies` (`[]SourcePasswordPoliciesInner`) are plain slices. The mapped leaf ref types themselves (`{type,id,name}`) stayed plain-pointer.
+- `DeleteSourceV1` returns `(sources.DeleteSource202Response, *http.Response, error)` (the 3-value async-task shape from old issue #7, now consistently named).
+
+### entitlements — EntitlementV2 (was #70 AttributeDTO family)
+- The API entity type is **`entitlements.EntitlementV2`** (not `Entitlement`). Renames: `Entitlement`→`EntitlementV2`, `NewEntitlement`→`NewEntitlementV2`, `EntitlementOwner`→`EntitlementV2Owner`, `NewEntitlementSource`→`NewEntitlementV2Source`, `NewEntitlementAccessModelMetadata`→`NewEntitlementV2AccessModelMetadata`, `AttributeDTO`→`AccessModelMetadata`, `AttributeValueDTO`→`AccessModelMetadataValuesInner`, `PermissionDto`→`PermissionDTO`.
+- **`Tags []string`** and **`PrivilegeLevel *EntitlementV2PrivilegeLevel`** are now DECLARED fields (in v2 they were only reachable via `AdditionalProperties`). Seed them in tests via `dto.SetTags(...)`/`dto.SetPrivilegeLevel(...)`, not `AdditionalProperties`.
+- **`EntitlementV2PrivilegeLevel`** shape: `Direct`, `SetBy`, `Effective` are `*string`; `SetByType`, `Inherited` are `NullableString`.
+- **`ManuallyUpdatedFields`** is now a plain `map[string]interface{}` (no `EntitlementManuallyUpdatedFields` struct type). Read keys `"DISPLAY_NAME"` / `"DESCRIPTION"`.
+- `entitlements.EntitlementAccessRequestConfigMaxPermittedAccessDuration` replaces v2's `PendingApprovalMaxPermittedAccessDuration`.
+
+### roles / access_profiles — Owner is NullableOwnerReference (was #35, #54)
+- `Role.Owner` / `AccessProfile.Owner` are now **`NullableOwnerReference`** (v2 had plain-pointer/plain owner). Wrap: `*roles.NewNullableOwnerReference(&roles.OwnerReference{...})`. Read: `dto.Owner.Get()`.
+- Constructors take the Nullable owner: `roles.NewRole(name, ownerNullable)`, `access_profiles.NewAccessProfile(name, ownerNullable, source)`.
+
+### segments (was #... segment shapes)
+- `VisibilityCriteria`→**`segments.SegmentVisibilityCriteria`**, now a plain `*` pointer (drop the v2 `.Get()`). `Expression.Attribute`/`.Value` are `NullableString`. `Value.Type` is a plain `*string`. `OwnerReferenceSegments`/`NewNullableOwnerReferenceSegments` still exist under `segments`.
+
+### service_desk_integration — managedResourceRefs FIXED (was SDK issue #1)
+- v2 `ProvisioningConfigManagedResourceRefsInner` (with the `map[string]interface{}` `Type/Id/Name` bug) → v3 **`service_desk_integration.ServiceDeskSource`** with `Type/Id/Name *string` (correctly typed). `ProvisioningConfig.ManagedResourceRefs` is `[]ServiceDeskSource`. The bug is fixed; the `sdk_fallback.go` workaround is now a dead-but-retained code path.
+
+### task_management (source_load_entitlement_wait_v1)
+- The `TaskStatus`/`TaskResultDetails`-style types + `NullableString` + a SailPoint time type used by `source_load_entitlement_wait_v1` all live under **`task_management`** in v3.
+
+### Error DTO — no shared package
+- v2 `api_beta.ErrorResponseDto` has NO single canonical home in v3; the identical `ErrorResponseDto` type is re-emitted into every per-service package. This repo's shared `util.SailpointErrorFromHTTPBody` arbitrarily uses `sources.ErrorResponseDto` (aliased `sperr`) — shape is identical across packages.
+
+### workflows — provisioning-policy V2 + list regression
+- `workflows.ListWorkflowsV1` request builder has ZERO query params (v2 had Filters/Sorters/Offset/Limit) — see SDK issue #11.
+- (sources, not workflows) `sources.SourcesAPIService` now publishes `{Create,Get,Put,Delete}ProvisioningPolicyV2` with a request-builder `XSailPointExperimental(bool)` setter — see SDK issue #10.
