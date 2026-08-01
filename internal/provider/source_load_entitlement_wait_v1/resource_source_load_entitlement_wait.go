@@ -36,8 +36,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/task_management"
 
 	"terraform-provider-identitynow/internal/provider/util"
 )
@@ -195,7 +195,7 @@ func (r *SourceLoadEntitlementWaitResource) Create(ctx context.Context, req reso
 	}()
 
 	// Passing an (empty) *os.File is a deliberate workaround for a bug in the
-	// vendored golang-sdk/v2 client: ApiImportEntitlementsRequest always sets
+	// vendored golang-sdk/v3 client: ApiImportEntitlementsRequest always sets
 	// the request Content-Type header to "multipart/form-data", but
 	// client.prepareRequest only actually builds a (correctly boundary'd)
 	// multipart body when `len(formFiles) > 0` due to an operator-precedence
@@ -204,7 +204,7 @@ func (r *SourceLoadEntitlementWaitResource) Create(ctx context.Context, req reso
 	// but the body/boundary are never set, which the API intermittently (and,
 	// in live testing, consistently) rejected with HTTP 500. Supplying a real
 	// (empty) file forces the SDK down its correct multipart-encoding path.
-	task, httpResp, err := r.client.Beta.SourcesAPI.ImportEntitlements(createCtx, sourceID).File(emptyFile).Execute()
+	task, httpResp, err := r.client.SourcesAPI.ImportEntitlementsV1(createCtx, sourceID).File(emptyFile).Execute()
 	if err != nil {
 		resp.Diagnostics.AddError("Error triggering entitlement aggregation", util.SailpointErrorDetail(err, httpResp))
 		return
@@ -301,8 +301,8 @@ func (r *SourceLoadEntitlementWaitResource) ImportState(ctx context.Context, req
 
 func (r *SourceLoadEntitlementWaitResource) waitForNoActiveEntitlementImports(ctx context.Context, sourceID string) error {
 	for attempt := 0; ; attempt++ {
-		tasks, httpResp, err := r.client.Beta.TaskManagementAPI.
-			GetTaskStatusList(ctx).
+		tasks, httpResp, err := r.client.TaskManagementAPI.
+			GetTaskStatusListV1(ctx).
 			Filters(entitlementImportTaskStatusListFilter(sourceID)).
 			Limit(250).
 			Execute()
@@ -329,7 +329,7 @@ func (r *SourceLoadEntitlementWaitResource) waitForNoActiveEntitlementImports(ct
 
 func (r *SourceLoadEntitlementWaitResource) waitForTaskCompletion(ctx context.Context, sourceID, taskID string) error {
 	for attempt := 0; ; attempt++ {
-		status, httpResp, err := r.client.Beta.TaskManagementAPI.GetTaskStatus(ctx, taskID).Execute()
+		status, httpResp, err := r.client.TaskManagementAPI.GetTaskStatusV1(ctx, taskID).Execute()
 		if err != nil {
 			if ctx.Err() != nil {
 				return fmt.Errorf("timed out while polling task status: %w", ctx.Err())
@@ -476,7 +476,7 @@ func entitlementImportTaskStatusListFilter(sourceID string) string {
 	return fmt.Sprintf("sourceId eq %q and completionStatus isnull", sourceID)
 }
 
-func normalizedCompletionStatus(status api_beta.NullableString) string {
+func normalizedCompletionStatus(status task_management.NullableString) string {
 	if !status.IsSet() || status.Get() == nil {
 		return ""
 	}
@@ -493,7 +493,7 @@ func isSuccessfulCompletionStatus(status string) bool {
 // while `completionStatus` is still empty/null for a brief window. That
 // combination is treated as "not yet finished" (finished=false) so the
 // caller keeps polling instead of misreporting a false completion status.
-func taskCompletionResult(status *api_beta.TaskStatus) (finished bool, completionStatus string) {
+func taskCompletionResult(status *task_management.TaskStatus) (finished bool, completionStatus string) {
 	if status == nil {
 		return false, ""
 	}
