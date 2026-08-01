@@ -44,7 +44,8 @@ resource "identitynow_governance_group_members_v1" "example" {
 ## Known Limitations & Live Testing Notes
 
 See the [`identitynow_governance_group_v1` resource documentation](governance_group_v1.md#known-limitations--live-testing-notes)
-for background on the pilot status shared by all Governance Group targets.
+for background shared by all Governance Group targets (SDK client used,
+live-testing notes).
 Membership management specifically has its own considerations:
 
 - **This resource manages the *entire* membership list, not incremental
