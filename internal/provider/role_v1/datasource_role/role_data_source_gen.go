@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/roles"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -11751,7 +11751,7 @@ func (v RevocationApprovalSchemesValue) AttributeTypes(ctx context.Context) map[
 	}
 }
 
-func (v AccessProfilesValue) ToApi_betaAccessProfileRef(ctx context.Context) (*api_beta.AccessProfileRef, diag.Diagnostics) {
+func (v AccessProfilesValue) ToApi_betaAccessProfileRef(ctx context.Context) (*roles.AccessProfileRef, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -11767,14 +11767,14 @@ func (v AccessProfilesValue) ToApi_betaAccessProfileRef(ctx context.Context) (*a
 		return nil, diags
 	}
 
-	return &api_beta.AccessProfileRef{
+	return &roles.AccessProfileRef{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.AccessProfilesType.ValueStringPointer(),
 	}, diags
 }
 
-func (v AccessProfilesValue) FromApi_betaAccessProfileRef(ctx context.Context, apiObject *api_beta.AccessProfileRef) (AccessProfilesValue, diag.Diagnostics) {
+func (v AccessProfilesValue) FromApi_betaAccessProfileRef(ctx context.Context, apiObject *roles.AccessProfileRef) (AccessProfilesValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -11789,7 +11789,7 @@ func (v AccessProfilesValue) FromApi_betaAccessProfileRef(ctx context.Context, a
 	}, diags
 }
 
-func (v DimensionRefsValue) ToApi_betaDimensionRef(ctx context.Context) (*api_beta.DimensionRef, diag.Diagnostics) {
+func (v DimensionRefsValue) ToApi_betaDimensionRef(ctx context.Context) (*roles.DimensionRef, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -11805,14 +11805,14 @@ func (v DimensionRefsValue) ToApi_betaDimensionRef(ctx context.Context) (*api_be
 		return nil, diags
 	}
 
-	return &api_beta.DimensionRef{
+	return &roles.DimensionRef{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.DimensionRefsType.ValueStringPointer(),
 	}, diags
 }
 
-func (v DimensionRefsValue) FromApi_betaDimensionRef(ctx context.Context, apiObject *api_beta.DimensionRef) (DimensionRefsValue, diag.Diagnostics) {
+func (v DimensionRefsValue) FromApi_betaDimensionRef(ctx context.Context, apiObject *roles.DimensionRef) (DimensionRefsValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -11827,7 +11827,7 @@ func (v DimensionRefsValue) FromApi_betaDimensionRef(ctx context.Context, apiObj
 	}, diags
 }
 
-func (v OwnerValue) ToApi_betaOwnerReference(ctx context.Context) (*api_beta.OwnerReference, diag.Diagnostics) {
+func (v OwnerValue) ToApi_betaOwnerReference(ctx context.Context) (*roles.OwnerReference, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -11843,14 +11843,14 @@ func (v OwnerValue) ToApi_betaOwnerReference(ctx context.Context) (*api_beta.Own
 		return nil, diags
 	}
 
-	return &api_beta.OwnerReference{
+	return &roles.OwnerReference{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.OwnerType.ValueStringPointer(),
 	}, diags
 }
 
-func (v OwnerValue) FromApi_betaOwnerReference(ctx context.Context, apiObject *api_beta.OwnerReference) (OwnerValue, diag.Diagnostics) {
+func (v OwnerValue) FromApi_betaOwnerReference(ctx context.Context, apiObject *roles.OwnerReference) (OwnerValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

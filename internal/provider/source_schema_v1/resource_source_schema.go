@@ -54,8 +54,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/sources"
 
 	"terraform-provider-identitynow/internal/provider/source_schema_v1/resource_source_schema"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -161,8 +161,8 @@ func (r *sourceSchemaResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.SourcesAPI.
-		CreateSourceSchema(ctx, sourceID).
+	apiResp, httpResp, err := r.client.SourcesAPI.
+		CreateSourceSchemaV1(ctx, sourceID).
 		Schema(*dto).
 		Execute()
 	if err != nil {
@@ -193,8 +193,8 @@ func (r *sourceSchemaResource) Read(ctx context.Context, req resource.ReadReques
 	schemaID := state.SchemaId.ValueString()
 	tflog.Debug(ctx, "Reading Source Schema", map[string]interface{}{"source_id": sourceID, "schema_id": schemaID})
 
-	apiResp, httpResp, err := r.client.Beta.SourcesAPI.
-		GetSourceSchema(ctx, sourceID, schemaID).
+	apiResp, httpResp, err := r.client.SourcesAPI.
+		GetSourceSchemaV1(ctx, sourceID, schemaID).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -247,8 +247,8 @@ func (r *sourceSchemaResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	dto.SetId(schemaID)
 
-	apiResp, httpResp, err := r.client.Beta.SourcesAPI.
-		PutSourceSchema(ctx, sourceID, schemaID).
+	apiResp, httpResp, err := r.client.SourcesAPI.
+		PutSourceSchemaV1(ctx, sourceID, schemaID).
 		Schema(*dto).
 		Execute()
 	if err != nil {
@@ -279,8 +279,8 @@ func (r *sourceSchemaResource) Delete(ctx context.Context, req resource.DeleteRe
 	schemaID := state.SchemaId.ValueString()
 	tflog.Debug(ctx, "Deleting Source Schema", map[string]interface{}{"source_id": sourceID, "schema_id": schemaID})
 
-	httpResp, err := r.client.Beta.SourcesAPI.
-		DeleteSourceSchema(ctx, sourceID, schemaID).
+	httpResp, err := r.client.SourcesAPI.
+		DeleteSourceSchemaV1(ctx, sourceID, schemaID).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -351,8 +351,8 @@ func normalizedConfigurationFromAPI(m map[string]interface{}) (jsontypes.Normali
 
 // attributesListToAPI converts the resource's "attributes" types.List (each
 // element a resource_source_schema.AttributesValue) into
-// []api_beta.AttributeDefinition.
-func attributesListToAPI(ctx context.Context, l types.List) ([]api_beta.AttributeDefinition, diag.Diagnostics) {
+// []sources.AttributeDefinition.
+func attributesListToAPI(ctx context.Context, l types.List) ([]sources.AttributeDefinition, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if l.IsNull() || l.IsUnknown() {
 		return nil, diags
@@ -363,9 +363,9 @@ func attributesListToAPI(ctx context.Context, l types.List) ([]api_beta.Attribut
 		return nil, diags
 	}
 
-	out := make([]api_beta.AttributeDefinition, 0, len(values))
+	out := make([]sources.AttributeDefinition, 0, len(values))
 	for _, v := range values {
-		ad := api_beta.NewAttributeDefinition()
+		ad := sources.NewAttributeDefinition()
 		if !v.Name.IsNull() && !v.Name.IsUnknown() {
 			ad.SetName(v.Name.ValueString())
 		}
@@ -373,7 +373,7 @@ func attributesListToAPI(ctx context.Context, l types.List) ([]api_beta.Attribut
 			ad.SetNativeName(v.NativeName.ValueString())
 		}
 		if !v.AttributesType.IsNull() && !v.AttributesType.IsUnknown() {
-			t := api_beta.AttributeDefinitionType(v.AttributesType.ValueString())
+			t := sources.AttributeDefinitionType(v.AttributesType.ValueString())
 			ad.Type = &t
 		}
 		if !v.Description.IsNull() && !v.Description.IsUnknown() {
@@ -396,15 +396,15 @@ func attributesListToAPI(ctx context.Context, l types.List) ([]api_beta.Attribut
 
 // schemaValueToNullableRef converts the nested "schema" basetypes.ObjectValue
 // (attr.Value form, as stored on AttributesValue.Schema) into an
-// api_beta.NullableAttributeDefinitionSchema by reading its "id"/"name"/"type"
+// sources.NullableAttributeDefinitionSchema by reading its "id"/"name"/"type"
 // string attributes directly.
-func schemaValueToNullableRef(obj types.Object) api_beta.NullableAttributeDefinitionSchema {
-	var out api_beta.NullableAttributeDefinitionSchema
+func schemaValueToNullableRef(obj types.Object) sources.NullableAttributeDefinitionSchema {
+	var out sources.NullableAttributeDefinitionSchema
 	if obj.IsNull() || obj.IsUnknown() {
 		return out
 	}
 	attrs := obj.Attributes()
-	ref := api_beta.NewAttributeDefinitionSchema()
+	ref := sources.NewAttributeDefinitionSchema()
 	if v, ok := attrs["id"].(types.String); ok && !v.IsNull() && !v.IsUnknown() {
 		ref.SetId(v.ValueString())
 	}
@@ -418,9 +418,9 @@ func schemaValueToNullableRef(obj types.Object) api_beta.NullableAttributeDefini
 	return out
 }
 
-// attributesListFromAPI converts an API-returned []api_beta.AttributeDefinition
+// attributesListFromAPI converts an API-returned []sources.AttributeDefinition
 // into the resource's "attributes" types.List.
-func attributesListFromAPI(ctx context.Context, defs []api_beta.AttributeDefinition) (types.List, diag.Diagnostics) {
+func attributesListFromAPI(ctx context.Context, defs []sources.AttributeDefinition) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_source_schema.AttributesValue{}.Type(ctx)
 	if defs == nil {
@@ -462,10 +462,10 @@ func attributesListFromAPI(ctx context.Context, defs []api_beta.AttributeDefinit
 	return list, diags
 }
 
-// schemaRefToObjectValue converts an api_beta.NullableAttributeDefinitionSchema
+// schemaRefToObjectValue converts an sources.NullableAttributeDefinitionSchema
 // API response value into a types.Object matching the "schema" nested
 // attribute's shape (id/name/type strings).
-func schemaRefToObjectValue(ref api_beta.NullableAttributeDefinitionSchema) (types.Object, diag.Diagnostics) {
+func schemaRefToObjectValue(ref sources.NullableAttributeDefinitionSchema) (types.Object, diag.Diagnostics) {
 	attrTypes := map[string]attr.Type{
 		"id":   types.StringType,
 		"name": types.StringType,
@@ -482,17 +482,17 @@ func schemaRefToObjectValue(ref api_beta.NullableAttributeDefinitionSchema) (typ
 	})
 }
 
-// nullableStringToStringValue converts an api_beta.NullableString into a
+// nullableStringToStringValue converts an sources.NullableString into a
 // types.String.
-func nullableStringToStringValue(ns api_beta.NullableString) types.String {
+func nullableStringToStringValue(ns sources.NullableString) types.String {
 	if !ns.IsSet() || ns.Get() == nil {
 		return types.StringNull()
 	}
 	return types.StringValue(*ns.Get())
 }
 
-// modelToDto builds an api_beta.Schema request body from the plan model.
-func modelToDto(ctx context.Context, plan sourceSchemaResourceModel) (*api_beta.Schema, diag.Diagnostics) {
+// modelToDto builds an sources.Schema request body from the plan model.
+func modelToDto(ctx context.Context, plan sourceSchemaResourceModel) (*sources.Schema, diag.Diagnostics) {
 	config, diags := configurationToMap(plan.Configuration)
 	if diags.HasError() {
 		return nil, diags
@@ -513,7 +513,7 @@ func modelToDto(ctx context.Context, plan sourceSchemaResourceModel) (*api_beta.
 		}
 	}
 
-	dto := api_beta.NewSchema()
+	dto := sources.NewSchema()
 	dto.SetName(plan.Name.ValueString())
 	if !plan.NativeObjectType.IsNull() && !plan.NativeObjectType.IsUnknown() {
 		dto.SetNativeObjectType(plan.NativeObjectType.ValueString())
@@ -541,9 +541,9 @@ func modelToDto(ctx context.Context, plan sourceSchemaResourceModel) (*api_beta.
 	return dto, diags
 }
 
-// dtoToModel converts an api_beta.Schema API response into the resource's
+// dtoToModel converts an sources.Schema API response into the resource's
 // state model.
-func dtoToModel(ctx context.Context, dto *api_beta.Schema, sourceID string, fallback sourceSchemaResourceModel) (sourceSchemaResourceModel, diag.Diagnostics) {
+func dtoToModel(ctx context.Context, dto *sources.Schema, sourceID string, fallback sourceSchemaResourceModel) (sourceSchemaResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -578,10 +578,10 @@ func dtoToModel(ctx context.Context, dto *api_beta.Schema, sourceID string, fall
 	return model, diags
 }
 
-// timeToStringValue formats an *api_beta.SailPointTime as RFC3339, or
+// timeToStringValue formats an *sources.SailPointTime as RFC3339, or
 // returns a null types.String if nil (matches sources_v1's identical
 // helper).
-func timeToStringValue(t *api_beta.SailPointTime) types.String {
+func timeToStringValue(t *sources.SailPointTime) types.String {
 	if t == nil {
 		return types.StringNull()
 	}

@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/transforms"
 
 	"terraform-provider-identitynow/internal/provider/transform_v1/datasource_transform"
 )
@@ -102,8 +102,8 @@ func (d *transformDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, "Reading Transform data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.TransformsAPI.
-		GetTransform(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.TransformsAPI.
+		GetTransformV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Transform data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -124,7 +124,7 @@ func (d *transformDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 // datasourceDtoToModel mirrors transformReadToModel in resource_transform.go
 // but against the data source's model type.
-func datasourceDtoToModel(dto *api_beta.TransformRead, fallback transformDataSourceModel) (transformDataSourceModel, diag.Diagnostics) {
+func datasourceDtoToModel(dto *transforms.TransformRead, fallback transformDataSourceModel) (transformDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 

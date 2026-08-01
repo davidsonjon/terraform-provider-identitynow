@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/governance_groups"
 
 	"terraform-provider-identitynow/internal/provider/governance_group_v1/datasource_governance_group"
 )
@@ -69,8 +69,8 @@ func (d *governanceGroupDataSource) Read(ctx context.Context, req datasource.Rea
 
 	tflog.Debug(ctx, "Reading Governance Group data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.GovernanceGroupsAPI.
-		GetWorkgroup(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.GovernanceGroupsAPI.
+		GetWorkgroupV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Governance Group data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -93,7 +93,7 @@ func (d *governanceGroupDataSource) Read(ctx context.Context, req datasource.Rea
 // against the data source's generated model/value types (a separate Go
 // package emitted by tfplugingen-framework, so the types are not identical
 // even though they're structurally the same).
-func datasourceDtoToModel(ctx context.Context, dto *api_beta.WorkgroupDto, fallback datasource_governance_group.GovernanceGroupModel) (datasource_governance_group.GovernanceGroupModel, diag.Diagnostics) {
+func datasourceDtoToModel(ctx context.Context, dto *governance_groups.WorkgroupDto, fallback datasource_governance_group.GovernanceGroupModel) (datasource_governance_group.GovernanceGroupModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 

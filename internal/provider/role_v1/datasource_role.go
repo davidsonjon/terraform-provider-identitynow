@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/roles"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/role_v1/datasource_role"
 )
@@ -70,8 +70,8 @@ func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading Role data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.RolesAPI.
-		GetRole(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.RolesAPI.
+		GetRoleV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Role data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -94,7 +94,7 @@ func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 // against the data source's generated model/value types (a separate Go package
 // emitted by tfplugingen-framework, so the types are not identical even though
 // they're structurally the same).
-func roleDatasourceDtoToModel(ctx context.Context, dto *api_beta.Role, fallback datasource_role.RoleModel) (datasource_role.RoleModel, diag.Diagnostics) {
+func roleDatasourceDtoToModel(ctx context.Context, dto *roles.Role, fallback datasource_role.RoleModel) (datasource_role.RoleModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -124,7 +124,7 @@ func roleDatasourceDtoToModel(ctx context.Context, dto *api_beta.Role, fallback 
 		model.Dimensional = types.BoolPointerValue(dto.Dimensional.Get())
 	}
 
-	owner, d := datasource_role.OwnerValue{}.FromApi_betaOwnerReference(ctx, &dto.Owner)
+	owner, d := datasource_role.OwnerValue{}.FromApi_betaOwnerReference(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 

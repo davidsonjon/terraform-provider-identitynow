@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/governance_groups"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -646,7 +646,7 @@ func (v OwnerValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	}
 }
 
-func (v OwnerValue) ToApi_betaWorkgroupDtoOwner(ctx context.Context) (*api_beta.WorkgroupDtoOwner, diag.Diagnostics) {
+func (v OwnerValue) ToApi_betaWorkgroupDtoOwner(ctx context.Context) (*governance_groups.WorkgroupDtoOwner, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -662,7 +662,7 @@ func (v OwnerValue) ToApi_betaWorkgroupDtoOwner(ctx context.Context) (*api_beta.
 		return nil, diags
 	}
 
-	return &api_beta.WorkgroupDtoOwner{
+	return &governance_groups.WorkgroupDtoOwner{
 		DisplayName:  v.DisplayName.ValueStringPointer(),
 		EmailAddress: v.EmailAddress.ValueStringPointer(),
 		Id:           v.Id.ValueStringPointer(),
@@ -671,7 +671,7 @@ func (v OwnerValue) ToApi_betaWorkgroupDtoOwner(ctx context.Context) (*api_beta.
 	}, diags
 }
 
-func (v OwnerValue) FromApi_betaWorkgroupDtoOwner(ctx context.Context, apiObject *api_beta.WorkgroupDtoOwner) (OwnerValue, diag.Diagnostics) {
+func (v OwnerValue) FromApi_betaWorkgroupDtoOwner(ctx context.Context, apiObject *governance_groups.WorkgroupDtoOwner) (OwnerValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

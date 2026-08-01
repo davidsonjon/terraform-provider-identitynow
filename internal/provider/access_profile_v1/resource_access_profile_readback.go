@@ -39,12 +39,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_profiles"
 
 	"terraform-provider-identitynow/internal/provider/access_profile_v1/resource_access_profile"
 )
 
-func accessProfileAccessModelMetadataFromApi(ctx context.Context, dto *api_beta.AttributeDTOList) (resource_access_profile.AccessModelMetadataValue, diag.Diagnostics) {
+func accessProfileAccessModelMetadataFromApi(ctx context.Context, dto *access_profiles.AttributeDTOList) (resource_access_profile.AccessModelMetadataValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return resource_access_profile.NewAccessModelMetadataValueNull(), diags
@@ -61,7 +61,7 @@ func accessProfileAccessModelMetadataFromApi(ctx context.Context, dto *api_beta.
 	return v, diags
 }
 
-func accessProfileAttributeDTOListFromApi(ctx context.Context, items []api_beta.AttributeDTO) (types.List, diag.Diagnostics) {
+func accessProfileAttributeDTOListFromApi(ctx context.Context, items []access_profiles.AttributeDTO) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_access_profile.AttributesValue{}.Type(ctx)
 	if items == nil {
@@ -98,7 +98,7 @@ func accessProfileAttributeDTOListFromApi(ctx context.Context, items []api_beta.
 	return listVal, diags
 }
 
-func accessProfileAttributeValueDTOListFromApi(ctx context.Context, items []api_beta.AttributeValueDTO) (types.List, diag.Diagnostics) {
+func accessProfileAttributeValueDTOListFromApi(ctx context.Context, items []access_profiles.AttributeValueDTO) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_access_profile.ValuesValue{}.Type(ctx)
 	if items == nil {
@@ -124,7 +124,7 @@ func accessProfileAttributeValueDTOListFromApi(ctx context.Context, items []api_
 	return listVal, diags
 }
 
-func accessProfileApprovalSchemeListFromApi(ctx context.Context, items []api_beta.AccessProfileApprovalScheme) (types.List, diag.Diagnostics) {
+func accessProfileApprovalSchemeListFromApi(ctx context.Context, items []access_profiles.AccessProfileApprovalScheme) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_access_profile.ApprovalSchemesValue{}.Type(ctx)
 	if items == nil {
@@ -149,7 +149,7 @@ func accessProfileApprovalSchemeListFromApi(ctx context.Context, items []api_bet
 	return listVal, diags
 }
 
-func accessProfileRevocationApprovalSchemeListFromApi(ctx context.Context, items []api_beta.AccessProfileApprovalScheme) (types.List, diag.Diagnostics) {
+func accessProfileRevocationApprovalSchemeListFromApi(ctx context.Context, items []access_profiles.AccessProfileApprovalScheme) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_access_profile.RevocationApprovalSchemesValue{}.Type(ctx)
 	if items == nil {
@@ -174,7 +174,7 @@ func accessProfileRevocationApprovalSchemeListFromApi(ctx context.Context, items
 	return listVal, diags
 }
 
-func accessProfileMaxPermittedAccessDurationFromApi(ctx context.Context, dto *api_beta.AccessDuration) (types.Object, diag.Diagnostics) {
+func accessProfileMaxPermittedAccessDurationFromApi(ctx context.Context, dto *access_profiles.AccessDuration) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	attrTypes := resource_access_profile.MaxPermittedAccessDurationValue{}.AttributeTypes(ctx)
 	if dto == nil {
@@ -199,7 +199,7 @@ func accessProfileMaxPermittedAccessDurationFromApi(ctx context.Context, dto *ap
 	return v.ToObjectValue(ctx)
 }
 
-func accessProfileAccessRequestConfigFromApi(ctx context.Context, dto *api_beta.Requestability) (resource_access_profile.AccessRequestConfigValue, diag.Diagnostics) {
+func accessProfileAccessRequestConfigFromApi(ctx context.Context, dto *access_profiles.Requestability) (resource_access_profile.AccessRequestConfigValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return resource_access_profile.NewAccessRequestConfigValueNull(), diags
@@ -226,7 +226,7 @@ func accessProfileAccessRequestConfigFromApi(ctx context.Context, dto *api_beta.
 	return v, diags
 }
 
-func accessProfileRevocationRequestConfigFromApi(ctx context.Context, dto *api_beta.Revocability) (resource_access_profile.RevocationRequestConfigValue, diag.Diagnostics) {
+func accessProfileRevocationRequestConfigFromApi(ctx context.Context, dto *access_profiles.Revocability) (resource_access_profile.RevocationRequestConfigValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return resource_access_profile.NewRevocationRequestConfigValueNull(), diags
@@ -249,7 +249,7 @@ func accessProfileRevocationRequestConfigFromApi(ctx context.Context, dto *api_b
 // recursive ProvisioningCriteriaLevel1/2/3 tree into the generated 3-level
 // ProvisioningCriteriaValue/ChildrenValue/GrandchildrenValue tree (see the
 // package doc for the depth limitation).
-func accessProfileProvisioningCriteriaFromApi(ctx context.Context, dto *api_beta.ProvisioningCriteriaLevel1) (resource_access_profile.ProvisioningCriteriaValue, diag.Diagnostics) {
+func accessProfileProvisioningCriteriaFromApi(ctx context.Context, dto *access_profiles.ProvisioningCriteriaLevel1) (resource_access_profile.ProvisioningCriteriaValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return resource_access_profile.NewProvisioningCriteriaValueNull(), diags
@@ -278,7 +278,7 @@ func accessProfileProvisioningCriteriaFromApi(ctx context.Context, dto *api_beta
 	return v, diags
 }
 
-func accessProfileProvisioningCriteriaLevel2ListFromApi(ctx context.Context, items []api_beta.ProvisioningCriteriaLevel2) (types.List, diag.Diagnostics) {
+func accessProfileProvisioningCriteriaLevel2ListFromApi(ctx context.Context, items []access_profiles.ProvisioningCriteriaLevel2) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_access_profile.ChildrenValue{}.Type(ctx)
 	if items == nil {
@@ -316,11 +316,11 @@ func accessProfileProvisioningCriteriaLevel2ListFromApi(ctx context.Context, ite
 }
 
 // accessProfileProvisioningCriteriaLevel3ListFromApi converts level 3 of the
-// tree. Level 3's own "children" field in the SDK (api_beta.NullableString) is
+// tree. Level 3's own "children" field in the SDK (access_profiles.NullableString) is
 // a dead/unused leftover matching the generated schema's "children" string
 // attribute on GrandchildrenValue - there is no level 4, so it is always left
 // null.
-func accessProfileProvisioningCriteriaLevel3ListFromApi(ctx context.Context, items []api_beta.ProvisioningCriteriaLevel3) (types.List, diag.Diagnostics) {
+func accessProfileProvisioningCriteriaLevel3ListFromApi(ctx context.Context, items []access_profiles.ProvisioningCriteriaLevel3) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_access_profile.GrandchildrenValue{}.Type(ctx)
 	if items == nil {
@@ -357,54 +357,54 @@ func accessProfileProvisioningCriteriaLevel3ListFromApi(ctx context.Context, ite
 // accessProfileProvisioningCriteriaToApi converts the Terraform
 // ProvisioningCriteriaValue tree from plan/config into the API's 3-level
 // ProvisioningCriteriaLevel1/2/3 tree for Create/Update requests.
-func accessProfileProvisioningCriteriaToApi(ctx context.Context, v resource_access_profile.ProvisioningCriteriaValue) (*api_beta.ProvisioningCriteriaLevel1, diag.Diagnostics) {
+func accessProfileProvisioningCriteriaToApi(ctx context.Context, v resource_access_profile.ProvisioningCriteriaValue) (*access_profiles.ProvisioningCriteriaLevel1, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if v.IsNull() || v.IsUnknown() {
 		return nil, diags
 	}
 
-	level1 := &api_beta.ProvisioningCriteriaLevel1{}
+	level1 := &access_profiles.ProvisioningCriteriaLevel1{}
 	if !v.Attribute.IsNull() && !v.Attribute.IsUnknown() {
-		level1.Attribute = *api_beta.NewNullableString(v.Attribute.ValueStringPointer())
+		level1.Attribute = *access_profiles.NewNullableString(v.Attribute.ValueStringPointer())
 	}
 	if !v.Value.IsNull() && !v.Value.IsUnknown() {
-		level1.Value = *api_beta.NewNullableString(v.Value.ValueStringPointer())
+		level1.Value = *access_profiles.NewNullableString(v.Value.ValueStringPointer())
 	}
 	if !v.Operation.IsNull() && !v.Operation.IsUnknown() {
-		op := api_beta.ProvisioningCriteriaOperation(v.Operation.ValueString())
+		op := access_profiles.ProvisioningCriteriaOperation(v.Operation.ValueString())
 		level1.Operation = &op
 	}
 
 	if !v.Children.IsNull() && !v.Children.IsUnknown() {
 		var childItems []resource_access_profile.ChildrenValue
 		diags.Append(v.Children.ElementsAs(ctx, &childItems, false)...)
-		children := make([]api_beta.ProvisioningCriteriaLevel2, 0, len(childItems))
+		children := make([]access_profiles.ProvisioningCriteriaLevel2, 0, len(childItems))
 		for _, c := range childItems {
-			level2 := api_beta.ProvisioningCriteriaLevel2{}
+			level2 := access_profiles.ProvisioningCriteriaLevel2{}
 			if !c.Attribute.IsNull() && !c.Attribute.IsUnknown() {
-				level2.Attribute = *api_beta.NewNullableString(c.Attribute.ValueStringPointer())
+				level2.Attribute = *access_profiles.NewNullableString(c.Attribute.ValueStringPointer())
 			}
 			if !c.Value.IsNull() && !c.Value.IsUnknown() {
-				level2.Value = *api_beta.NewNullableString(c.Value.ValueStringPointer())
+				level2.Value = *access_profiles.NewNullableString(c.Value.ValueStringPointer())
 			}
 			if !c.Operation.IsNull() && !c.Operation.IsUnknown() {
-				op := api_beta.ProvisioningCriteriaOperation(c.Operation.ValueString())
+				op := access_profiles.ProvisioningCriteriaOperation(c.Operation.ValueString())
 				level2.Operation = &op
 			}
 			if !c.Grandchildren.IsNull() && !c.Grandchildren.IsUnknown() {
 				var grandchildItems []resource_access_profile.GrandchildrenValue
 				diags.Append(c.Grandchildren.ElementsAs(ctx, &grandchildItems, false)...)
-				grandchildren := make([]api_beta.ProvisioningCriteriaLevel3, 0, len(grandchildItems))
+				grandchildren := make([]access_profiles.ProvisioningCriteriaLevel3, 0, len(grandchildItems))
 				for _, g := range grandchildItems {
-					level3 := api_beta.ProvisioningCriteriaLevel3{}
+					level3 := access_profiles.ProvisioningCriteriaLevel3{}
 					if !g.Attribute.IsNull() && !g.Attribute.IsUnknown() {
-						level3.Attribute = *api_beta.NewNullableString(g.Attribute.ValueStringPointer())
+						level3.Attribute = *access_profiles.NewNullableString(g.Attribute.ValueStringPointer())
 					}
 					if !g.Value.IsNull() && !g.Value.IsUnknown() {
-						level3.Value = *api_beta.NewNullableString(g.Value.ValueStringPointer())
+						level3.Value = *access_profiles.NewNullableString(g.Value.ValueStringPointer())
 					}
 					if !g.Operation.IsNull() && !g.Operation.IsUnknown() {
-						op := api_beta.ProvisioningCriteriaOperation(g.Operation.ValueString())
+						op := access_profiles.ProvisioningCriteriaOperation(g.Operation.ValueString())
 						level3.Operation = &op
 					}
 					grandchildren = append(grandchildren, level3)

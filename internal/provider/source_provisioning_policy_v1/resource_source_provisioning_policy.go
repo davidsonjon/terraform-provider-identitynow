@@ -22,7 +22,7 @@
 // v2's by-id shape is the objectively better fit for a normal Terraform
 // resource (a stable, single-attribute identifier, matching every other
 // _v1 pilot in this repo) and was the task's stated preference - but
-// github.com/sailpoint-oss/golang-sdk/v2@v2.7.106 (api_beta.SourcesAPIService)
+// github.com/sailpoint-oss/golang-sdk/v2@v2.7.106 (sources.SourcesAPIService)
 // has NO generated bindings at all for the v2 endpoints (confirmed via
 // `grep -n "ProvisioningPolic" api_sources.go`: only
 // Create/Get/Put/Update/Delete/ListProvisioningPolicies, all v1); v2 also
@@ -66,8 +66,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/sources"
 
 	"terraform-provider-identitynow/internal/provider/source_provisioning_policy_v1/resource_source_provisioning_policy"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -169,8 +169,8 @@ func (r *sourceProvisioningPolicyResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.SourcesAPI.
-		CreateProvisioningPolicy(ctx, sourceID).
+	apiResp, httpResp, err := r.client.SourcesAPI.
+		CreateProvisioningPolicyV1(ctx, sourceID).
 		ProvisioningPolicyDto(*dto).
 		Execute()
 	if err != nil {
@@ -201,8 +201,8 @@ func (r *sourceProvisioningPolicyResource) Read(ctx context.Context, req resourc
 	usageType := state.UsageType.ValueString()
 	tflog.Debug(ctx, "Reading Source Provisioning Policy", map[string]interface{}{"source_id": sourceID, "usage_type": usageType})
 
-	apiResp, httpResp, err := r.client.Beta.SourcesAPI.
-		GetProvisioningPolicy(ctx, sourceID, api_beta.UsageType(usageType)).
+	apiResp, httpResp, err := r.client.SourcesAPI.
+		GetProvisioningPolicyV1(ctx, sourceID, sources.UsageType(usageType)).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -253,8 +253,8 @@ func (r *sourceProvisioningPolicyResource) Update(ctx context.Context, req resou
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.SourcesAPI.
-		PutProvisioningPolicy(ctx, sourceID, api_beta.UsageType(usageType)).
+	apiResp, httpResp, err := r.client.SourcesAPI.
+		PutProvisioningPolicyV1(ctx, sourceID, sources.UsageType(usageType)).
 		ProvisioningPolicyDto(*dto).
 		Execute()
 	if err != nil {
@@ -285,8 +285,8 @@ func (r *sourceProvisioningPolicyResource) Delete(ctx context.Context, req resou
 	usageType := state.UsageType.ValueString()
 	tflog.Debug(ctx, "Deleting Source Provisioning Policy", map[string]interface{}{"source_id": sourceID, "usage_type": usageType})
 
-	httpResp, err := r.client.Beta.SourcesAPI.
-		DeleteProvisioningPolicy(ctx, sourceID, api_beta.UsageType(usageType)).
+	httpResp, err := r.client.SourcesAPI.
+		DeleteProvisioningPolicyV1(ctx, sourceID, sources.UsageType(usageType)).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -320,14 +320,14 @@ func idToParts(id string) (sourceID, usageType string, err error) {
 
 // fieldsToSlice decodes the practitioner-supplied "fields" JSON string (a
 // JSON array of FieldDetailsDto-shaped objects) into
-// []api_beta.FieldDetailsDto. A null/empty jsontypes.Normalized decodes to a
+// []sources.FieldDetailsDto. A null/empty jsontypes.Normalized decodes to a
 // nil slice (omitted "fields" on the wire), which the API accepts.
-func fieldsToSlice(v jsontypes.Normalized) ([]api_beta.FieldDetailsDto, diag.Diagnostics) {
+func fieldsToSlice(v jsontypes.Normalized) ([]sources.FieldDetailsDto, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if v.IsNull() || v.IsUnknown() || v.ValueString() == "" {
 		return nil, diags
 	}
-	var fields []api_beta.FieldDetailsDto
+	var fields []sources.FieldDetailsDto
 	if err := json.Unmarshal([]byte(v.ValueString()), &fields); err != nil {
 		diags.AddError(
 			"Invalid \"fields\" JSON",
@@ -343,10 +343,10 @@ func fieldsToSlice(v jsontypes.Normalized) ([]api_beta.FieldDetailsDto, diag.Dia
 // normalizedAttributesFromAPI pattern. A nil slice (no fields configured on
 // the policy) is normalized to an empty JSON array "[]", not the JSON
 // literal "null", for predictable diffing.
-func normalizedFieldsFromAPI(fields []api_beta.FieldDetailsDto) (jsontypes.Normalized, diag.Diagnostics) {
+func normalizedFieldsFromAPI(fields []sources.FieldDetailsDto) (jsontypes.Normalized, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if fields == nil {
-		fields = []api_beta.FieldDetailsDto{}
+		fields = []sources.FieldDetailsDto{}
 	}
 	fieldsJSON, err := json.Marshal(fields)
 	if err != nil {
@@ -359,27 +359,27 @@ func normalizedFieldsFromAPI(fields []api_beta.FieldDetailsDto) (jsontypes.Norma
 	return jsontypes.NewNormalizedValue(string(fieldsJSON)), diags
 }
 
-// modelToDto builds an api_beta.ProvisioningPolicyDto request body from the
+// modelToDto builds an sources.ProvisioningPolicyDto request body from the
 // plan model.
-func modelToDto(plan sourceProvisioningPolicyResourceModel) (*api_beta.ProvisioningPolicyDto, diag.Diagnostics) {
+func modelToDto(plan sourceProvisioningPolicyResourceModel) (*sources.ProvisioningPolicyDto, diag.Diagnostics) {
 	fields, diags := fieldsToSlice(plan.Fields)
 	if diags.HasError() {
 		return nil, diags
 	}
 
-	dto := api_beta.NewProvisioningPolicyDto(*api_beta.NewNullableString(plan.Name.ValueStringPointer()))
+	dto := sources.NewProvisioningPolicyDto(*sources.NewNullableString(plan.Name.ValueStringPointer()))
 	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
 		dto.SetDescription(plan.Description.ValueString())
 	}
-	usageType := api_beta.UsageType(plan.UsageType.ValueString())
+	usageType := sources.UsageType(plan.UsageType.ValueString())
 	dto.UsageType = &usageType
 	dto.Fields = fields
 	return dto, diags
 }
 
-// dtoToModel converts an api_beta.ProvisioningPolicyDto API response into
+// dtoToModel converts an sources.ProvisioningPolicyDto API response into
 // the resource's state model, synthesizing "id" from sourceID+usageType.
-func dtoToModel(dto *api_beta.ProvisioningPolicyDto, sourceID string, fallback sourceProvisioningPolicyResourceModel) (sourceProvisioningPolicyResourceModel, diag.Diagnostics) {
+func dtoToModel(dto *sources.ProvisioningPolicyDto, sourceID string, fallback sourceProvisioningPolicyResourceModel) (sourceProvisioningPolicyResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 

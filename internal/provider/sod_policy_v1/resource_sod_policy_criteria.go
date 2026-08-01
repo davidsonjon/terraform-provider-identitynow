@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/sod_policies"
 )
 
 // --- conflicting_access_criteria ---
@@ -183,7 +183,7 @@ func accessCriteriaDataSourceAttribute() datasourceschema.SingleNestedAttribute 
 	}
 }
 
-func conflictingAccessCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*api_beta.SodPolicyConflictingAccessCriteria, diag.Diagnostics) {
+func conflictingAccessCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*sod_policies.SodPolicyConflictingAccessCriteria, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if obj.IsNull() {
 		return nil, diags
@@ -207,13 +207,13 @@ func conflictingAccessCriteriaObjectToAPI(ctx context.Context, obj types.Object)
 		return nil, diags
 	}
 
-	cac := api_beta.NewSodPolicyConflictingAccessCriteriaWithDefaults()
+	cac := sod_policies.NewSodPolicyConflictingAccessCriteriaWithDefaults()
 	cac.LeftCriteria = left
 	cac.RightCriteria = right
 	return cac, diags
 }
 
-func accessCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*api_beta.AccessCriteria, diag.Diagnostics) {
+func accessCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*sod_policies.AccessCriteria, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if obj.IsNull() || obj.IsUnknown() {
 		return nil, diags
@@ -225,7 +225,7 @@ func accessCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*api_beta
 		return nil, diags
 	}
 
-	ac := api_beta.NewAccessCriteriaWithDefaults()
+	ac := sod_policies.NewAccessCriteriaWithDefaults()
 	if !model.Name.IsNull() && !model.Name.IsUnknown() {
 		ac.Name = model.Name.ValueStringPointer()
 	}
@@ -233,9 +233,9 @@ func accessCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*api_beta
 	if !model.CriteriaList.IsNull() && !model.CriteriaList.IsUnknown() {
 		var items []criteriaListItemModel
 		diags.Append(model.CriteriaList.ElementsAs(ctx, &items, false)...)
-		list := make([]api_beta.AccessCriteriaCriteriaListInner, 0, len(items))
+		list := make([]sod_policies.AccessCriteriaCriteriaListInner, 0, len(items))
 		for _, item := range items {
-			list = append(list, api_beta.AccessCriteriaCriteriaListInner{
+			list = append(list, sod_policies.AccessCriteriaCriteriaListInner{
 				Type: item.Type.ValueStringPointer(),
 				Id:   item.Id.ValueStringPointer(),
 				Name: item.Name.ValueStringPointer(),
@@ -247,7 +247,7 @@ func accessCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*api_beta
 	return ac, diags
 }
 
-func conflictingAccessCriteriaObjectFromAPI(ctx context.Context, cac *api_beta.SodPolicyConflictingAccessCriteria) (types.Object, diag.Diagnostics) {
+func conflictingAccessCriteriaObjectFromAPI(ctx context.Context, cac *sod_policies.SodPolicyConflictingAccessCriteria) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if cac == nil {
 		return types.ObjectNull(conflictingAccessCriteriaAttrTypes()), diags
@@ -269,7 +269,7 @@ func conflictingAccessCriteriaObjectFromAPI(ctx context.Context, cac *api_beta.S
 	return obj, diags
 }
 
-func accessCriteriaObjectFromAPI(ctx context.Context, ac *api_beta.AccessCriteria) (types.Object, diag.Diagnostics) {
+func accessCriteriaObjectFromAPI(ctx context.Context, ac *sod_policies.AccessCriteria) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if ac == nil {
 		return types.ObjectNull(accessCriteriaAttrTypes()), diags
@@ -427,7 +427,7 @@ func applyDataSourceViolationOwnerAssignmentConfigField(attrs *map[string]dataso
 	}
 }
 
-func violationOwnerAssignmentConfigObjectToAPI(ctx context.Context, obj types.Object) (*api_beta.ViolationOwnerAssignmentConfig, diag.Diagnostics) {
+func violationOwnerAssignmentConfigObjectToAPI(ctx context.Context, obj types.Object) (*sod_policies.ViolationOwnerAssignmentConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if obj.IsNull() {
 		return nil, diags
@@ -443,8 +443,8 @@ func violationOwnerAssignmentConfigObjectToAPI(ctx context.Context, obj types.Ob
 		return nil, diags
 	}
 
-	voac := api_beta.NewViolationOwnerAssignmentConfigWithDefaults()
-	voac.AssignmentRule = *api_beta.NewNullableString(model.AssignmentRule.ValueStringPointer())
+	voac := sod_policies.NewViolationOwnerAssignmentConfigWithDefaults()
+	voac.AssignmentRule = *sod_policies.NewNullableString(model.AssignmentRule.ValueStringPointer())
 
 	if !model.OwnerRef.IsNull() && !model.OwnerRef.IsUnknown() {
 		var ownerModel violationOwnerRefModel
@@ -452,17 +452,17 @@ func violationOwnerAssignmentConfigObjectToAPI(ctx context.Context, obj types.Ob
 		if diags.HasError() {
 			return nil, diags
 		}
-		owner := api_beta.NewViolationOwnerAssignmentConfigOwnerRefWithDefaults()
-		owner.Type = *api_beta.NewNullableString(ownerModel.Type.ValueStringPointer())
+		owner := sod_policies.NewViolationOwnerAssignmentConfigOwnerRefWithDefaults()
+		owner.Type = *sod_policies.NewNullableString(ownerModel.Type.ValueStringPointer())
 		owner.Id = ownerModel.Id.ValueStringPointer()
 		owner.Name = ownerModel.Name.ValueStringPointer()
-		voac.OwnerRef = *api_beta.NewNullableViolationOwnerAssignmentConfigOwnerRef(owner)
+		voac.OwnerRef = *sod_policies.NewNullableViolationOwnerAssignmentConfigOwnerRef(owner)
 	}
 
 	return voac, diags
 }
 
-func violationOwnerAssignmentConfigObjectFromAPI(ctx context.Context, voac *api_beta.ViolationOwnerAssignmentConfig) (types.Object, diag.Diagnostics) {
+func violationOwnerAssignmentConfigObjectFromAPI(ctx context.Context, voac *sod_policies.ViolationOwnerAssignmentConfig) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if voac == nil {
 		return types.ObjectNull(violationOwnerAssignmentConfigAttrTypes()), diags
@@ -479,7 +479,7 @@ func violationOwnerAssignmentConfigObjectFromAPI(ctx context.Context, voac *api_
 	return obj, diags
 }
 
-func violationOwnerRefObjectFromAPI(ctx context.Context, ref *api_beta.ViolationOwnerAssignmentConfigOwnerRef) (types.Object, diag.Diagnostics) {
+func violationOwnerRefObjectFromAPI(ctx context.Context, ref *sod_policies.ViolationOwnerAssignmentConfigOwnerRef) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	_ = ctx
 	if ref == nil {

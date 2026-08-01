@@ -3,7 +3,7 @@
 // upstream davidsonjon/terraform-provider-identitynow PR #7 pattern
 // (identitynow_identities: a separate plural data source wrapping a List*
 // SDK call with filter/limit support, rather than overloading the singular
-// data source). It queries GET /roles/v1 (api_beta.RolesAPI.ListRoles)
+// data source). It queries GET /roles/v1 (roles.RolesAPI.ListRolesV1)
 // instead of GET /roles/v1/{id}, and returns every matching Role using the
 // exact same nested object shape as identitynow_role_v1 (reusing
 // datasource_role's generated schema/model/value types and the existing
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/role_v1/datasource_role"
 )
@@ -163,7 +163,7 @@ func (d *rolesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading Roles data source", map[string]interface{}{"filters": config.Filters.ValueString()})
 
-	apiReq := d.client.Beta.RolesAPI.ListRoles(ctx)
+	apiReq := d.client.RolesAPI.ListRolesV1(ctx)
 
 	if !config.Filters.IsNull() && !config.Filters.IsUnknown() {
 		apiReq = apiReq.Filters(config.Filters.ValueString())

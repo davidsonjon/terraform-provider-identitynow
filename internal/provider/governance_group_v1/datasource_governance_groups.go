@@ -3,7 +3,7 @@
 // datasource_governance_group.go, mirroring role_v1's datasource_roles.go
 // pattern (itself adopted from upstream davidsonjon/terraform-provider-
 // identitynow PR #7's identitynow_identities). It queries GET /workgroups/v1
-// (api_beta.GovernanceGroupsAPI.ListWorkgroups) instead of
+// (governance_groups.GovernanceGroupsAPI.ListWorkgroupsV1) instead of
 // GET /workgroups/v1/{id}, and returns every matching Governance Group using
 // the exact same nested object shape as identitynow_governance_group_v1
 // (reusing datasource_governance_group's generated schema/model/value types
@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/governance_group_v1/datasource_governance_group"
 )
@@ -151,7 +151,7 @@ func (d *governanceGroupsDataSource) Read(ctx context.Context, req datasource.Re
 
 	tflog.Debug(ctx, "Reading Governance Groups data source", map[string]interface{}{"filters": config.Filters.ValueString()})
 
-	apiReq := d.client.Beta.GovernanceGroupsAPI.ListWorkgroups(ctx)
+	apiReq := d.client.GovernanceGroupsAPI.ListWorkgroupsV1(ctx)
 
 	if !config.Filters.IsNull() && !config.Filters.IsUnknown() {
 		apiReq = apiReq.Filters(config.Filters.ValueString())

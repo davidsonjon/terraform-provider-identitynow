@@ -11,7 +11,7 @@
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in resource_access_profile and
 // datasource_access_profile, backed by the golang-sdk v2
-// api_beta.AccessProfilesAPIService client (the SDK does not yet publish a
+// access_profiles.AccessProfilesAPIService client (the SDK does not yet publish a
 // per-service v1 package; v1 is the stabilization of what was beta).
 //
 // Known limitations (tracked for follow-up before promoting out of the _v1
@@ -29,8 +29,8 @@
 //   - "entitlements" and "additional_owners" are populated on Create/Update from
 //     plan and read back from the API response, but converted by hand (not via a
 //     generated ToApi_beta.../FromApi_beta... helper) because
-//     api_beta.EntitlementRef.Name and api_beta.AdditionalOwnerRef.Name are
-//     api_beta.NullableString, a shape tfplugingen-framework's associated_external_type
+//     access_profiles.EntitlementRef.Name and access_profiles.AdditionalOwnerRef.Name are
+//     access_profiles.NullableString, a shape tfplugingen-framework's associated_external_type
 //     converter templates cannot bridge to the schema's plain string attribute
 //     (same limitation documented in role_v1's package doc).
 //   - "provisioning_criteria" is read back from the API response (see
@@ -53,8 +53,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_profiles"
 
 	"terraform-provider-identitynow/internal/provider/access_profile_v1/resource_access_profile"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -135,8 +135,8 @@ func (r *accessProfileResource) Create(ctx context.Context, req resource.CreateR
 	accessProfilePassThroughWarning(ctx, &resp.Diagnostics, "access_request_config", plan.AccessRequestConfig.IsNull())
 	accessProfilePassThroughWarning(ctx, &resp.Diagnostics, "revocation_request_config", plan.RevocationRequestConfig.IsNull())
 
-	apiResp, httpResp, err := r.client.Beta.AccessProfilesAPI.
-		CreateAccessProfile(ctx).
+	apiResp, httpResp, err := r.client.AccessProfilesAPI.
+		CreateAccessProfileV1(ctx).
 		AccessProfile(*dto).
 		Execute()
 	if err != nil {
@@ -165,8 +165,8 @@ func (r *accessProfileResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading Access Profile", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.AccessProfilesAPI.
-		GetAccessProfile(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.AccessProfilesAPI.
+		GetAccessProfileV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -222,52 +222,52 @@ func (r *accessProfileResource) Update(ctx context.Context, req resource.UpdateR
 	// "entitlements" must be replaced in the same call with entitlements from
 	// the new source - this provider always sends both together (see below),
 	// so that constraint is satisfied automatically whenever either changes.
-	patch := []api_beta.JsonPatchOperation{
-		accessProfileJSONPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&dto.Name)),
+	patch := []access_profiles.JsonPatchOperation{
+		accessProfileJSONPatchReplace("/name", access_profiles.StringAsJsonPatchOperationValue(&dto.Name)),
 	}
 	if m, err := accessProfileStructToMap(dto.Owner); err == nil && m != nil {
-		patch = append(patch, accessProfileJSONPatchReplace("/owner", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+		patch = append(patch, accessProfileJSONPatchReplace("/owner", access_profiles.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 	}
 	if m, err := accessProfileStructToMap(dto.Source); err == nil && m != nil {
-		patch = append(patch, accessProfileJSONPatchReplace("/source", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+		patch = append(patch, accessProfileJSONPatchReplace("/source", access_profiles.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 	}
 	if dto.Description.IsSet() {
 		desc := dto.Description.Get()
-		patch = append(patch, accessProfileJSONPatchReplace("/description", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(desc)))
+		patch = append(patch, accessProfileJSONPatchReplace("/description", access_profiles.StringAsJsonPatchOperationValue(desc)))
 	}
 	if dto.Enabled != nil {
-		patch = append(patch, accessProfileJSONPatchReplace("/enabled", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(dto.Enabled)))
+		patch = append(patch, accessProfileJSONPatchReplace("/enabled", access_profiles.BoolAsJsonPatchOperationValue(dto.Enabled)))
 	}
 	if dto.Requestable != nil {
-		patch = append(patch, accessProfileJSONPatchReplace("/requestable", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(dto.Requestable)))
+		patch = append(patch, accessProfileJSONPatchReplace("/requestable", access_profiles.BoolAsJsonPatchOperationValue(dto.Requestable)))
 	}
 	if dto.Entitlements != nil {
 		if arr, err := accessProfileSliceToArrayInner(dto.Entitlements); err == nil {
-			patch = append(patch, accessProfileJSONPatchReplace("/entitlements", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+			patch = append(patch, accessProfileJSONPatchReplace("/entitlements", access_profiles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 		}
 	}
 	if dto.AdditionalOwners != nil {
 		if arr, err := accessProfileSliceToArrayInner(dto.AdditionalOwners); err == nil {
-			patch = append(patch, accessProfileJSONPatchReplace("/additionalOwners", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+			patch = append(patch, accessProfileJSONPatchReplace("/additionalOwners", access_profiles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 		}
 	}
 	if dto.Segments != nil {
-		arr := make([]api_beta.ArrayInner, 0, len(dto.Segments))
+		arr := make([]access_profiles.ArrayInner, 0, len(dto.Segments))
 		for i := range dto.Segments {
-			arr = append(arr, api_beta.ArrayInner{String: &dto.Segments[i]})
+			arr = append(arr, access_profiles.ArrayInner{String: &dto.Segments[i]})
 		}
-		patch = append(patch, accessProfileJSONPatchReplace("/segments", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+		patch = append(patch, accessProfileJSONPatchReplace("/segments", access_profiles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 	}
 	if dto.ProvisioningCriteria.IsSet() {
 		if m, err := accessProfileStructToMap(dto.ProvisioningCriteria.Get()); err == nil {
-			patch = append(patch, accessProfileJSONPatchReplace("/provisioningCriteria", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, accessProfileJSONPatchReplace("/provisioningCriteria", access_profiles.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 
 	tflog.Debug(ctx, "Patching Access Profile", map[string]interface{}{"id": state.Id.ValueString(), "patch_ops": len(patch)})
 
-	apiResp, httpResp, err := r.client.Beta.AccessProfilesAPI.
-		PatchAccessProfile(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.AccessProfilesAPI.
+		PatchAccessProfileV1(ctx, state.Id.ValueString()).
 		JsonPatchOperation(patch).
 		Execute()
 	if err != nil {
@@ -296,8 +296,8 @@ func (r *accessProfileResource) Delete(ctx context.Context, req resource.DeleteR
 
 	tflog.Debug(ctx, "Deleting Access Profile", map[string]interface{}{"id": state.Id.ValueString()})
 
-	httpResp, err := r.client.Beta.AccessProfilesAPI.
-		DeleteAccessProfile(ctx, state.Id.ValueString()).
+	httpResp, err := r.client.AccessProfilesAPI.
+		DeleteAccessProfileV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -319,7 +319,7 @@ func (r *accessProfileResource) Delete(ctx context.Context, req resource.DeleteR
 // owner and source are both Required in the schema (matches the API's
 // required: [name, owner, source]), so they are never Unknown by the time
 // Create/Update run.
-func accessProfileModelToDto(ctx context.Context, m resource_access_profile.AccessProfileModel) (*api_beta.AccessProfile, diag.Diagnostics) {
+func accessProfileModelToDto(ctx context.Context, m resource_access_profile.AccessProfileModel) (*access_profiles.AccessProfile, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	owner, d := m.Owner.ToApi_betaOwnerReference(ctx)
@@ -334,13 +334,13 @@ func accessProfileModelToDto(ctx context.Context, m resource_access_profile.Acce
 		return nil, diags
 	}
 
-	dto := api_beta.NewAccessProfileWithDefaults()
+	dto := access_profiles.NewAccessProfileWithDefaults()
 	dto.Name = m.Name.ValueString()
-	dto.Owner = *owner
+	dto.Owner = *access_profiles.NewNullableOwnerReference(owner)
 	dto.Source = *source
 
 	if !m.Description.IsNull() && !m.Description.IsUnknown() {
-		dto.Description = *api_beta.NewNullableString(m.Description.ValueStringPointer())
+		dto.Description = *access_profiles.NewNullableString(m.Description.ValueStringPointer())
 	}
 	if !m.Enabled.IsNull() && !m.Enabled.IsUnknown() {
 		dto.Enabled = m.Enabled.ValueBoolPointer()
@@ -358,11 +358,11 @@ func accessProfileModelToDto(ctx context.Context, m resource_access_profile.Acce
 	if !m.Entitlements.IsNull() && !m.Entitlements.IsUnknown() {
 		var items []resource_access_profile.EntitlementsValue
 		diags.Append(m.Entitlements.ElementsAs(ctx, &items, false)...)
-		refs := make([]api_beta.EntitlementRef, 0, len(items))
+		refs := make([]access_profiles.EntitlementRef, 0, len(items))
 		for _, item := range items {
-			refs = append(refs, api_beta.EntitlementRef{
+			refs = append(refs, access_profiles.EntitlementRef{
 				Id:   item.Id.ValueStringPointer(),
-				Name: *api_beta.NewNullableString(item.Name.ValueStringPointer()),
+				Name: *access_profiles.NewNullableString(item.Name.ValueStringPointer()),
 				Type: item.EntitlementsType.ValueStringPointer(),
 			})
 		}
@@ -372,11 +372,11 @@ func accessProfileModelToDto(ctx context.Context, m resource_access_profile.Acce
 	if !m.AdditionalOwners.IsNull() && !m.AdditionalOwners.IsUnknown() {
 		var items []resource_access_profile.AdditionalOwnersValue
 		diags.Append(m.AdditionalOwners.ElementsAs(ctx, &items, false)...)
-		refs := make([]api_beta.AdditionalOwnerRef, 0, len(items))
+		refs := make([]access_profiles.AdditionalOwnerRef, 0, len(items))
 		for _, item := range items {
-			refs = append(refs, api_beta.AdditionalOwnerRef{
+			refs = append(refs, access_profiles.AdditionalOwnerRef{
 				Id:   item.Id.ValueStringPointer(),
-				Name: *api_beta.NewNullableString(item.Name.ValueStringPointer()),
+				Name: *access_profiles.NewNullableString(item.Name.ValueStringPointer()),
 				Type: item.AdditionalOwnersType.ValueStringPointer(),
 			})
 		}
@@ -387,7 +387,7 @@ func accessProfileModelToDto(ctx context.Context, m resource_access_profile.Acce
 		level1, d := accessProfileProvisioningCriteriaToApi(ctx, m.ProvisioningCriteria)
 		diags.Append(d...)
 		if level1 != nil {
-			dto.ProvisioningCriteria = *api_beta.NewNullableProvisioningCriteriaLevel1(level1)
+			dto.ProvisioningCriteria = *access_profiles.NewNullableProvisioningCriteriaLevel1(level1)
 		}
 	}
 
@@ -397,7 +397,7 @@ func accessProfileModelToDto(ctx context.Context, m resource_access_profile.Acce
 // accessProfileDtoToModel converts an API response DTO into the Terraform
 // state model, preferring fields carried over from fallback (plan/prior
 // state) for the pass-through-only blocks documented in the package doc.
-func accessProfileDtoToModel(ctx context.Context, dto *api_beta.AccessProfile, fallback resource_access_profile.AccessProfileModel) (resource_access_profile.AccessProfileModel, diag.Diagnostics) {
+func accessProfileDtoToModel(ctx context.Context, dto *access_profiles.AccessProfile, fallback resource_access_profile.AccessProfileModel) (resource_access_profile.AccessProfileModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -421,7 +421,7 @@ func accessProfileDtoToModel(ctx context.Context, dto *api_beta.AccessProfile, f
 		model.Requestable = types.BoolPointerValue(dto.Requestable)
 	}
 
-	owner, d := resource_access_profile.OwnerValue{}.FromApi_betaOwnerReference(ctx, &dto.Owner)
+	owner, d := resource_access_profile.OwnerValue{}.FromApi_betaOwnerReference(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 
@@ -529,8 +529,8 @@ func accessProfilePassThroughWarning(ctx context.Context, diags *diag.Diagnostic
 	)
 }
 
-func accessProfileJSONPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{
+func accessProfileJSONPatchReplace(path string, value access_profiles.JsonPatchOperationValue) access_profiles.JsonPatchOperation {
+	return access_profiles.JsonPatchOperation{
 		Op:    "replace",
 		Path:  path,
 		Value: &value,
@@ -539,7 +539,7 @@ func accessProfileJSONPatchReplace(path string, value api_beta.UpdateMultiHostSo
 
 // accessProfileStructToMap round-trips an SDK model struct through JSON to get
 // a map[string]interface{} suitable for
-// api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue, since the
+// access_profiles.MapmapOfStringAnyAsJsonPatchOperationValue, since the
 // JSON Patch value wrapper type doesn't accept typed structs directly.
 func accessProfileStructToMap(v interface{}) (map[string]interface{}, error) {
 	if v == nil {
@@ -557,11 +557,11 @@ func accessProfileStructToMap(v interface{}) (map[string]interface{}, error) {
 }
 
 // accessProfileSliceToArrayInner round-trips a slice of SDK model structs
-// (e.g. []api_beta.EntitlementRef) through JSON to build a
-// []api_beta.ArrayInner suitable for
-// api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue, since
+// (e.g. []access_profiles.EntitlementRef) through JSON to build a
+// []access_profiles.ArrayInner suitable for
+// access_profiles.ArrayOfArrayInnerAsJsonPatchOperationValue, since
 // JsonPatchOperation.Value has no generic "array of objects" constructor.
-func accessProfileSliceToArrayInner(v interface{}) ([]api_beta.ArrayInner, error) {
+func accessProfileSliceToArrayInner(v interface{}) ([]access_profiles.ArrayInner, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
@@ -570,10 +570,10 @@ func accessProfileSliceToArrayInner(v interface{}) ([]api_beta.ArrayInner, error
 	if err := json.Unmarshal(b, &maps); err != nil {
 		return nil, err
 	}
-	arr := make([]api_beta.ArrayInner, 0, len(maps))
+	arr := make([]access_profiles.ArrayInner, 0, len(maps))
 	for i := range maps {
 		m := maps[i]
-		arr = append(arr, api_beta.ArrayInner{MapmapOfStringAny: &m})
+		arr = append(arr, access_profiles.ArrayInner{MapmapOfStringAny: &m})
 	}
 	return arr, nil
 }

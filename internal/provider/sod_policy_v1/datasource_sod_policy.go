@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/sod_policies"
 
 	"terraform-provider-identitynow/internal/provider/sod_policy_v1/datasource_sod_policy"
 )
@@ -100,8 +100,8 @@ func (d *sodPolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, "Reading SOD Policy data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.SODPoliciesAPI.
-		GetSodPolicy(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.SODPoliciesAPI.
+		GetSodPolicyV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading SOD Policy data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -118,7 +118,7 @@ func (d *sodPolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func sodPolicyDataSourceDTOToModel(ctx context.Context, dto *api_beta.SodPolicy) (sodPolicyDataSourceModel, diag.Diagnostics) {
+func sodPolicyDataSourceDTOToModel(ctx context.Context, dto *sod_policies.SodPolicy) (sodPolicyDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	model := sodPolicyDataSourceModel{

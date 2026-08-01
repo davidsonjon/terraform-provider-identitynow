@@ -7,7 +7,7 @@
 // These hand-written wrappers implement resource.Resource /
 // datasource.DataSource around the generated schema/model types in
 // resource_application and datasource_application, backed by the golang-sdk v2
-// api_beta.AppsAPI client (the SDK does not yet publish a per-service v1
+// apps.AppsAPI client (the SDK does not yet publish a per-service v1
 // package; v1 is the stabilization of what was beta).
 //
 // Known limitations (tracked for follow-up before promoting out of the _v1
@@ -47,8 +47,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/apps"
 
 	"terraform-provider-identitynow/internal/provider/application_v1/resource_application"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -176,8 +176,8 @@ func (r *applicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	created, httpResp, err := r.client.Beta.AppsAPI.
-		CreateSourceApp(ctx).
+	created, httpResp, err := r.client.AppsAPI.
+		CreateSourceAppV1(ctx).
 		SourceAppCreateDto(*createDto).
 		Execute()
 	if err != nil {
@@ -198,8 +198,8 @@ func (r *applicationResource) Create(ctx context.Context, req resource.CreateReq
 
 	if len(patchOps) > 0 {
 		tflog.Debug(ctx, "Patching newly created Application", map[string]interface{}{"id": *created.Id, "patch_ops": len(patchOps)})
-		_, httpResp, err = r.client.Beta.AppsAPI.
-			PatchSourceApp(ctx, *created.Id).
+		_, httpResp, err = r.client.AppsAPI.
+			PatchSourceAppV1(ctx, *created.Id).
 			JsonPatchOperation(patchOps).
 			Execute()
 		if err != nil {
@@ -263,8 +263,8 @@ func (r *applicationResource) Update(ctx context.Context, req resource.UpdateReq
 
 	if len(patchOps) > 0 {
 		tflog.Debug(ctx, "Patching Application", map[string]interface{}{"id": state.Id.ValueString(), "patch_ops": len(patchOps)})
-		_, httpResp, err := r.client.Beta.AppsAPI.
-			PatchSourceApp(ctx, state.Id.ValueString()).
+		_, httpResp, err := r.client.AppsAPI.
+			PatchSourceAppV1(ctx, state.Id.ValueString()).
 			JsonPatchOperation(patchOps).
 			Execute()
 		if err != nil {
@@ -295,8 +295,8 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Debug(ctx, "Deleting Application", map[string]interface{}{"id": state.Id.ValueString()})
 
-	_, httpResp, err := r.client.Beta.AppsAPI.
-		DeleteSourceApp(ctx, state.Id.ValueString()).
+	_, httpResp, err := r.client.AppsAPI.
+		DeleteSourceAppV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -314,8 +314,8 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 func (r *applicationResource) readApplicationState(ctx context.Context, id string, fallback applicationResourceModel) (applicationResourceModel, bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	dto, httpResp, err := r.client.Beta.AppsAPI.
-		GetSourceApp(ctx, id).
+	dto, httpResp, err := r.client.AppsAPI.
+		GetSourceAppV1(ctx, id).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -336,7 +336,7 @@ func (r *applicationResource) readApplicationState(ctx context.Context, id strin
 	return model, false, diags
 }
 
-func applicationModelToCreateDto(ctx context.Context, m applicationResourceModel) (*api_beta.SourceAppCreateDto, diag.Diagnostics) {
+func applicationModelToCreateDto(ctx context.Context, m applicationResourceModel) (*apps.SourceAppCreateDto, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	accountSource, d := accountSourceToCreateAPI(m.AccountSource)
@@ -345,7 +345,7 @@ func applicationModelToCreateDto(ctx context.Context, m applicationResourceModel
 		return nil, diags
 	}
 
-	dto := api_beta.NewSourceAppCreateDtoWithDefaults()
+	dto := apps.NewSourceAppCreateDtoWithDefaults()
 	dto.Name = m.Name.ValueString()
 	dto.Description = m.Description.ValueString()
 	dto.AccountSource = *accountSource
@@ -358,15 +358,15 @@ func applicationModelToCreateDto(ctx context.Context, m applicationResourceModel
 	return dto, diags
 }
 
-func applicationCreatePatchOps(ctx context.Context, plan applicationResourceModel) ([]api_beta.JsonPatchOperation, diag.Diagnostics) {
+func applicationCreatePatchOps(ctx context.Context, plan applicationResourceModel) ([]apps.JsonPatchOperation, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	patch := make([]api_beta.JsonPatchOperation, 0, 5)
+	patch := make([]apps.JsonPatchOperation, 0, 5)
 
 	if !plan.Owner.IsNull() && !plan.Owner.IsUnknown() {
 		ownerMap, d := ownerToPatchMap(plan.Owner)
 		diags.Append(d...)
 		if !diags.HasError() && ownerMap != nil {
-			patch = append(patch, applicationJSONPatchReplace("/owner", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&ownerMap)))
+			patch = append(patch, applicationJSONPatchReplace("/owner", apps.MapmapOfStringAnyAsJsonPatchOperationValue(&ownerMap)))
 		}
 	}
 
@@ -374,80 +374,80 @@ func applicationCreatePatchOps(ctx context.Context, plan applicationResourceMode
 		arr, d := stringSetToArrayInner(ctx, plan.AccessProfileIds)
 		diags.Append(d...)
 		if !diags.HasError() {
-			patch = append(patch, applicationJSONPatchReplace("/accessProfiles", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+			patch = append(patch, applicationJSONPatchReplace("/accessProfiles", apps.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 		}
 	}
 
 	if !plan.Enabled.IsNull() && !plan.Enabled.IsUnknown() && plan.Enabled.ValueBool() {
 		v := plan.Enabled.ValueBool()
-		patch = append(patch, applicationJSONPatchReplace("/enabled", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v)))
+		patch = append(patch, applicationJSONPatchReplace("/enabled", apps.BoolAsJsonPatchOperationValue(&v)))
 	}
 	if !plan.ProvisionRequestEnabled.IsNull() && !plan.ProvisionRequestEnabled.IsUnknown() && plan.ProvisionRequestEnabled.ValueBool() {
 		v := plan.ProvisionRequestEnabled.ValueBool()
-		patch = append(patch, applicationJSONPatchReplace("/provisionRequestEnabled", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v)))
+		patch = append(patch, applicationJSONPatchReplace("/provisionRequestEnabled", apps.BoolAsJsonPatchOperationValue(&v)))
 	}
 	if !plan.AppCenterEnabled.IsNull() && !plan.AppCenterEnabled.IsUnknown() && !plan.AppCenterEnabled.ValueBool() {
 		v := plan.AppCenterEnabled.ValueBool()
-		patch = append(patch, applicationJSONPatchReplace("/appCenterEnabled", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v)))
+		patch = append(patch, applicationJSONPatchReplace("/appCenterEnabled", apps.BoolAsJsonPatchOperationValue(&v)))
 	}
 
 	return patch, diags
 }
 
-func applicationUpdatePatchOps(ctx context.Context, plan, state applicationResourceModel) ([]api_beta.JsonPatchOperation, diag.Diagnostics) {
+func applicationUpdatePatchOps(ctx context.Context, plan, state applicationResourceModel) ([]apps.JsonPatchOperation, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	patch := make([]api_beta.JsonPatchOperation, 0, 9)
+	patch := make([]apps.JsonPatchOperation, 0, 9)
 
 	if !plan.Name.Equal(state.Name) {
 		v := plan.Name.ValueString()
-		patch = append(patch, applicationJSONPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&v)))
+		patch = append(patch, applicationJSONPatchReplace("/name", apps.StringAsJsonPatchOperationValue(&v)))
 	}
 	if !plan.Description.Equal(state.Description) {
 		v := plan.Description.ValueString()
-		patch = append(patch, applicationJSONPatchReplace("/description", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&v)))
+		patch = append(patch, applicationJSONPatchReplace("/description", apps.StringAsJsonPatchOperationValue(&v)))
 	}
 	if !plan.Enabled.Equal(state.Enabled) {
 		v := plan.Enabled.ValueBool()
-		patch = append(patch, applicationJSONPatchReplace("/enabled", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v)))
+		patch = append(patch, applicationJSONPatchReplace("/enabled", apps.BoolAsJsonPatchOperationValue(&v)))
 	}
 	if !plan.ProvisionRequestEnabled.Equal(state.ProvisionRequestEnabled) {
 		v := plan.ProvisionRequestEnabled.ValueBool()
-		patch = append(patch, applicationJSONPatchReplace("/provisionRequestEnabled", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v)))
+		patch = append(patch, applicationJSONPatchReplace("/provisionRequestEnabled", apps.BoolAsJsonPatchOperationValue(&v)))
 	}
 	if !plan.AppCenterEnabled.Equal(state.AppCenterEnabled) {
 		v := plan.AppCenterEnabled.ValueBool()
-		patch = append(patch, applicationJSONPatchReplace("/appCenterEnabled", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v)))
+		patch = append(patch, applicationJSONPatchReplace("/appCenterEnabled", apps.BoolAsJsonPatchOperationValue(&v)))
 	}
 	if !plan.MatchAllAccounts.Equal(state.MatchAllAccounts) {
 		v := plan.MatchAllAccounts.ValueBool()
-		patch = append(patch, applicationJSONPatchReplace("/matchAllAccounts", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v)))
+		patch = append(patch, applicationJSONPatchReplace("/matchAllAccounts", apps.BoolAsJsonPatchOperationValue(&v)))
 	}
 	if !plan.AccountSource.Equal(state.AccountSource) {
 		accountSourceMap, d := accountSourceToPatchMap(plan.AccountSource)
 		diags.Append(d...)
 		if !diags.HasError() && accountSourceMap != nil {
-			patch = append(patch, applicationJSONPatchReplace("/accountSource", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&accountSourceMap)))
+			patch = append(patch, applicationJSONPatchReplace("/accountSource", apps.MapmapOfStringAnyAsJsonPatchOperationValue(&accountSourceMap)))
 		}
 	}
 	if !plan.Owner.IsNull() && !plan.Owner.IsUnknown() && !plan.Owner.Equal(state.Owner) {
 		ownerMap, d := ownerToPatchMap(plan.Owner)
 		diags.Append(d...)
 		if !diags.HasError() && ownerMap != nil {
-			patch = append(patch, applicationJSONPatchReplace("/owner", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&ownerMap)))
+			patch = append(patch, applicationJSONPatchReplace("/owner", apps.MapmapOfStringAnyAsJsonPatchOperationValue(&ownerMap)))
 		}
 	}
 	if !plan.AccessProfileIds.IsNull() && !plan.AccessProfileIds.IsUnknown() && !plan.AccessProfileIds.Equal(state.AccessProfileIds) {
 		arr, d := stringSetToArrayInner(ctx, plan.AccessProfileIds)
 		diags.Append(d...)
 		if !diags.HasError() {
-			patch = append(patch, applicationJSONPatchReplace("/accessProfiles", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+			patch = append(patch, applicationJSONPatchReplace("/accessProfiles", apps.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 		}
 	}
 
 	return patch, diags
 }
 
-func applicationDtoToModel(ctx context.Context, dto *api_beta.SourceApp, accessProfileIDs []string, fallback applicationResourceModel) (applicationResourceModel, diag.Diagnostics) {
+func applicationDtoToModel(ctx context.Context, dto *apps.SourceApp, accessProfileIDs []string, fallback applicationResourceModel) (applicationResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -496,7 +496,7 @@ func ownerToPatchMap(v resource_application.OwnerValue) (map[string]interface{},
 	}, diags
 }
 
-func ownerFromAPI(ctx context.Context, dto *api_beta.BaseReferenceDto) (resource_application.OwnerValue, diag.Diagnostics) {
+func ownerFromAPI(ctx context.Context, dto *apps.BaseReferenceDto) (resource_application.OwnerValue, diag.Diagnostics) {
 	if dto == nil {
 		return resource_application.NewOwnerValueNull(), nil
 	}
@@ -511,13 +511,13 @@ func ownerFromAPI(ctx context.Context, dto *api_beta.BaseReferenceDto) (resource
 	return resource_application.NewOwnerValue(resource_application.OwnerValue{}.AttributeTypes(ctx), attrs)
 }
 
-func accountSourceToCreateAPI(v resource_application.AccountSourceValue) (*api_beta.SourceAppCreateDtoAccountSource, diag.Diagnostics) {
+func accountSourceToCreateAPI(v resource_application.AccountSourceValue) (*apps.SourceAppCreateDtoAccountSource, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if v.IsNull() || v.IsUnknown() || v.Id.IsNull() || v.Id.IsUnknown() {
 		diags.AddError("Invalid account_source value", "account_source.id must be known before the application can be created.")
 		return nil, diags
 	}
-	dto := api_beta.NewSourceAppCreateDtoAccountSource(v.Id.ValueString())
+	dto := apps.NewSourceAppCreateDtoAccountSource(v.Id.ValueString())
 	if !v.AccountSourceType.IsNull() && !v.AccountSourceType.IsUnknown() {
 		t := v.AccountSourceType.ValueString()
 		dto.Type = &t
@@ -541,7 +541,7 @@ func accountSourceToPatchMap(v resource_application.AccountSourceValue) (map[str
 	return map[string]interface{}{"id": v.Id.ValueString()}, diags
 }
 
-func accountSourceFromAPI(ctx context.Context, dto *api_beta.SourceAppAccountSource) (resource_application.AccountSourceValue, diag.Diagnostics) {
+func accountSourceFromAPI(ctx context.Context, dto *apps.SourceAppAccountSource) (resource_application.AccountSourceValue, diag.Diagnostics) {
 	if dto == nil {
 		return resource_application.NewAccountSourceValueNull(), nil
 	}
@@ -561,7 +561,7 @@ func accountSourceFromAPI(ctx context.Context, dto *api_beta.SourceAppAccountSou
 	return resource_application.NewAccountSourceValue(resource_application.AccountSourceValue{}.AttributeTypes(ctx), attrs)
 }
 
-func passwordPoliciesFromAPI(ctx context.Context, policies []api_beta.BaseReferenceDto) (types.List, diag.Diagnostics) {
+func passwordPoliciesFromAPI(ctx context.Context, policies []apps.BaseReferenceDto) (types.List, diag.Diagnostics) {
 	if len(policies) == 0 {
 		return types.ListNull(resource_application.PasswordPoliciesValue{}.Type(ctx)), nil
 	}
@@ -598,8 +598,8 @@ func listApplicationAccessProfileIDs(ctx context.Context, client *sailpoint.APIC
 
 	var offset int32
 	for {
-		page, httpResp, err := client.Beta.AppsAPI.
-			ListAccessProfilesForSourceApp(ctx, applicationID).
+		page, httpResp, err := client.AppsAPI.
+			ListAccessProfilesForSourceAppV1(ctx, applicationID).
 			Limit(applicationListMaxLimit).
 			Offset(offset).
 			Execute()
@@ -621,21 +621,21 @@ func listApplicationAccessProfileIDs(ctx context.Context, client *sailpoint.APIC
 	return ids, diags
 }
 
-func stringSetToArrayInner(ctx context.Context, s types.Set) ([]api_beta.ArrayInner, diag.Diagnostics) {
+func stringSetToArrayInner(ctx context.Context, s types.Set) ([]apps.ArrayInner, diag.Diagnostics) {
 	var ids []string
 	if s.IsNull() || s.IsUnknown() {
 		return nil, nil
 	}
 	diags := s.ElementsAs(ctx, &ids, false)
-	arr := make([]api_beta.ArrayInner, 0, len(ids))
+	arr := make([]apps.ArrayInner, 0, len(ids))
 	for i := range ids {
 		id := ids[i]
-		arr = append(arr, api_beta.ArrayInner{String: &id})
+		arr = append(arr, apps.ArrayInner{String: &id})
 	}
 	return arr, diags
 }
 
-func timeToStringValue(t *api_beta.SailPointTime) types.String {
+func timeToStringValue(t *apps.SailPointTime) types.String {
 	if t == nil {
 		return types.StringNull()
 	}
@@ -646,8 +646,8 @@ func applicationErrDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-func applicationJSONPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{
+func applicationJSONPatchReplace(path string, value apps.JsonPatchOperationValue) apps.JsonPatchOperation {
+	return apps.JsonPatchOperation{
 		Op:    "replace",
 		Path:  path,
 		Value: &value,

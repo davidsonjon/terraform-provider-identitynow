@@ -5,7 +5,7 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in resource_transform and
-// datasource_transform, backed by the golang-sdk v2 api_beta.TransformsAPI
+// datasource_transform, backed by the golang-sdk v2 transforms.TransformsAPI
 // client (the SDK does not yet publish a per-service v1 package; v1 is the
 // stabilization of what was beta).
 //
@@ -52,8 +52,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/transforms"
 
 	"terraform-provider-identitynow/internal/provider/transform_v1/resource_transform"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -178,10 +178,10 @@ func (r *transformResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	dto := api_beta.NewTransform(plan.Name.ValueString(), plan.Type.ValueString(), attrs)
+	dto := transforms.NewTransform(plan.Name.ValueString(), plan.Type.ValueString(), attrs)
 
-	apiResp, httpResp, err := r.client.Beta.TransformsAPI.
-		CreateTransform(ctx).
+	apiResp, httpResp, err := r.client.TransformsAPI.
+		CreateTransformV1(ctx).
 		Transform(*dto).
 		Execute()
 	if err != nil {
@@ -210,8 +210,8 @@ func (r *transformResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading Transform", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.TransformsAPI.
-		GetTransform(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.TransformsAPI.
+		GetTransformV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -265,10 +265,10 @@ func (r *transformResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	dto := api_beta.NewTransform(plan.Name.ValueString(), plan.Type.ValueString(), attrs)
+	dto := transforms.NewTransform(plan.Name.ValueString(), plan.Type.ValueString(), attrs)
 
-	apiResp, httpResp, err := r.client.Beta.TransformsAPI.
-		UpdateTransform(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.TransformsAPI.
+		UpdateTransformV1(ctx, state.Id.ValueString()).
 		Transform(*dto).
 		Execute()
 	if err != nil {
@@ -297,8 +297,8 @@ func (r *transformResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting Transform", map[string]interface{}{"id": state.Id.ValueString()})
 
-	httpResp, err := r.client.Beta.TransformsAPI.
-		DeleteTransform(ctx, state.Id.ValueString()).
+	httpResp, err := r.client.TransformsAPI.
+		DeleteTransformV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -314,7 +314,7 @@ func (r *transformResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 // attributesToMap decodes the practitioner-supplied "attributes" JSON string
-// into a map[string]interface{} suitable for api_beta.NewTransform. A null
+// into a map[string]interface{} suitable for transforms.NewTransform. A null
 // jsontypes.Normalized (attribute genuinely omitted, though it's schema.Required
 // so this should only occur for an empty-object literal like "{}") decodes to
 // an empty map rather than nil, since the API requires "attributes" to be
@@ -335,13 +335,13 @@ func attributesToMap(v jsontypes.Normalized) (map[string]interface{}, diag.Diagn
 	return m, diags
 }
 
-// transformReadToModel converts an api_beta.TransformRead API response into
+// transformReadToModel converts an transforms.TransformRead API response into
 // the resource's state model. "attributes" is round-tripped through
 // jsontypes.NewNormalizedValue so the state reflects the API's canonical
 // representation (useful for drift detection on transform types where the
 // API might reorder/default sub-keys), while jsontypes.Normalized's semantic
 // equality still avoids false diffs from whitespace/key-ordering alone.
-func transformReadToModel(dto *api_beta.TransformRead, fallback transformResourceModel) (transformResourceModel, diag.Diagnostics) {
+func transformReadToModel(dto *transforms.TransformRead, fallback transformResourceModel) (transformResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 

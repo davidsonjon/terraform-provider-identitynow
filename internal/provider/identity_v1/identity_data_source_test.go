@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/identities"
 )
 
 func TestIdentityDataSourceDTOToModel(t *testing.T) {
 	ctx := context.Background()
-	created := api_beta.SailPointTime{Time: time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC)}
-	modified := api_beta.SailPointTime{Time: time.Date(2026, time.February, 3, 4, 5, 6, 0, time.UTC)}
-	lastRefresh := api_beta.SailPointTime{Time: time.Date(2026, time.March, 4, 5, 6, 7, 0, time.UTC)}
+	created := identities.SailPointTime{Time: time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC)}
+	modified := identities.SailPointTime{Time: time.Date(2026, time.February, 3, 4, 5, 6, 0, time.UTC)}
+	lastRefresh := identities.SailPointTime{Time: time.Date(2026, time.March, 4, 5, 6, 7, 0, time.UTC)}
 
-	dto := api_beta.NewIdentity("Test User")
+	dto := identities.NewIdentity("Test User")
 	dto.SetId("identity-id")
 	dto.SetAlias("M200082")
 	dto.SetEmailAddress("test.user@example.com")
@@ -28,9 +28,9 @@ func TestIdentityDataSourceDTOToModel(t *testing.T) {
 	dto.SetModified(modified)
 	dto.SetLastRefresh(lastRefresh)
 	dto.SetAttributes(map[string]interface{}{"department": "Engineering", "employeeNumber": float64(7)})
-	dto.SetLifecycleState(*api_beta.NewIdentityLifecycleState("active", true))
+	dto.SetLifecycleState(*identities.NewIdentityLifecycleState("active", true))
 
-	managerRef := api_beta.NewIdentityManagerRef()
+	managerRef := identities.NewIdentityManagerRef()
 	managerRef.SetId("manager-id")
 	managerRef.SetName("Manager Name")
 	managerRef.SetType("IDENTITY")
@@ -107,11 +107,11 @@ func TestIdentityDataSourceDTOToModel(t *testing.T) {
 
 func TestIdentitiesListItemFromDTO(t *testing.T) {
 	ctx := context.Background()
-	created := api_beta.SailPointTime{Time: time.Date(2026, time.April, 5, 6, 7, 8, 0, time.UTC)}
-	modified := api_beta.SailPointTime{Time: time.Date(2026, time.May, 6, 7, 8, 9, 0, time.UTC)}
-	lastRefresh := api_beta.SailPointTime{Time: time.Date(2026, time.June, 7, 8, 9, 10, 0, time.UTC)}
+	created := identities.SailPointTime{Time: time.Date(2026, time.April, 5, 6, 7, 8, 0, time.UTC)}
+	modified := identities.SailPointTime{Time: time.Date(2026, time.May, 6, 7, 8, 9, 0, time.UTC)}
+	lastRefresh := identities.SailPointTime{Time: time.Date(2026, time.June, 7, 8, 9, 10, 0, time.UTC)}
 
-	dto := api_beta.NewIdentity("Another User")
+	dto := identities.NewIdentity("Another User")
 	dto.SetId("identity-2")
 	dto.SetAlias("A200001")
 	dto.SetEmailAddress("another.user@example.com")
@@ -121,9 +121,9 @@ func TestIdentitiesListItemFromDTO(t *testing.T) {
 	dto.SetCreated(created)
 	dto.SetModified(modified)
 	dto.SetLastRefresh(lastRefresh)
-	dto.SetLifecycleState(*api_beta.NewIdentityLifecycleState("inactive", false))
+	dto.SetLifecycleState(*identities.NewIdentityLifecycleState("inactive", false))
 
-	managerRef := api_beta.NewIdentityManagerRef()
+	managerRef := identities.NewIdentityManagerRef()
 	managerRef.SetId("manager-2")
 	managerRef.SetName("Second Manager")
 	managerRef.SetType("IDENTITY")
@@ -262,7 +262,7 @@ func TestIdentityFromMatches(t *testing.T) {
 
 	t.Run("single match", func(t *testing.T) {
 		id := "identity-id"
-		got, diags := identityFromMatches([]api_beta.Identity{{Id: &id}}, "M200082", "alias", "alias")
+		got, diags := identityFromMatches([]identities.Identity{{Id: &id}}, "M200082", "alias", "alias")
 		if diags.HasError() {
 			t.Fatalf("identityFromMatches returned diagnostics: %v", diags)
 		}
@@ -275,7 +275,7 @@ func TestIdentityFromMatches(t *testing.T) {
 		id1 := "identity-1"
 		id2 := "identity-2"
 		got, diags := identityFromMatches(
-			[]api_beta.Identity{{Id: &id1}, {Id: &id2}},
+			[]identities.Identity{{Id: &id1}, {Id: &id2}},
 			"M200082",
 			"alias",
 			"alias",

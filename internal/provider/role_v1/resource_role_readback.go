@@ -18,7 +18,7 @@ package role_v1
 //     comment - so overwriting a configured value with the API's response
 //     would produce a permanent, non-convergent diff).
 //   - access_request_config's "dimension_schema" attribute has no counterpart
-//     in api_beta.RequestabilityForRole (the v1 API added it; the beta SDK
+//     in roles.RequestabilityForRole (the v1 API added it; the beta SDK
 //     this pilot maps onto has not caught up yet - see the
 //     tfplugingen-openapi-type-reviewer knowledge file's per-service-v1 SDK
 //     lag note). It is always left null here.
@@ -42,12 +42,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/roles"
 
 	"terraform-provider-identitynow/internal/provider/role_v1/resource_role"
 )
 
-func roleAccessModelMetadataFromApi(ctx context.Context, dto *api_beta.AttributeDTOList) (resource_role.AccessModelMetadataValue, diag.Diagnostics) {
+func roleAccessModelMetadataFromApi(ctx context.Context, dto *roles.AttributeDTOList) (resource_role.AccessModelMetadataValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return resource_role.NewAccessModelMetadataValueNull(), diags
@@ -64,7 +64,7 @@ func roleAccessModelMetadataFromApi(ctx context.Context, dto *api_beta.Attribute
 	return v, diags
 }
 
-func roleAttributeDTOListFromApi(ctx context.Context, items []api_beta.AttributeDTO) (types.List, diag.Diagnostics) {
+func roleAttributeDTOListFromApi(ctx context.Context, items []roles.AttributeDTO) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_role.AttributesValue{}.Type(ctx)
 	if items == nil {
@@ -101,7 +101,7 @@ func roleAttributeDTOListFromApi(ctx context.Context, items []api_beta.Attribute
 	return listVal, diags
 }
 
-func roleAttributeValueDTOListFromApi(ctx context.Context, items []api_beta.AttributeValueDTO) (types.List, diag.Diagnostics) {
+func roleAttributeValueDTOListFromApi(ctx context.Context, items []roles.AttributeValueDTO) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_role.ValuesValue{}.Type(ctx)
 	if items == nil {
@@ -127,7 +127,7 @@ func roleAttributeValueDTOListFromApi(ctx context.Context, items []api_beta.Attr
 	return listVal, diags
 }
 
-func roleApprovalSchemeForRoleListFromApi(ctx context.Context, items []api_beta.ApprovalSchemeForRole) (types.List, diag.Diagnostics) {
+func roleApprovalSchemeForRoleListFromApi(ctx context.Context, items []roles.ApprovalSchemeForRole) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_role.ApprovalSchemesValue{}.Type(ctx)
 	if items == nil {
@@ -152,7 +152,7 @@ func roleApprovalSchemeForRoleListFromApi(ctx context.Context, items []api_beta.
 	return listVal, diags
 }
 
-func roleRevocationApprovalSchemeForRoleListFromApi(ctx context.Context, items []api_beta.ApprovalSchemeForRole) (types.List, diag.Diagnostics) {
+func roleRevocationApprovalSchemeForRoleListFromApi(ctx context.Context, items []roles.ApprovalSchemeForRole) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_role.RevocationApprovalSchemesValue{}.Type(ctx)
 	if items == nil {
@@ -177,7 +177,7 @@ func roleRevocationApprovalSchemeForRoleListFromApi(ctx context.Context, items [
 	return listVal, diags
 }
 
-func roleMaxPermittedAccessDurationFromApi(ctx context.Context, dto *api_beta.AccessDuration) (types.Object, diag.Diagnostics) {
+func roleMaxPermittedAccessDurationFromApi(ctx context.Context, dto *roles.AccessDuration) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	attrTypes := resource_role.MaxPermittedAccessDurationValue{}.AttributeTypes(ctx)
 	if dto == nil {
@@ -202,7 +202,7 @@ func roleMaxPermittedAccessDurationFromApi(ctx context.Context, dto *api_beta.Ac
 	return v.ToObjectValue(ctx)
 }
 
-func roleAccessRequestConfigFromApi(ctx context.Context, dto *api_beta.RequestabilityForRole) (resource_role.AccessRequestConfigValue, diag.Diagnostics) {
+func roleAccessRequestConfigFromApi(ctx context.Context, dto *roles.RequestabilityForRole) (resource_role.AccessRequestConfigValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return resource_role.NewAccessRequestConfigValueNull(), diags
@@ -214,7 +214,7 @@ func roleAccessRequestConfigFromApi(ctx context.Context, dto *api_beta.Requestab
 	maxPermitted, d := roleMaxPermittedAccessDurationFromApi(ctx, dto.MaxPermittedAccessDuration.Get())
 	diags.Append(d...)
 
-	// dimension_schema has no counterpart in api_beta.RequestabilityForRole -
+	// dimension_schema has no counterpart in roles.RequestabilityForRole -
 	// see the package-level doc comment at the top of this file.
 	dimensionSchemaNull := types.ObjectNull(resource_role.DimensionSchemaValue{}.AttributeTypes(ctx))
 
@@ -235,7 +235,7 @@ func roleAccessRequestConfigFromApi(ctx context.Context, dto *api_beta.Requestab
 	return v, diags
 }
 
-func roleRevocationRequestConfigFromApi(ctx context.Context, dto *api_beta.RevocabilityForRole) (resource_role.RevocationRequestConfigValue, diag.Diagnostics) {
+func roleRevocationRequestConfigFromApi(ctx context.Context, dto *roles.RevocabilityForRole) (resource_role.RevocationRequestConfigValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return resource_role.NewRevocationRequestConfigValueNull(), diags
@@ -256,7 +256,7 @@ func roleRevocationRequestConfigFromApi(ctx context.Context, dto *api_beta.Revoc
 	return v, diags
 }
 
-func roleIdentitiesFromApi(ctx context.Context, items []api_beta.RoleMembershipIdentity) (types.List, diag.Diagnostics) {
+func roleIdentitiesFromApi(ctx context.Context, items []roles.RoleMembershipIdentity) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_role.IdentitiesValue{}.Type(ctx)
 	if items == nil {
@@ -289,7 +289,7 @@ func roleIdentitiesFromApi(ctx context.Context, items []api_beta.RoleMembershipI
 	return listVal, diags
 }
 
-func roleCriteriaKeyFromApi(ctx context.Context, key *api_beta.RoleCriteriaKey) types.Object {
+func roleCriteriaKeyFromApi(ctx context.Context, key *roles.RoleCriteriaKey) types.Object {
 	attrTypes := resource_role.KeyValue{}.AttributeTypes(ctx)
 	if key == nil {
 		return types.ObjectNull(attrTypes)
@@ -307,7 +307,7 @@ func roleCriteriaKeyFromApi(ctx context.Context, key *api_beta.RoleCriteriaKey) 
 	return obj
 }
 
-func roleChildKeyFromApi(ctx context.Context, key *api_beta.RoleCriteriaKey) types.Object {
+func roleChildKeyFromApi(ctx context.Context, key *roles.RoleCriteriaKey) types.Object {
 	attrTypes := resource_role.ChildKeyValue{}.AttributeTypes(ctx)
 	if key == nil {
 		return types.ObjectNull(attrTypes)
@@ -325,7 +325,7 @@ func roleChildKeyFromApi(ctx context.Context, key *api_beta.RoleCriteriaKey) typ
 	return obj
 }
 
-func roleGrandchildKeyFromApi(ctx context.Context, key *api_beta.RoleCriteriaKey) types.Object {
+func roleGrandchildKeyFromApi(ctx context.Context, key *roles.RoleCriteriaKey) types.Object {
 	attrTypes := resource_role.GrandchildKeyValue{}.AttributeTypes(ctx)
 	if key == nil {
 		return types.ObjectNull(attrTypes)
@@ -343,7 +343,7 @@ func roleGrandchildKeyFromApi(ctx context.Context, key *api_beta.RoleCriteriaKey
 	return obj
 }
 
-func roleGrandchildrenFromApi(ctx context.Context, items []api_beta.RoleCriteriaLevel3) (types.List, diag.Diagnostics) {
+func roleGrandchildrenFromApi(ctx context.Context, items []roles.RoleCriteriaLevel3) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_role.GrandchildrenValue{}.Type(ctx)
 	if items == nil {
@@ -375,7 +375,7 @@ func roleGrandchildrenFromApi(ctx context.Context, items []api_beta.RoleCriteria
 	return listVal, diags
 }
 
-func roleChildrenFromApi(ctx context.Context, items []api_beta.RoleCriteriaLevel2) (types.List, diag.Diagnostics) {
+func roleChildrenFromApi(ctx context.Context, items []roles.RoleCriteriaLevel2) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_role.ChildrenValue{}.Type(ctx)
 	if items == nil {
@@ -411,7 +411,7 @@ func roleChildrenFromApi(ctx context.Context, items []api_beta.RoleCriteriaLevel
 	return listVal, diags
 }
 
-func roleCriteriaFromApi(ctx context.Context, level1 *api_beta.RoleCriteriaLevel1) (types.Object, diag.Diagnostics) {
+func roleCriteriaFromApi(ctx context.Context, level1 *roles.RoleCriteriaLevel1) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	attrTypes := resource_role.CriteriaValue{}.AttributeTypes(ctx)
 	if level1 == nil {
@@ -440,7 +440,7 @@ func roleCriteriaFromApi(ctx context.Context, level1 *api_beta.RoleCriteriaLevel
 	return v.ToObjectValue(ctx)
 }
 
-func roleMembershipFromApi(ctx context.Context, dto *api_beta.RoleMembershipSelector) (resource_role.MembershipValue, diag.Diagnostics) {
+func roleMembershipFromApi(ctx context.Context, dto *roles.RoleMembershipSelector) (resource_role.MembershipValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return resource_role.NewMembershipValueNull(), diags

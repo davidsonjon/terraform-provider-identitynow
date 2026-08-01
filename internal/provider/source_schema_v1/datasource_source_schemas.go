@@ -3,7 +3,7 @@
 // mirroring role_v1/datasource_roles.go and
 // source_provisioning_policy_v1/datasource_source_provisioning_policies.go's
 // established pattern. It queries GET /sources/v1/{sourceId}/schemas
-// (api_beta.SourcesAPIService.GetSourceSchemas) instead of
+// (sources.SourcesAPIService.GetSourceSchemas) instead of
 // GET /sources/v1/{sourceId}/schemas/{schemaId}, and returns every schema
 // defined on the source using the same nested object shape as
 // identitynow_source_schema_v1.
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/source_schema_v1/datasource_source_schema"
 )
@@ -135,7 +135,7 @@ func (d *sourceSchemasDataSource) Read(ctx context.Context, req datasource.ReadR
 	sourceID := config.SourceId.ValueString()
 	tflog.Debug(ctx, "Reading Source Schemas data source", map[string]interface{}{"source_id": sourceID})
 
-	apiReq := d.client.Beta.SourcesAPI.GetSourceSchemas(ctx, sourceID)
+	apiReq := d.client.SourcesAPI.GetSourceSchemasV1(ctx, sourceID)
 	if !config.IncludeTypes.IsNull() && !config.IncludeTypes.IsUnknown() {
 		apiReq = apiReq.IncludeTypes(config.IncludeTypes.ValueString())
 	}

@@ -1,7 +1,7 @@
 // This file adds a plural "list" data source alongside the singular
 // identitynow_connector_rule_v1 data source in datasource_connector_rule.go,
 // mirroring role_v1's identitynow_roles_v1 pattern. It queries
-// GET /connector-rules/v1 (api_beta.ConnectorRuleManagementAPI.GetConnectorRuleList)
+// GET /connector-rules/v1 (connector_rule_management.ConnectorRuleManagementAPI.GetConnectorRuleListV1)
 // instead of GET /connector-rules/v1/{id}, and returns every connector rule
 // using the exact same nested object shape as identitynow_connector_rule_v1.
 //
@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/connector_rule_v1/datasource_connector_rule"
 )
@@ -122,8 +122,8 @@ func (d *connectorRulesDataSource) Read(ctx context.Context, req datasource.Read
 
 	tflog.Debug(ctx, "Reading Connector Rules data source", nil)
 
-	dtos, httpResp, err := d.client.Beta.ConnectorRuleManagementAPI.
-		GetConnectorRuleList(ctx).
+	dtos, httpResp, err := d.client.ConnectorRuleManagementAPI.
+		GetConnectorRuleListV1(ctx).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Connector Rules data source", map[string]interface{}{"error": err.Error()})

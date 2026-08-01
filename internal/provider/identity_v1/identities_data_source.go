@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/identities"
 
 	"terraform-provider-identitynow/internal/provider/identity_v1/datasource_identities"
 )
@@ -70,7 +70,7 @@ func (d *identitiesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	tflog.Debug(ctx, "Reading Identities data source", map[string]interface{}{"filters": config.Filters.ValueString()})
 
-	apiReq := d.client.Beta.IdentitiesAPI.ListIdentities(ctx)
+	apiReq := d.client.IdentitiesAPI.ListIdentitiesV1(ctx)
 	if !config.Filters.IsNull() && !config.Filters.IsUnknown() {
 		apiReq = apiReq.Filters(config.Filters.ValueString())
 	}
@@ -117,7 +117,7 @@ func (d *identitiesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-func identitiesListItemFromDTO(ctx context.Context, dto *api_beta.Identity) (datasource_identities.IdentitiesValue, diag.Diagnostics) {
+func identitiesListItemFromDTO(ctx context.Context, dto *identities.Identity) (datasource_identities.IdentitiesValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	lifecycleState, d := identityLifecycleStateValueFromAPI(ctx, nil)
