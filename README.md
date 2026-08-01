@@ -6,14 +6,20 @@ top of the official [`golang-sdk`](https://github.com/sailpoint-oss/golang-sdk).
 
 ## Scope
 
-- **Resources** (16): `access_model_metadata_attribute_v1`, `access_profile_v1`,
-  `application_access_association_v1`, `application_v1`,
+- **Resources** (19): `access_model_metadata_attribute_v1`, `access_profile_v1`,
+  `application_access_association_v1`, `application_v1`, `connector_rule_v1`,
   `entitlement_request_config_v1`, `entitlement_v1`,
   `governance_group_members_v1`, `governance_group_v1`,
   `identity_profile_v1`, `role_v1`, `segment_access_v1`, `segment_v1`,
-  `service_desk_integration_v1`, `source_load_entitlement_wait_v1`,
-  `source_v1`, `transform_v1`.
-- **Data sources** (22): singular + plural pairs for most of the above
+- **Resources** (21): `access_model_metadata_attribute_v1`, `access_profile_v1`,
+  `application_access_association_v1`, `application_v1`, `connector_rule_v1`,
+  `entitlement_request_config_v1`, `entitlement_v1`,
+  `governance_group_members_v1`, `governance_group_v1`,
+  `identity_profile_v1`, `role_v1`, `segment_access_v1`, `segment_v1`,
+  `service_desk_integration_v1`, `sod_policy_v1`,
+  `source_load_entitlement_wait_v1`, `source_provisioning_policy_v1`,
+  `source_schema_v1`, `source_v1`, `transform_v1`, `workflow_v1`.
+- **Data sources** (30): singular + plural pairs for most of the above
   (`identitynow_<x>_v1` / `identitynow_<x>s_v1`), plus read-only sources such
   as `identity_v1`/`identities_v1` and `governance_group_connections_v1`.
 
@@ -21,6 +27,32 @@ See [`examples/`](examples/) for real, sanitized HCL for every
 resource/data source, and [`docs/`](docs/) for the full generated reference
 (schema, examples, and hand-written "Known Limitations & Live Testing Notes"
 per target).
+
+### Roadmap: candidate resource types
+
+Informed by recurring themes on the [SailPoint Developer Community
+forum](https://developer.sailpoint.com/discuss/c/identity-security-cloud/6)
+(e.g. the API versioning migration thread, workflow/API-usage pain points,
+and access-governance discussions), the following API surfaces are not yet
+modeled here but are reasonable candidates for future pilots, roughly in
+priority order:
+
+1. **SOD Policy schedule / evaluate / violation-report sub-endpoints** -
+   `sod_policy_v1` (implemented) covers core CRUD only; the async
+   `GET`/`PUT /sod-policies/v1/{id}/schedule` and the
+   evaluate/violation-report/violation-report-status endpoints model a
+   request/status-poll workflow rather than declarative CRUD state, and
+   would be better suited to a purpose-built future resource/data source.
+2. **Certification Campaigns** - frequently discussed access-review workflow;
+   likely a bigger lift (campaign generation/rules/reports) suited to its own
+   multi-resource pipeline similar to Governance Groups.
+3. **Access Request configuration** (approval workflows, request access
+   config beyond `entitlement_request_config_v1`) - complements the existing
+   pilot but covers request-time approval routing, not just entitlement
+   request eligibility.
+
+This list reflects forum activity as of this review and isn't a committed
+roadmap - see the repo's issues for concrete, tracked feature requests.
 
 ## Requirements
 

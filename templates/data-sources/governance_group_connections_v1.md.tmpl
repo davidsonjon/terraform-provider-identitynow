@@ -1,0 +1,31 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Governance Groups"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+See the [`identitynow_governance_group_v1` resource documentation](../resources/governance_group_v1.md#known-limitations--live-testing-notes)
+for background on the pilot status shared by all Governance Group targets.
+
+Connections returned here are read-only reflections of the *referencing*
+object's own configuration (e.g. a role naming this governance group as an
+`Owner`) - there is no way to create or remove a connection from the
+governance group side; manage the referencing resource instead.

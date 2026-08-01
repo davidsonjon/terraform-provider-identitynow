@@ -1,0 +1,17 @@
+required_overrides:
+  # WorkflowBody.owner has no top-level `required` entry in the spec's
+  # createWorkflowV1 request body (only `name` is listed), so
+  # tfplugingen-openapi generates it as computed_optional. But the SDK's own
+  # api_beta.CreateWorkflowRequest types Owner as a plain (non-pointer,
+  # non-omitempty) WorkflowBodyOwner - i.e. the SDK's generator, working from
+  # the same spec family, treats owner as unconditionally required for
+  # create - and SailPoint's Workflows documentation
+  # (https://developer.sailpoint.com/docs/extensibility/workflows/) describes
+  # every workflow as always having an owning identity. Force it to
+  # `required` on the resource schema (mirroring governance_group_v1's
+  # identical "owner" fix) so Terraform surfaces a missing owner at plan
+  # time rather than a live apply-time API error. Left as computed-only on
+  # the data source schema since GET responses always include it.
+  - path: "owner"
+    scope: resource
+    required: true

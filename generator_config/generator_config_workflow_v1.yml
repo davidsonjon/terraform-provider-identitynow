@@ -1,0 +1,59 @@
+provider:
+  name: identitynow
+resources:
+  workflow:
+    create:
+      path: /workflows/v1
+      method: POST
+    read:
+      path: /workflows/v1/{id}
+      method: GET
+    update:
+      path: /workflows/v1/{id}
+      method: PUT
+    delete:
+      path: /workflows/v1/{id}
+      method: DELETE
+    schema:
+      ignores:
+        # "definition.steps" is `type: object, additionalProperties: true` -
+        # a free-form map of step definitions whose own shape varies by each
+        # step's "type" (action/approval/success/etc.), with genuinely
+        # arbitrary depth (a step's "attributes" can itself hold further
+        # nested objects/expressions). Following the transform_v1/
+        # source_v1 "dynamic/discriminated-union field" precedent (see the
+        # 2026-07-24 knowledge entry and this agent's Project Context), the
+        # whole "definition" object is hand-added as a single
+        # jsontypes.Normalized JSON-string CustomType in resource_workflow.go
+        # rather than letting the generator attempt (and fail to
+        # faithfully model) "steps" as a nested block.
+        - definition
+        # The whole "trigger" object (not just its "attributes" sub-field)
+        # is excluded here, not just "trigger.attributes": tfplugingen-
+        # framework generates a distinct custom Go value type (TriggerValue)
+        # per single_nested block at codegen time, keyed only by the
+        # attributes actually present in the schema - there is no supported
+        # way to later hand-insert an extra "attributes" field into that
+        # generated type/model post-generation (unlike a flat/top-level
+        # field, which can simply be added as an extra struct field - see
+        # transform_v1). Instead "trigger" is hand-written in full
+        # (schema + a plain types.Object-backed model, following
+        # segment_v1's "visibility_criteria" precedent for a fully
+        # hand-rolled nested block) in resource_workflow.go/
+        # datasource_workflow.go, with "type"/"display_name" as ordinary
+        # typed attributes and "attributes" as the same jsontypes.Normalized
+        # CustomType pattern used for transform's/source's top-level
+        # dynamic fields. "attributes" itself is an anyOf across 3 shapes
+        # (EventAttributes/ExternalAttributes/ScheduledAttributes) keyed
+        # implicitly by the sibling "trigger.type" field.
+        - trigger
+
+data_sources:
+  workflow:
+    read:
+      path: /workflows/v1/{id}
+      method: GET
+    schema:
+      ignores:
+        - definition
+        - trigger

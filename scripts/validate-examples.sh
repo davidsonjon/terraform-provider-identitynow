@@ -23,7 +23,12 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-PROVIDER_ADDRESS="hashicorp.com/edu/identitynow"
+# Must match the `source` used in examples/provider/provider.tf (the real
+# published registry address, since that file is also what's rendered on the
+# Terraform Registry docs) - NOT the "local.dev/identitynow/identitynow"
+# placeholder used by test/*/main.tf for local manual `make plan`/`apply`
+# testing (see docs/TESTING.md), which is a separate, unrelated convention.
+PROVIDER_ADDRESS="davidsonjon/identitynow"
 SCRATCH_ROOT="$(mktemp -d)"
 BIN_DIR="$SCRATCH_ROOT/bin"
 mkdir -p "$BIN_DIR"

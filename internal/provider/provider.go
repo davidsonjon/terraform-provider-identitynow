@@ -27,9 +27,13 @@ import (
 	"terraform-provider-identitynow/internal/provider/segment_access_v1"
 	"terraform-provider-identitynow/internal/provider/segment_v1"
 	"terraform-provider-identitynow/internal/provider/service_desk_integration_v1"
+	"terraform-provider-identitynow/internal/provider/sod_policy_v1"
 	"terraform-provider-identitynow/internal/provider/source_load_entitlement_wait_v1"
+	"terraform-provider-identitynow/internal/provider/source_provisioning_policy_v1"
+	"terraform-provider-identitynow/internal/provider/source_schema_v1"
 	"terraform-provider-identitynow/internal/provider/sources_v1"
 	"terraform-provider-identitynow/internal/provider/transform_v1"
+	"terraform-provider-identitynow/internal/provider/workflow_v1"
 )
 
 var _ provider.Provider = (*identitynowProvider)(nil)
@@ -183,9 +187,17 @@ func (p *identitynowProvider) DataSources(ctx context.Context) []func() datasour
 		segment_v1.NewSegmentsDataSource,
 		role_v1.NewRolesDataSource,
 		service_desk_integration_v1.NewServiceDeskIntegrationDataSource,
+		sod_policy_v1.NewSodPolicyDataSource,
+		sod_policy_v1.NewSodPoliciesDataSource,
+		source_provisioning_policy_v1.NewSourceProvisioningPolicyDataSource,
+		source_provisioning_policy_v1.NewSourceProvisioningPoliciesDataSource,
+		source_schema_v1.NewSourceSchemaDataSource,
+		source_schema_v1.NewSourceSchemasDataSource,
 		sources_v1.NewSourceDataSource,
 		sources_v1.NewSourcesDataSource,
 		transform_v1.NewTransformDataSource,
+		workflow_v1.NewWorkflowDataSource,
+		workflow_v1.NewWorkflowsDataSource,
 	}
 }
 
@@ -205,8 +217,12 @@ func (p *identitynowProvider) Resources(ctx context.Context) []func() resource.R
 		segment_access_v1.NewSegmentAccessResource,
 		segment_v1.NewSegmentResource,
 		service_desk_integration_v1.NewServiceDeskIntegrationResource,
+		sod_policy_v1.NewSodPolicyResource,
 		source_load_entitlement_wait_v1.NewSourceLoadEntitlementWaitResource,
+		source_provisioning_policy_v1.NewSourceProvisioningPolicyResource,
+		source_schema_v1.NewSourceSchemaResource,
 		sources_v1.NewSourceResource,
 		transform_v1.NewTransformResource,
+		workflow_v1.NewWorkflowResource,
 	}
 }

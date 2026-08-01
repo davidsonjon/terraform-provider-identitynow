@@ -63,7 +63,7 @@ terraform plan
 ```
 
 `terraform init` is not required — `~/.terraformrc` `dev_overrides` for
-`hashicorp.com/edu/identitynow` (and `davidsonjon/identitynow`) point
+`local.dev/identitynow/identitynow` (and `davidsonjon/identitynow`) point
 directly at the locally-installed provider binary in `$GOBIN`.
 
 ## Offline (Phase A) vs. Live (Phase B) validation

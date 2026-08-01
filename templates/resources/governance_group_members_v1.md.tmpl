@@ -1,0 +1,40 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Governance Groups"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+See the [`identitynow_governance_group_v1` resource documentation](governance_group_v1.md#known-limitations--live-testing-notes)
+for background on the pilot status shared by all Governance Group targets.
+Membership management specifically has its own considerations:
+
+- **This resource manages the *entire* membership list, not incremental
+  adds/removes.** Every `terraform apply` reconciles actual group membership
+  to exactly match `member_ids` - members added out of Terraform (e.g. via
+  the IdentityNow UI or another automation) will be removed on the next
+  apply.
+- **Exactly one `identitynow_governance_group_members_v1` resource should
+  exist per governance group.** Creating more than one for the same
+  `governance_group_id` results in each apply fighting over the same
+  membership list.
+- **Only identity members are supported.** The underlying
+  `/workgroups/v1/{workgroupId}/members/bulk-add` and `/bulk-delete`
+  endpoints' `type` field only accepts `IDENTITY` in the current SDK.

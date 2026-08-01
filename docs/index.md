@@ -9,13 +9,47 @@ description: |-
 
 Terraform provider for [SailPoint Identity Security Cloud (IdentityNow)](https://documentation.sailpoint.com/index.html).
 
+## Authentication
+
+The provider authenticates to your tenant using an OAuth2 client (a
+[personal access token or API client](https://developer.sailpoint.com/docs/api/authentication/)),
+configured via `sail_base_url`/`sail_client_id`/`sail_client_secret`.
+
+Credentials can be supplied either as provider configuration arguments or via
+the `SAIL_BASE_URL`/`SAIL_CLIENT_ID`/`SAIL_CLIENT_SECRET` environment
+variables - the environment variable form is preferred so that secrets never
+need to be committed to configuration or state files.
+
+### Environment Variables (recommended)
+
+```shell
+export SAIL_BASE_URL="https://your-tenant.api.identitynow.com"
+export SAIL_CLIENT_ID="your-client-id"
+export SAIL_CLIENT_SECRET="your-client-secret"
+```
+
+```terraform
+provider "identitynow" {}
+```
+
+### Static Credentials
+
+```terraform
+provider "identitynow" {
+  sail_base_url      = "https://your-tenant.api.identitynow.com"
+  sail_client_id     = var.sail_client_id
+  sail_client_secret = var.sail_client_secret
+}
+```
+
 ## Example Usage
 
 ```terraform
 terraform {
   required_providers {
     identitynow = {
-      source = "hashicorp.com/edu/identitynow"
+      source  = "davidsonjon/identitynow"
+      version = "~> 0.5"
     }
   }
 }
@@ -49,24 +83,112 @@ new per-service `v1` OpenAPI specs (see
 Each target below is developed and validated independently - check its own
 documentation page for known limitations before relying on it.
 
+### Access Model Metadata
+
+- [`identitynow_access_model_metadata_attribute_v1` (resource)](resources/access_model_metadata_attribute_v1.md)
+- [`identitynow_access_model_metadata_attribute_v1` (data source)](data-sources/access_model_metadata_attribute_v1.md)
+
+### Access Profiles
+
+- [`identitynow_access_profile_v1` (resource)](resources/access_profile_v1.md)
+- [`identitynow_access_profile_v1` (data source)](data-sources/access_profile_v1.md)
+- [`identitynow_access_profiles_v1` (data source)](data-sources/access_profiles_v1.md)
+
+### Applications
+
+- [`identitynow_application_v1` (resource)](resources/application_v1.md)
+- [`identitynow_application_access_association_v1` (resource)](resources/application_access_association_v1.md)
+- [`identitynow_application_v1` (data source)](data-sources/application_v1.md)
+- [`identitynow_applications_v1` (data source)](data-sources/applications_v1.md)
+
+### Connector Rules
+
+- [`identitynow_connector_rule_v1` (resource)](resources/connector_rule_v1.md)
+- [`identitynow_connector_rule_v1` (data source)](data-sources/connector_rule_v1.md)
+- [`identitynow_connector_rules_v1` (data source)](data-sources/connector_rules_v1.md)
+
+### Entitlements
+
+- [`identitynow_entitlement_v1` (resource)](resources/entitlement_v1.md)
+- [`identitynow_entitlement_request_config_v1` (resource)](resources/entitlement_request_config_v1.md)
+- [`identitynow_entitlement_v1` (data source)](data-sources/entitlement_v1.md)
+- [`identitynow_entitlements_v1` (data source)](data-sources/entitlements_v1.md)
+
+### Governance Groups
+
+- [`identitynow_governance_group_v1` (resource)](resources/governance_group_v1.md)
+- [`identitynow_governance_group_members_v1` (resource)](resources/governance_group_members_v1.md)
+- [`identitynow_governance_group_v1` (data source)](data-sources/governance_group_v1.md)
+- [`identitynow_governance_groups_v1` (data source)](data-sources/governance_groups_v1.md)
+- [`identitynow_governance_group_connections_v1` (data source)](data-sources/governance_group_connections_v1.md)
+
+### Identities
+
+- [`identitynow_identity_v1` (data source)](data-sources/identity_v1.md)
+- [`identitynow_identities_v1` (data source)](data-sources/identities_v1.md)
+
+### Identity Profiles
+
+- [`identitynow_identity_profile_v1` (resource)](resources/identity_profile_v1.md)
+- [`identitynow_identity_profile_v1` (data source)](data-sources/identity_profile_v1.md)
+- [`identitynow_identity_profiles_v1` (data source)](data-sources/identity_profiles_v1.md)
+
 ### Roles
 
 - [`identitynow_role_v1` (resource)](resources/role_v1.md)
 - [`identitynow_role_v1` (data source)](data-sources/role_v1.md)
+- [`identitynow_roles_v1` (data source)](data-sources/roles_v1.md)
+
+### Segments
+
+- [`identitynow_segment_v1` (resource)](resources/segment_v1.md)
+- [`identitynow_segment_access_v1` (resource)](resources/segment_access_v1.md)
+- [`identitynow_segment_v1` (data source)](data-sources/segment_v1.md)
+- [`identitynow_segments_v1` (data source)](data-sources/segments_v1.md)
+
+### Separation of Duties (SOD) Policies
+
+- [`identitynow_sod_policy_v1` (resource)](resources/sod_policy_v1.md)
+- [`identitynow_sod_policy_v1` (data source)](data-sources/sod_policy_v1.md)
+- [`identitynow_sod_policies_v1` (data source)](data-sources/sod_policies_v1.md)
 
 ### Service Desk Integrations
 
 - [`identitynow_service_desk_integration_v1` (resource)](resources/service_desk_integration_v1.md)
 - [`identitynow_service_desk_integration_v1` (data source)](data-sources/service_desk_integration_v1.md)
 
+### Sources
+
+- [`identitynow_source_v1` (resource)](resources/source_v1.md)
+- [`identitynow_source_load_entitlement_wait_v1` (resource)](resources/source_load_entitlement_wait_v1.md)
+- [`identitynow_source_provisioning_policy_v1` (resource)](resources/source_provisioning_policy_v1.md)
+- [`identitynow_source_schema_v1` (resource)](resources/source_schema_v1.md)
+- [`identitynow_source_v1` (data source)](data-sources/source_v1.md)
+- [`identitynow_sources_v1` (data source)](data-sources/sources_v1.md)
+- [`identitynow_source_provisioning_policy_v1` (data source)](data-sources/source_provisioning_policy_v1.md)
+- [`identitynow_source_provisioning_policies_v1` (data source)](data-sources/source_provisioning_policies_v1.md)
+- [`identitynow_source_schema_v1` (data source)](data-sources/source_schema_v1.md)
+- [`identitynow_source_schemas_v1` (data source)](data-sources/source_schemas_v1.md)
+
+### Transforms
+
+- [`identitynow_transform_v1` (resource)](resources/transform_v1.md)
+- [`identitynow_transform_v1` (data source)](data-sources/transform_v1.md)
+
+### Workflows
+
+- [`identitynow_workflow_v1` (resource)](resources/workflow_v1.md)
+- [`identitynow_workflow_v1` (data source)](data-sources/workflow_v1.md)
+- [`identitynow_workflows_v1` (data source)](data-sources/workflows_v1.md)
+
 ## Pilot Status and Known Limitations
 
-Both targets above are `_v1` pilots: their generated schema/model types come
-from `tfplugingen-framework` against SailPoint's per-service `v1` OpenAPI
-specs, but Create/Read/Update/Delete logic is hand-written against the
+Every target above is a `_v1` pilot: generated schema/model types come from
+`tfplugingen-framework` against SailPoint's per-service `v1` OpenAPI specs,
+but Create/Read/Update/Delete logic is hand-written against the
 `golang-sdk`'s `api_beta` package (SailPoint has not yet published dedicated
-per-service `v1` Go SDK packages). See each resource/data source's own
-"Known Limitations & Live Testing Notes" section for specifics uncovered by
-running `terraform apply`/`terraform plan` and acceptance tests against a
-real sandbox tenant - these notes exist because a clean `terraform plan`
-alone does not guarantee correct `apply`-time behavior.
+per-service `v1` Go SDK packages for every target). See each resource/data
+source's own "Known Limitations & Live Testing Notes" section for specifics
+uncovered by running `terraform apply`/`terraform plan` and acceptance tests
+against a real sandbox tenant - these notes exist because a clean
+`terraform plan` alone does not guarantee correct `apply`-time behavior.
