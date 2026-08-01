@@ -1,0 +1,37 @@
+external_type_mappings:
+  # WorkflowBodyOwner - leaf single_nested {type,id,name}, all plain
+  # *string per direct SDK source inspection of
+  # api_beta.model_workflow_body_owner.go - no NullableString outliers.
+  # Safe to map per the tfplugingen-openapi-type-reviewer's leaf-block-only
+  # rule.
+  - path: "owner"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.WorkflowBodyOwner"
+
+  # WorkflowAllOfCreator - leaf single_nested {type,id,name}, all plain
+  # *string (api_beta.model_workflow_all_of_creator.go). Computed-only
+  # (read-only "who created this workflow" field) on both resource and data
+  # source.
+  - path: "creator"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.WorkflowAllOfCreator"
+
+  # WorkflowModifiedBy - leaf single_nested {type,id,name}, all plain
+  # *string (api_beta.model_workflow_modified_by.go). Computed-only,
+  # structurally identical to WorkflowBodyOwner/WorkflowAllOfCreator but a
+  # genuinely distinct Go type - do not conflate them.
+  - path: "modified_by"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.WorkflowModifiedBy"
+
+symbol_renames: []
+  # No collisions found: "owner"/"creator"/"modified_by" are the only
+  # single_nested blocks in this target's schema, appearing once each in
+  # the resource and data source trees. "trigger" is deliberately left
+  # unmapped/schema-native (only "type"/"display_name" remain after
+  # "attributes" was schema.ignores'd - see generator_config_workflow_v1.yml)
+  # since it has no full corresponding leaf SDK struct once "attributes" is
+  # excluded.

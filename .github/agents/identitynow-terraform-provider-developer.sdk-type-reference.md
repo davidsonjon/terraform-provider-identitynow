@@ -125,3 +125,24 @@ after any SDK version bump before trusting a stale entry for a new target.
 - **Shape**: `Type *string`, `Id *string`, `Name *string` - a plain task-reference DTO returned by `DELETE /sources/v1/{id}`'s `202 Accepted` response, referencing the async account-removal task IdentityNow queues before the source itself is deleted.
 - **Notes**: Not polled to completion by `sources_v1`'s `Delete()` - fire-and-forget, matching every other `_v1` pilot's Delete() convention.
 - **Used by targets**: `sources_v1` (return value discarded).
+
+### Workflow / WorkflowBody / CreateWorkflowRequest
+- **File**: `api_beta/model_workflow.go`, `model_workflow_body.go`, `model_create_workflow_request.go`
+- **Confirmed against**: v2.7.106 (2026-07-31)
+- **Shape**: `Workflow{ Name *string, Owner *WorkflowBodyOwner, Description *string, Definition *WorkflowDefinition, Enabled *bool, Trigger *WorkflowTrigger, Id *string, Modified *SailPointTime, ModifiedBy *WorkflowModifiedBy, ExecutionCount *int32, FailureCount *int32, Created *SailPointTime, Creator *WorkflowAllOfCreator }` - every field a plain pointer, no `NullableString` outliers. `WorkflowBody` is the same shape minus the 7 read-only/computed fields (used for `PUT`/`PatchWorkflow`'s JSON-Patch value shape). `CreateWorkflowRequest` is the same shape again but with `Name string` (required, non-pointer) and `Owner WorkflowBodyOwner` (required, non-pointer, non-omitempty) - i.e. the SDK's own generated `Create` request type treats `owner` as unconditionally required for creation even though the spec's `createWorkflowV1` request body only lists `name` in its top-level `required` array (see the matching 2026-07-31 knowledge entry and `schema_overrides_workflow_v1.yml` for the resulting `required_overrides` fix).
+- **Notes**: Confirms the whole-response-`allOf` pattern (`Workflow` = base object + `WorkflowBody`-shaped wrapper via `allOf` in the raw spec) needs `scripts/flatten_openapi_allof.py` before `gen-api-v1`, exactly like `transform_v1`'s `Transform`/`TransformRead` split.
+- **Used by targets**: `workflow_v1`.
+
+### WorkflowBodyOwner / WorkflowAllOfCreator / WorkflowModifiedBy
+- **Files**: `api_beta/model_workflow_body_owner.go`, `model_workflow_all_of_creator.go`, `model_workflow_modified_by.go`
+- **Confirmed against**: v2.7.106 (2026-07-31)
+- **Shape**: All three are `{Type *string, Id *string, Name *string}` - leaf, all-plain-pointer ref DTOs, plus `AdditionalProperties map[string]interface{}`.
+- **Notes**: Structurally identical to each other (and to several other `{type,id,name}` ref DTOs already cataloged above - `OwnerReference`, `AccessProfileSourceRef`, `WorkgroupDtoOwner`, `MultiHostSourcesBeforeProvisioningRule`, etc.) but three genuinely distinct Go types - do not conflate when mapping (the now-recurring caution first raised for `sources_v1`'s 3 near-identical "rule ref" types). Safe to `associated_external_type` map each individually - no `NullableString`/non-pointer-required traps found on any of the three.
+- **Used by targets**: `workflow_v1` (`owner`->`WorkflowBodyOwner`, `creator`->`WorkflowAllOfCreator`, `modified_by`->`WorkflowModifiedBy`).
+
+### WorkflowTrigger / WorkflowDefinition
+- **Files**: `api_beta/model_workflow_trigger.go`, `model_workflow_definition.go`
+- **Confirmed against**: v2.7.106 (2026-07-31)
+- **Shape**: `WorkflowTrigger{ Type string (required, non-pointer), DisplayName NullableString, Attributes map[string]interface{} (required, non-pointer) }`. `WorkflowDefinition{ Start *string, Steps map[string]interface{} }`.
+- **Notes**: **Not** `associated_external_type` mapped for either - `WorkflowTrigger` is the target of the "nested single_nested block with a dynamic sub-field" pattern (the whole `trigger` schema attribute is `schema.ignores`'d and hand-written, see the 2026-07-31 knowledge entry and `segment_v1`'s `visibility_criteria` precedent), and `WorkflowDefinition` is hand-decoded/encoded directly via `json.Unmarshal`/`json.Marshal` against a `jsontypes.Normalized` top-level field (the same top-level-dynamic-field pattern as `transform_v1`'s `Attributes`) rather than mapped as a nested block, since its own `Steps` field is a free-form `additionalProperties: true` map. `WorkflowTrigger.DisplayName`'s `NullableString` typing is worth noting for future reference (another `NullableString`-on-an-otherwise-plain-pointer-struct outlier, consistent with `AdditionalOwnerRef`/`EntitlementRef.Name`'s established inconsistency pattern), though it didn't block anything here since the whole struct was hand-converted anyway.
+- **Used by targets**: `workflow_v1` (hand-converted, not `associated_external_type` mapped).

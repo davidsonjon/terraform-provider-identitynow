@@ -163,6 +163,12 @@ documentation page for known limitations before relying on it.
 - [`identitynow_transform_v1` (resource)](resources/transform_v1.md)
 - [`identitynow_transform_v1` (data source)](data-sources/transform_v1.md)
 
+### Workflows
+
+- [`identitynow_workflow_v1` (resource)](resources/workflow_v1.md)
+- [`identitynow_workflow_v1` (data source)](data-sources/workflow_v1.md)
+- [`identitynow_workflows_v1` (data source)](data-sources/workflows_v1.md)
+
 ## Pilot Status and Known Limitations
 
 Every target above is a `_v1` pilot: generated schema/model types come from

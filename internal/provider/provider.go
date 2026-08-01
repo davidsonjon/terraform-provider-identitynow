@@ -30,6 +30,7 @@ import (
 	"terraform-provider-identitynow/internal/provider/source_load_entitlement_wait_v1"
 	"terraform-provider-identitynow/internal/provider/sources_v1"
 	"terraform-provider-identitynow/internal/provider/transform_v1"
+	"terraform-provider-identitynow/internal/provider/workflow_v1"
 )
 
 var _ provider.Provider = (*identitynowProvider)(nil)
@@ -186,6 +187,8 @@ func (p *identitynowProvider) DataSources(ctx context.Context) []func() datasour
 		sources_v1.NewSourceDataSource,
 		sources_v1.NewSourcesDataSource,
 		transform_v1.NewTransformDataSource,
+		workflow_v1.NewWorkflowDataSource,
+		workflow_v1.NewWorkflowsDataSource,
 	}
 }
 
@@ -208,5 +211,6 @@ func (p *identitynowProvider) Resources(ctx context.Context) []func() resource.R
 		source_load_entitlement_wait_v1.NewSourceLoadEntitlementWaitResource,
 		sources_v1.NewSourceResource,
 		transform_v1.NewTransformResource,
+		workflow_v1.NewWorkflowResource,
 	}
 }
