@@ -225,10 +225,21 @@ client.
   SailPoint's own documentation always populates both. Until Phase B (live
   sandbox) testing confirms otherwise, treat them as practically required
   even though Terraform will not enforce that for you.
-- **Live sandbox-tenant verification is still pending for this pilot** as of
-  its initial implementation - the schema/hand-written CRUD/build were
-  validated offline (`go build`/`vet`/`test`, `golangci-lint`,
-  `tfplugindocs`, `terraform validate`), but no `terraform plan`/`apply` has
-  yet been run against a real tenant. Treat this resource with the same
-  caution as any other freshly-added `_v1` pilot until that follow-up is
-  completed.
+- **`state` only accepts `"ENFORCED"`/`"NOT_ENFORCED"`.** Despite `state`
+  being a free-form string in the generated schema, the API 400s on any
+  other value (confirmed live: `"DISABLED"` is rejected with `Attribute
+  state value must be one of: ["ENFORCED" "NOT_ENFORCED"]`).
+- **`tags` are silently normalized server-side to uppercase
+  alphanumeric/underscore.** Confirmed live: submitting
+  `tags = ["terraform-pilot"]` is accepted (no error) but the API silently
+  rewrites it to `"TERRAFORMPILOT"` on read-back (hyphens stripped,
+  lowercased letters uppercased), which then trips Terraform's "provider
+  produced inconsistent result after apply" consistency check. Always use
+  already-normalized tag values (e.g. `"TERRAFORM_PILOT"`, matching the
+  OpenAPI spec's own `TAG1`/`TAG2` examples) to avoid this - the provider
+  does not (and cannot, without over-normalizing user input) pre-normalize
+  `tags` for you.
+- **Live sandbox-tenant verification (Phase B) is complete for this
+  pilot.** `terraform apply`/`plan`/`destroy` all confirmed clean (no drift)
+  against a real tenant using the fixture above, including a full
+  create/read/destroy cycle.

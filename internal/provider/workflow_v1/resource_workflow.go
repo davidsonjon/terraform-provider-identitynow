@@ -544,6 +544,24 @@ func triggerObjectToAPI(ctx context.Context, obj types.Object) (*api_beta.Workfl
 	return trg, diags
 }
 
+// stripNullMapValues returns a shallow copy of m with any nil-valued entries
+// removed. Used to drop API-injected null keys (e.g. "integrationId" on a
+// non-SCHEDULED trigger's "attributes") that weren't part of the original
+// request JSON, avoiding false drift/inconsistency errors on those fields.
+func stripNullMapValues(m map[string]interface{}) map[string]interface{} {
+	if m == nil {
+		return nil
+	}
+	out := make(map[string]interface{}, len(m))
+	for k, v := range m {
+		if v == nil {
+			continue
+		}
+		out[k] = v
+	}
+	return out
+}
+
 // triggerAPIToObject converts an API-returned *api_beta.WorkflowTrigger into
 // the hand-written "trigger" types.Object.
 func triggerAPIToObject(ctx context.Context, trg *api_beta.WorkflowTrigger) (types.Object, diag.Diagnostics) {
@@ -552,7 +570,16 @@ func triggerAPIToObject(ctx context.Context, trg *api_beta.WorkflowTrigger) (typ
 		return types.ObjectNull(triggerAttrTypes()), diags
 	}
 
-	attrsJSON, err := json.Marshal(trg.Attributes)
+	// The API enriches "trigger.attributes" on read with additional
+	// null-valued keys not present in the original request (e.g.
+	// "integrationId": null on an EVENT trigger, which only applies to
+	// SCHEDULED triggers). Strip null-valued keys before re-encoding so
+	// `terraform apply` doesn't see a spurious "provider produced
+	// inconsistent result after apply" error when the config's JSON
+	// didn't include them - confirmed live against the sandbox tenant.
+	attrsForEncode := stripNullMapValues(trg.Attributes)
+
+	attrsJSON, err := json.Marshal(attrsForEncode)
 	if err != nil {
 		diags.AddError(
 			"Error encoding \"trigger.attributes\" from API response",

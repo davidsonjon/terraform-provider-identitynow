@@ -221,10 +221,13 @@ hand-written against the `golang-sdk`'s `api_beta.WorkflowsAPI` client.
 - **Enabled workflows cannot be deleted.** The live API rejects `DELETE` on
   an `enabled = true` workflow; disable it first (`enabled = false`, then
   `apply`) before destroying.
-- **Phase B (live `terraform plan`/`apply` against a real sandbox tenant) is
-  a pending follow-up for this pilot** - this resource was built and
-  validated offline only (`go build`/`vet`/`test`, `golangci-lint`,
-  `terraform-plugin-docs`, `tflint`); it has not yet been exercised against
-  a real IdentityNow tenant. Treat the above design notes as
-  schema/spec-reasoned, not live-confirmed, until a future session completes
-  a live create/update/destroy cycle (see `test/workflow/main.tf`).
+- **Phase B (live `terraform plan`/`apply`/`destroy` against a real sandbox
+  tenant) is complete for this pilot.** A full create/plan(no-drift)/destroy
+  cycle was confirmed against a real tenant using `test/workflow/main.tf`.
+  One real bug was found and fixed in the process: the API enriches
+  `trigger.attributes` on read with extra null-valued keys not present in
+  the original request (e.g. an `EVENT` trigger's response includes
+  `"integrationId": null`, a key that's only meaningful for `SCHEDULED`
+  triggers), which previously caused a "provider produced inconsistent
+  result after apply" error on `Create`/`Update`. The provider now strips
+  null-valued keys from `trigger.attributes` before storing it in state.

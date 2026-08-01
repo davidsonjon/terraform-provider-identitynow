@@ -112,3 +112,11 @@ above that are capped with a warning rather than an error. A fully-known
 `filters` value will invoke a live API call during `terraform plan` itself,
 not just `apply` (confirmed on `role_v1`/`access_profile_v1`'s identically-
 shaped plural data sources).
+
+**Live-confirmed: only `enabled` is a valid `filters` property.** The
+underlying `GET /workflows` API rejects `name`, `trigger`, and `owner` with
+`400 invalid filter property: <prop>` - despite the OpenAPI spec advertising
+no `filters` parameter at all for this endpoint (undocumented but functional,
+and restricted to a narrow allow-list). Use `filters = "enabled eq <bool>"`;
+any other property will fail at `plan`/`apply` time, not schema-validation
+time.
