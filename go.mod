@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.31.0
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
-	github.com/sailpoint-oss/golang-sdk/v2 v2.7.106
+	github.com/sailpoint-oss/golang-sdk/v3 v3.1.10
 )
 
 require (
@@ -66,7 +66,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/sagikazarmark/locafero v0.10.0 // indirect
-	github.com/sailpoint-oss/golang-sdk/v3 v3.1.10 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
