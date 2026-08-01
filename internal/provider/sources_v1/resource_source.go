@@ -5,9 +5,9 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in resource_source/datasource_source,
-// backed by the golang-sdk v2 api_beta.SourcesAPIService client (the SDK does
+// backed by the golang-sdk v3 sources.SourcesAPIService client (the SDK does
 // not yet publish a per-service v1 package; v1 is the stabilization of what
-// was beta). Update() calls api_beta.SourcesAPIService.UpdateSource, which is
+// was beta). Update() calls sources.SourcesAPIService.UpdateSource, which is
 // PATCH /sources/v1/{id} (RFC 6902 JSON Patch) - deliberately NOT
 // PutSource/PUT /sources/v1/{id} (the full-replace variant, whose own spec
 // description explicitly calls out MORE fields as immutable than the PATCH
@@ -74,8 +74,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/sources"
 
 	"terraform-provider-identitynow/internal/provider/sources_v1/resource_source"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -194,8 +194,8 @@ func (r *sourceResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.SourcesAPI.
-		CreateSource(ctx).
+	apiResp, httpResp, err := r.client.SourcesAPI.
+		CreateSourceV1(ctx).
 		Source(*dto).
 		Execute()
 	if err != nil {
@@ -224,8 +224,8 @@ func (r *sourceResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	tflog.Debug(ctx, "Reading Source", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.SourcesAPI.
-		GetSource(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.SourcesAPI.
+		GetSourceV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -276,19 +276,19 @@ func (r *sourceResource) Update(ctx context.Context, req resource.UpdateRequest,
 	// patched here unconditionally as a "replace" op (same simple,
 	// unconditional-replace convention as governance_group_v1/role_v1,
 	// rather than diffing state vs. plan per-field).
-	patch := []api_beta.JsonPatchOperation{
-		jsonPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&dto.Name)),
+	patch := []sources.JsonPatchOperation{
+		jsonPatchReplace("/name", sources.StringAsJsonPatchOperationValue(&dto.Name)),
 	}
 	patch = append(patch, optionalStringPatch("/description", dto.Description)...)
 	patch = append(patch, optionalBoolPatch("/credentialProviderEnabled", dto.CredentialProviderEnabled)...)
 	patch = append(patch, optionalInt32Patch("/deleteThreshold", dto.DeleteThreshold)...)
 
 	if len(dto.Features) > 0 {
-		arr := make([]api_beta.ArrayInner, 0, len(dto.Features))
+		arr := make([]sources.ArrayInner, 0, len(dto.Features))
 		for i := range dto.Features {
-			arr = append(arr, api_beta.ArrayInner{String: &dto.Features[i]})
+			arr = append(arr, sources.ArrayInner{String: &dto.Features[i]})
 		}
-		patch = append(patch, jsonPatchReplace("/features", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+		patch = append(patch, jsonPatchReplace("/features", sources.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 	}
 	if m, err := structToMap(dto.ConnectorAttributes); err == nil && m != nil && plan.ConnectorAttributes.ValueString() != state.ConnectorAttributes.ValueString() {
 		// connector_attributes genuinely changed - merge the practitioner's
@@ -304,54 +304,54 @@ func (r *sourceResource) Update(ctx context.Context, req resource.UpdateRequest,
 		// practitioner's configured subset rather than blocking the whole
 		// update on a secondary read failure.
 		var liveAttrs map[string]interface{}
-		if liveResp, _, err := r.client.Beta.SourcesAPI.GetSource(ctx, state.Id.ValueString()).Execute(); err == nil && liveResp != nil {
+		if liveResp, _, err := r.client.SourcesAPI.GetSourceV1(ctx, state.Id.ValueString()).Execute(); err == nil && liveResp != nil {
 			liveAttrs = liveResp.ConnectorAttributes
 		} else {
 			tflog.Warn(ctx, "Could not re-fetch live Source to merge connector_attributes before Update; sending only the configured subset", map[string]interface{}{"id": state.Id.ValueString()})
 		}
 		merged := mergeConnectorAttributes(liveAttrs, m)
 		if merged != nil {
-			patch = append(patch, jsonPatchReplace("/connectorAttributes", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&merged)))
+			patch = append(patch, jsonPatchReplace("/connectorAttributes", sources.MapmapOfStringAnyAsJsonPatchOperationValue(&merged)))
 		}
 	}
 	if owner := dto.Owner.Get(); owner != nil {
 		if m, err := structToMap(owner); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/owner", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/owner", sources.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 	if cluster := dto.Cluster.Get(); cluster != nil {
 		if m, err := structToMap(cluster); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/cluster", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/cluster", sources.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 	if v := dto.AccountCorrelationConfig.Get(); v != nil {
 		if m, err := structToMap(v); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/accountCorrelationConfig", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/accountCorrelationConfig", sources.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 	if v := dto.AccountCorrelationRule.Get(); v != nil {
 		if m, err := structToMap(v); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/accountCorrelationRule", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/accountCorrelationRule", sources.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
-	if v := dto.ManagerCorrelationMapping.Get(); v != nil {
+	if v := dto.ManagerCorrelationMapping; v != nil {
 		if m, err := structToMap(v); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/managerCorrelationMapping", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/managerCorrelationMapping", sources.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 	if v := dto.ManagerCorrelationRule.Get(); v != nil {
 		if m, err := structToMap(v); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/managerCorrelationRule", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/managerCorrelationRule", sources.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 	if v := dto.BeforeProvisioningRule.Get(); v != nil {
 		if m, err := structToMap(v); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/beforeProvisioningRule", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/beforeProvisioningRule", sources.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 	if v := dto.ManagementWorkgroup.Get(); v != nil {
 		if m, err := structToMap(v); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/managementWorkgroup", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/managementWorkgroup", sources.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 
@@ -360,8 +360,8 @@ func (r *sourceResource) Update(ctx context.Context, req resource.UpdateRequest,
 		tflog.Debug(ctx, "DEBUG_PATCH_BODY", map[string]interface{}{"body": string(b)})
 	}
 
-	apiResp, httpResp, err := r.client.Beta.SourcesAPI.
-		UpdateSource(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.SourcesAPI.
+		UpdateSourceV1(ctx, state.Id.ValueString()).
 		JsonPatchOperation(patch).
 		Execute()
 	if err != nil {
@@ -395,8 +395,8 @@ func (r *sourceResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	// source itself) - this resource does not poll that task to completion,
 	// matching the "fire and forget" behavior of every other _v1 pilot
 	// resource's Delete().
-	_, httpResp, err := r.client.Beta.SourcesAPI.
-		Delete(ctx, state.Id.ValueString()).
+	_, httpResp, err := r.client.SourcesAPI.
+		DeleteSourceV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -417,19 +417,19 @@ func (r *sourceResource) Delete(ctx context.Context, req resource.DeleteRequest,
 // connector_name, connection_type, connector_implementation_id, healthy,
 // status, since, schemas, password_policies) are left at their zero value
 // and always re-populated from the live API response by dtoToModel instead.
-func modelToDto(ctx context.Context, m sourceResourceModel) (*api_beta.Source, diag.Diagnostics) {
+func modelToDto(ctx context.Context, m sourceResourceModel) (*sources.Source, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	owner, d := m.Owner.ToApi_betaSourceOwner(ctx)
+	owner, d := m.Owner.ToSourcesSourceOwner(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return nil, diags
 	}
 
-	dto := api_beta.NewSourceWithDefaults()
+	dto := sources.NewSourceWithDefaults()
 	dto.Name = m.Name.ValueString()
 	dto.Connector = m.Connector.ValueString()
-	dto.Owner = *api_beta.NewNullableSourceOwner(owner)
+	dto.Owner = *sources.NewNullableSourceOwner(owner)
 
 	if !m.Description.IsNull() && !m.Description.IsUnknown() {
 		v := m.Description.ValueString()
@@ -472,43 +472,43 @@ func modelToDto(ctx context.Context, m sourceResourceModel) (*api_beta.Source, d
 	}
 
 	if !m.Cluster.IsNull() && !m.Cluster.IsUnknown() {
-		v := api_beta.MultiHostIntegrationsCluster{
+		v := sources.SourceCluster{
 			Id:   m.Cluster.Id.ValueString(),
 			Name: m.Cluster.Name.ValueString(),
 			Type: m.Cluster.ClusterType.ValueString(),
 		}
-		dto.Cluster = *api_beta.NewNullableMultiHostIntegrationsCluster(&v)
+		dto.Cluster = *sources.NewNullableSourceCluster(&v)
 	}
 
 	if !m.AccountCorrelationConfig.IsNull() && !m.AccountCorrelationConfig.IsUnknown() {
-		v, d := m.AccountCorrelationConfig.ToApi_betaMultiHostSourcesAccountCorrelationConfig(ctx)
+		v, d := m.AccountCorrelationConfig.ToSourcesSourceAccountCorrelationConfig(ctx)
 		diags.Append(d...)
-		dto.AccountCorrelationConfig = *api_beta.NewNullableMultiHostSourcesAccountCorrelationConfig(v)
+		dto.AccountCorrelationConfig = *sources.NewNullableSourceAccountCorrelationConfig(v)
 	}
 	if !m.AccountCorrelationRule.IsNull() && !m.AccountCorrelationRule.IsUnknown() {
-		v, d := m.AccountCorrelationRule.ToApi_betaMultiHostSourcesAccountCorrelationRule(ctx)
+		v, d := m.AccountCorrelationRule.ToSourcesSourceAccountCorrelationRule(ctx)
 		diags.Append(d...)
-		dto.AccountCorrelationRule = *api_beta.NewNullableMultiHostSourcesAccountCorrelationRule(v)
+		dto.AccountCorrelationRule = *sources.NewNullableSourceAccountCorrelationRule(v)
 	}
 	if !m.ManagerCorrelationMapping.IsNull() && !m.ManagerCorrelationMapping.IsUnknown() {
-		v, d := m.ManagerCorrelationMapping.ToApi_betaManagerCorrelationMapping(ctx)
+		v, d := m.ManagerCorrelationMapping.ToSourcesSourceManagerCorrelationMapping(ctx)
 		diags.Append(d...)
-		dto.ManagerCorrelationMapping = *api_beta.NewNullableManagerCorrelationMapping(v)
+		dto.ManagerCorrelationMapping = v
 	}
 	if !m.ManagerCorrelationRule.IsNull() && !m.ManagerCorrelationRule.IsUnknown() {
-		v, d := m.ManagerCorrelationRule.ToApi_betaMultiHostSourcesManagerCorrelationRule(ctx)
+		v, d := m.ManagerCorrelationRule.ToSourcesSourceManagerCorrelationRule(ctx)
 		diags.Append(d...)
-		dto.ManagerCorrelationRule = *api_beta.NewNullableMultiHostSourcesManagerCorrelationRule(v)
+		dto.ManagerCorrelationRule = *sources.NewNullableSourceManagerCorrelationRule(v)
 	}
 	if !m.BeforeProvisioningRule.IsNull() && !m.BeforeProvisioningRule.IsUnknown() {
-		v, d := m.BeforeProvisioningRule.ToApi_betaMultiHostSourcesBeforeProvisioningRule(ctx)
+		v, d := m.BeforeProvisioningRule.ToSourcesSourceBeforeProvisioningRule(ctx)
 		diags.Append(d...)
-		dto.BeforeProvisioningRule = *api_beta.NewNullableMultiHostSourcesBeforeProvisioningRule(v)
+		dto.BeforeProvisioningRule = *sources.NewNullableSourceBeforeProvisioningRule(v)
 	}
 	if !m.ManagementWorkgroup.IsNull() && !m.ManagementWorkgroup.IsUnknown() {
-		v, d := m.ManagementWorkgroup.ToApi_betaMultiHostIntegrationsManagementWorkgroup(ctx)
+		v, d := m.ManagementWorkgroup.ToSourcesSourceManagementWorkgroup(ctx)
 		diags.Append(d...)
-		dto.ManagementWorkgroup = *api_beta.NewNullableMultiHostIntegrationsManagementWorkgroup(v)
+		dto.ManagementWorkgroup = *sources.NewNullableSourceManagementWorkgroup(v)
 	}
 
 	return dto, diags
@@ -518,7 +518,7 @@ func modelToDto(ctx context.Context, m sourceResourceModel) (*api_beta.Source, d
 // "fallback" supplies any attribute this converter doesn't itself populate
 // (there are none currently, but this matches the established
 // governance_group_v1/role_v1 convention of always taking a fallback model).
-func dtoToModel(ctx context.Context, dto *api_beta.Source, fallback sourceResourceModel) (sourceResourceModel, diag.Diagnostics) {
+func dtoToModel(ctx context.Context, dto *sources.Source, fallback sourceResourceModel) (sourceResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -577,7 +577,7 @@ func dtoToModel(ctx context.Context, dto *api_beta.Source, fallback sourceResour
 		model.Features = types.ListNull(types.StringType)
 	}
 
-	owner, d := resource_source.OwnerValue{}.FromApi_betaSourceOwner(ctx, dto.Owner.Get())
+	owner, d := resource_source.OwnerValue{}.FromSourcesSourceOwner(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 
@@ -585,34 +585,34 @@ func dtoToModel(ctx context.Context, dto *api_beta.Source, fallback sourceResour
 	diags.Append(d...)
 	model.Cluster = clusterVal
 
-	accountCorrelationConfig, d := resource_source.AccountCorrelationConfigValue{}.FromApi_betaMultiHostSourcesAccountCorrelationConfig(ctx, dto.AccountCorrelationConfig.Get())
+	accountCorrelationConfig, d := resource_source.AccountCorrelationConfigValue{}.FromSourcesSourceAccountCorrelationConfig(ctx, dto.AccountCorrelationConfig.Get())
 	diags.Append(d...)
 	model.AccountCorrelationConfig = accountCorrelationConfig
 
-	accountCorrelationRule, d := resource_source.AccountCorrelationRuleValue{}.FromApi_betaMultiHostSourcesAccountCorrelationRule(ctx, dto.AccountCorrelationRule.Get())
+	accountCorrelationRule, d := resource_source.AccountCorrelationRuleValue{}.FromSourcesSourceAccountCorrelationRule(ctx, dto.AccountCorrelationRule.Get())
 	diags.Append(d...)
 	model.AccountCorrelationRule = accountCorrelationRule
 
-	managerCorrelationMapping, d := resource_source.ManagerCorrelationMappingValue{}.FromApi_betaManagerCorrelationMapping(ctx, dto.ManagerCorrelationMapping.Get())
+	managerCorrelationMapping, d := resource_source.ManagerCorrelationMappingValue{}.FromSourcesSourceManagerCorrelationMapping(ctx, dto.ManagerCorrelationMapping)
 	diags.Append(d...)
 	model.ManagerCorrelationMapping = managerCorrelationMapping
 
-	managerCorrelationRule, d := resource_source.ManagerCorrelationRuleValue{}.FromApi_betaMultiHostSourcesManagerCorrelationRule(ctx, dto.ManagerCorrelationRule.Get())
+	managerCorrelationRule, d := resource_source.ManagerCorrelationRuleValue{}.FromSourcesSourceManagerCorrelationRule(ctx, dto.ManagerCorrelationRule.Get())
 	diags.Append(d...)
 	model.ManagerCorrelationRule = managerCorrelationRule
 
-	beforeProvisioningRule, d := resource_source.BeforeProvisioningRuleValue{}.FromApi_betaMultiHostSourcesBeforeProvisioningRule(ctx, dto.BeforeProvisioningRule.Get())
+	beforeProvisioningRule, d := resource_source.BeforeProvisioningRuleValue{}.FromSourcesSourceBeforeProvisioningRule(ctx, dto.BeforeProvisioningRule.Get())
 	diags.Append(d...)
 	model.BeforeProvisioningRule = beforeProvisioningRule
 
-	managementWorkgroup, d := resource_source.ManagementWorkgroupValue{}.FromApi_betaMultiHostIntegrationsManagementWorkgroup(ctx, dto.ManagementWorkgroup.Get())
+	managementWorkgroup, d := resource_source.ManagementWorkgroupValue{}.FromSourcesSourceManagementWorkgroup(ctx, dto.ManagementWorkgroup.Get())
 	diags.Append(d...)
 	model.ManagementWorkgroup = managementWorkgroup
 
 	if len(dto.Schemas) > 0 {
 		values := make([]resource_source.SchemasValue, 0, len(dto.Schemas))
 		for i := range dto.Schemas {
-			v, d := resource_source.SchemasValue{}.FromApi_betaMultiHostSourcesSchemasInner(ctx, &dto.Schemas[i])
+			v, d := resource_source.SchemasValue{}.FromSourcesSourceSchemasInner(ctx, &dto.Schemas[i])
 			diags.Append(d...)
 			values = append(values, v)
 		}
@@ -626,7 +626,7 @@ func dtoToModel(ctx context.Context, dto *api_beta.Source, fallback sourceResour
 	if len(dto.PasswordPolicies) > 0 {
 		values := make([]resource_source.PasswordPoliciesValue, 0, len(dto.PasswordPolicies))
 		for i := range dto.PasswordPolicies {
-			v, d := resource_source.PasswordPoliciesValue{}.FromApi_betaMultiHostSourcesPasswordPoliciesInner(ctx, &dto.PasswordPolicies[i])
+			v, d := resource_source.PasswordPoliciesValue{}.FromSourcesSourcePasswordPoliciesInner(ctx, &dto.PasswordPolicies[i])
 			diags.Append(d...)
 			values = append(values, v)
 		}
@@ -648,38 +648,38 @@ func errDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-func jsonPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{
+func jsonPatchReplace(path string, value sources.JsonPatchOperationValue) sources.JsonPatchOperation {
+	return sources.JsonPatchOperation{
 		Op:    "replace",
 		Path:  path,
 		Value: &value,
 	}
 }
 
-func optionalStringPatch(path string, v *string) []api_beta.JsonPatchOperation {
+func optionalStringPatch(path string, v *string) []sources.JsonPatchOperation {
 	if v == nil {
 		return nil
 	}
-	return []api_beta.JsonPatchOperation{jsonPatchReplace(path, api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(v))}
+	return []sources.JsonPatchOperation{jsonPatchReplace(path, sources.StringAsJsonPatchOperationValue(v))}
 }
 
-func optionalBoolPatch(path string, v *bool) []api_beta.JsonPatchOperation {
+func optionalBoolPatch(path string, v *bool) []sources.JsonPatchOperation {
 	if v == nil {
 		return nil
 	}
-	return []api_beta.JsonPatchOperation{jsonPatchReplace(path, api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(v))}
+	return []sources.JsonPatchOperation{jsonPatchReplace(path, sources.BoolAsJsonPatchOperationValue(v))}
 }
 
-func optionalInt32Patch(path string, v *int32) []api_beta.JsonPatchOperation {
+func optionalInt32Patch(path string, v *int32) []sources.JsonPatchOperation {
 	if v == nil {
 		return nil
 	}
-	return []api_beta.JsonPatchOperation{jsonPatchReplace(path, api_beta.Int32AsUpdateMultiHostSourcesRequestInnerValue(v))}
+	return []sources.JsonPatchOperation{jsonPatchReplace(path, sources.Int32AsJsonPatchOperationValue(v))}
 }
 
 // structToMap round-trips an SDK model struct through JSON to get a
 // map[string]interface{} suitable for
-// api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue, since
+// sources.MapmapOfStringAnyAsJsonPatchOperationValue, since
 // the JSON Patch value wrapper type doesn't accept typed structs directly
 // (see the sdk-type-reference catalog's JsonPatchOperation entry).
 func structToMap(v interface{}) (map[string]interface{}, error) {
@@ -699,7 +699,7 @@ func structToMap(v interface{}) (map[string]interface{}, error) {
 
 // connectorAttributesToMap decodes the practitioner-supplied
 // "connector_attributes" JSON string into a map[string]interface{} suitable
-// for api_beta.Source.ConnectorAttributes. A null/unknown/empty
+// for sources.Source.ConnectorAttributes. A null/unknown/empty
 // jsontypes.Normalized decodes to nil (connectorAttributes is Optional, not
 // Required, unlike transform_v1's "attributes").
 func connectorAttributesToMap(v jsontypes.Normalized) (map[string]interface{}, diag.Diagnostics) {
@@ -764,16 +764,16 @@ func normalizedConnectorAttributesFromAPI(attrs map[string]interface{}) (jsontyp
 	return jsontypes.NewNormalizedValue(string(attrsJSON)), diags
 }
 
-// clusterFromAPI hand-converts an *api_beta.MultiHostIntegrationsCluster into
+// clusterFromAPI hand-converts an *sources.SourceCluster into
 // the schema-native resource_source.ClusterValue. Not associated_external_type
 // mapped - see the "NOT mapped" note in
-// generator_config/type_mappings_sources_v1.yml (MultiHostIntegrationsCluster's
+// generator_config/type_mappings_sources_v1.yml (SourceCluster's
 // id/name/type fields are plain, non-pointer `string`, since Source.yaml's
 // cluster schema marks them all `required` within the nested object - this
 // is incompatible with the generated converter template's
 // `.ValueStringPointer()`/`types.StringPointerValue(...)` calls, which
 // assume a plain `*string` field).
-func clusterFromAPI(ctx context.Context, cluster *api_beta.MultiHostIntegrationsCluster) (resource_source.ClusterValue, diag.Diagnostics) {
+func clusterFromAPI(ctx context.Context, cluster *sources.SourceCluster) (resource_source.ClusterValue, diag.Diagnostics) {
 	if cluster == nil {
 		return resource_source.NewClusterValueNull(), nil
 	}
@@ -787,8 +787,8 @@ func clusterFromAPI(ctx context.Context, cluster *api_beta.MultiHostIntegrations
 	)
 }
 
-// timeToString formats an *api_beta.SailPointTime as RFC3339, or returns "" if nil.
-func timeToStringValue(t *api_beta.SailPointTime) types.String {
+// timeToString formats an *sources.SailPointTime as RFC3339, or returns "" if nil.
+func timeToStringValue(t *sources.SailPointTime) types.String {
 	if t == nil {
 		return types.StringNull()
 	}

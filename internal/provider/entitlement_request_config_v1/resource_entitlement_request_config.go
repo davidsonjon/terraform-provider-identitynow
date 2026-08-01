@@ -34,8 +34,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/entitlements"
 
 	"terraform-provider-identitynow/internal/provider/entitlement_request_config_v1/resource_entitlement_request_config"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -148,8 +148,8 @@ func (r *entitlementRequestConfigResource) Create(ctx context.Context, req resou
 			return
 		}
 
-		_, httpResp, err := r.client.Beta.EntitlementsAPI.
-			PutEntitlementRequestConfig(ctx, id).
+		_, httpResp, err := r.client.EntitlementsAPI.
+			PutEntitlementRequestConfigV1(ctx, id).
 			EntitlementRequestConfig(*dto).
 			Execute()
 		if err != nil {
@@ -235,8 +235,8 @@ func (r *entitlementRequestConfigResource) Update(ctx context.Context, req resou
 			return
 		}
 
-		_, httpResp, err := r.client.Beta.EntitlementsAPI.
-			PutEntitlementRequestConfig(ctx, id).
+		_, httpResp, err := r.client.EntitlementsAPI.
+			PutEntitlementRequestConfigV1(ctx, id).
 			EntitlementRequestConfig(*dto).
 			Execute()
 		if err != nil {
@@ -275,8 +275,8 @@ func (r *entitlementRequestConfigResource) Delete(ctx context.Context, req resou
 func (r *entitlementRequestConfigResource) readEntitlementRequestConfigState(ctx context.Context, id string, fallback resource_entitlement_request_config.EntitlementRequestConfigModel) (resource_entitlement_request_config.EntitlementRequestConfigModel, bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	dto, httpResp, err := r.client.Beta.EntitlementsAPI.
-		GetEntitlementRequestConfig(ctx, id).
+	dto, httpResp, err := r.client.EntitlementsAPI.
+		GetEntitlementRequestConfigV1(ctx, id).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -458,7 +458,7 @@ func entitlementRequestConfigModelsEqual(a, b resource_entitlement_request_confi
 		a.RevocationRequestConfig.Equal(b.RevocationRequestConfig)
 }
 
-func entitlementRequestConfigDtoToModel(ctx context.Context, id string, dto *api_beta.EntitlementRequestConfig, fallback resource_entitlement_request_config.EntitlementRequestConfigModel) (resource_entitlement_request_config.EntitlementRequestConfigModel, diag.Diagnostics) {
+func entitlementRequestConfigDtoToModel(ctx context.Context, id string, dto *entitlements.EntitlementRequestConfig, fallback resource_entitlement_request_config.EntitlementRequestConfigModel) (resource_entitlement_request_config.EntitlementRequestConfigModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	model := fallback
@@ -477,7 +477,7 @@ func entitlementRequestConfigDtoToModel(ctx context.Context, id string, dto *api
 	return model, diags
 }
 
-func accessRequestConfigFromAPI(ctx context.Context, dto *api_beta.EntitlementAccessRequestConfig, ok bool) (resource_entitlement_request_config.AccessRequestConfigValue, diag.Diagnostics) {
+func accessRequestConfigFromAPI(ctx context.Context, dto *entitlements.EntitlementAccessRequestConfig, ok bool) (resource_entitlement_request_config.AccessRequestConfigValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if !ok || dto == nil {
 		return resource_entitlement_request_config.NewAccessRequestConfigValueNull(), diags
@@ -504,7 +504,7 @@ func accessRequestConfigFromAPI(ctx context.Context, dto *api_beta.EntitlementAc
 	return v, diags
 }
 
-func revocationRequestConfigFromAPI(ctx context.Context, dto *api_beta.EntitlementRevocationRequestConfig, ok bool) (resource_entitlement_request_config.RevocationRequestConfigValue, diag.Diagnostics) {
+func revocationRequestConfigFromAPI(ctx context.Context, dto *entitlements.EntitlementRevocationRequestConfig, ok bool) (resource_entitlement_request_config.RevocationRequestConfigValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if !ok || dto == nil {
 		return resource_entitlement_request_config.NewRevocationRequestConfigValueNull(), diags
@@ -522,7 +522,7 @@ func revocationRequestConfigFromAPI(ctx context.Context, dto *api_beta.Entitleme
 	return v, diags
 }
 
-func accessApprovalSchemesFromAPI(ctx context.Context, items []api_beta.EntitlementApprovalScheme) (types.List, diag.Diagnostics) {
+func accessApprovalSchemesFromAPI(ctx context.Context, items []entitlements.EntitlementApprovalScheme) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_entitlement_request_config.ApprovalSchemesValue{}.Type(ctx)
 	if items == nil {
@@ -547,7 +547,7 @@ func accessApprovalSchemesFromAPI(ctx context.Context, items []api_beta.Entitlem
 	return listVal, diags
 }
 
-func revocationApprovalSchemesFromAPI(ctx context.Context, items []api_beta.EntitlementApprovalScheme) (types.List, diag.Diagnostics) {
+func revocationApprovalSchemesFromAPI(ctx context.Context, items []entitlements.EntitlementApprovalScheme) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_entitlement_request_config.RevocationApprovalSchemesValue{}.Type(ctx)
 	if items == nil {
@@ -572,7 +572,7 @@ func revocationApprovalSchemesFromAPI(ctx context.Context, items []api_beta.Enti
 	return listVal, diags
 }
 
-func maxPermittedAccessDurationFromAPI(ctx context.Context, dto *api_beta.PendingApprovalMaxPermittedAccessDuration, ok bool) (basetypes.ObjectValue, diag.Diagnostics) {
+func maxPermittedAccessDurationFromAPI(ctx context.Context, dto *entitlements.EntitlementAccessRequestConfigMaxPermittedAccessDuration, ok bool) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	attrTypes := resource_entitlement_request_config.MaxPermittedAccessDurationValue{}.AttributeTypes(ctx)
 	if !ok || dto == nil {
@@ -597,10 +597,10 @@ func maxPermittedAccessDurationFromAPI(ctx context.Context, dto *api_beta.Pendin
 	return obj, diags
 }
 
-func entitlementRequestConfigModelToAPI(ctx context.Context, model resource_entitlement_request_config.EntitlementRequestConfigModel) (*api_beta.EntitlementRequestConfig, diag.Diagnostics) {
+func entitlementRequestConfigModelToAPI(ctx context.Context, model resource_entitlement_request_config.EntitlementRequestConfigModel) (*entitlements.EntitlementRequestConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	dto := api_beta.NewEntitlementRequestConfig()
+	dto := entitlements.NewEntitlementRequestConfig()
 
 	accessRequestConfig, d := accessRequestConfigModelToAPI(ctx, model.AccessRequestConfig)
 	diags.Append(d...)
@@ -617,7 +617,7 @@ func entitlementRequestConfigModelToAPI(ctx context.Context, model resource_enti
 	return dto, diags
 }
 
-func accessRequestConfigModelToAPI(ctx context.Context, model resource_entitlement_request_config.AccessRequestConfigValue) (*api_beta.EntitlementAccessRequestConfig, diag.Diagnostics) {
+func accessRequestConfigModelToAPI(ctx context.Context, model resource_entitlement_request_config.AccessRequestConfigValue) (*entitlements.EntitlementAccessRequestConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if model.IsNull() {
 		return nil, diags
@@ -627,7 +627,7 @@ func accessRequestConfigModelToAPI(ctx context.Context, model resource_entitleme
 		return nil, diags
 	}
 
-	dto := &api_beta.EntitlementAccessRequestConfig{}
+	dto := &entitlements.EntitlementAccessRequestConfig{}
 
 	approvalSchemes, d := accessApprovalSchemesModelToAPI(ctx, model.ApprovalSchemes)
 	diags.Append(d...)
@@ -657,7 +657,7 @@ func accessRequestConfigModelToAPI(ctx context.Context, model resource_entitleme
 	return dto, diags
 }
 
-func revocationRequestConfigModelToAPI(ctx context.Context, model resource_entitlement_request_config.RevocationRequestConfigValue) (*api_beta.EntitlementRevocationRequestConfig, diag.Diagnostics) {
+func revocationRequestConfigModelToAPI(ctx context.Context, model resource_entitlement_request_config.RevocationRequestConfigValue) (*entitlements.EntitlementRevocationRequestConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if model.IsNull() {
 		return nil, diags
@@ -667,7 +667,7 @@ func revocationRequestConfigModelToAPI(ctx context.Context, model resource_entit
 		return nil, diags
 	}
 
-	dto := &api_beta.EntitlementRevocationRequestConfig{}
+	dto := &entitlements.EntitlementRevocationRequestConfig{}
 	approvalSchemes, d := revocationApprovalSchemesModelToAPI(ctx, model.RevocationApprovalSchemes)
 	diags.Append(d...)
 	if !model.RevocationApprovalSchemes.IsNull() {
@@ -679,7 +679,7 @@ func revocationRequestConfigModelToAPI(ctx context.Context, model resource_entit
 	return dto, diags
 }
 
-func accessApprovalSchemesModelToAPI(ctx context.Context, list basetypes.ListValue) ([]api_beta.EntitlementApprovalScheme, diag.Diagnostics) {
+func accessApprovalSchemesModelToAPI(ctx context.Context, list basetypes.ListValue) ([]entitlements.EntitlementApprovalScheme, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if list.IsNull() {
 		return nil, diags
@@ -691,9 +691,9 @@ func accessApprovalSchemesModelToAPI(ctx context.Context, list basetypes.ListVal
 
 	var items []resource_entitlement_request_config.ApprovalSchemesValue
 	diags.Append(list.ElementsAs(ctx, &items, false)...)
-	out := make([]api_beta.EntitlementApprovalScheme, 0, len(items))
+	out := make([]entitlements.EntitlementApprovalScheme, 0, len(items))
 	for _, item := range items {
-		scheme := api_beta.EntitlementApprovalScheme{}
+		scheme := entitlements.EntitlementApprovalScheme{}
 		if !item.ApproverType.IsNull() && !item.ApproverType.IsUnknown() {
 			scheme.SetApproverType(item.ApproverType.ValueString())
 		}
@@ -712,7 +712,7 @@ func accessApprovalSchemesModelToAPI(ctx context.Context, list basetypes.ListVal
 	return out, diags
 }
 
-func revocationApprovalSchemesModelToAPI(ctx context.Context, list basetypes.ListValue) ([]api_beta.EntitlementApprovalScheme, diag.Diagnostics) {
+func revocationApprovalSchemesModelToAPI(ctx context.Context, list basetypes.ListValue) ([]entitlements.EntitlementApprovalScheme, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if list.IsNull() {
 		return nil, diags
@@ -724,9 +724,9 @@ func revocationApprovalSchemesModelToAPI(ctx context.Context, list basetypes.Lis
 
 	var items []resource_entitlement_request_config.RevocationApprovalSchemesValue
 	diags.Append(list.ElementsAs(ctx, &items, false)...)
-	out := make([]api_beta.EntitlementApprovalScheme, 0, len(items))
+	out := make([]entitlements.EntitlementApprovalScheme, 0, len(items))
 	for _, item := range items {
-		scheme := api_beta.EntitlementApprovalScheme{}
+		scheme := entitlements.EntitlementApprovalScheme{}
 		if !item.ApproverType.IsNull() && !item.ApproverType.IsUnknown() {
 			scheme.SetApproverType(item.ApproverType.ValueString())
 		}
@@ -741,7 +741,7 @@ func revocationApprovalSchemesModelToAPI(ctx context.Context, list basetypes.Lis
 	return out, diags
 }
 
-func maxPermittedAccessDurationModelToAPI(obj basetypes.ObjectValue) (*api_beta.PendingApprovalMaxPermittedAccessDuration, diag.Diagnostics) {
+func maxPermittedAccessDurationModelToAPI(obj basetypes.ObjectValue) (*entitlements.EntitlementAccessRequestConfigMaxPermittedAccessDuration, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if obj.IsNull() {
 		return nil, diags
@@ -763,7 +763,7 @@ func maxPermittedAccessDurationModelToAPI(obj basetypes.ObjectValue) (*api_beta.
 		return nil, diags
 	}
 
-	dto := &api_beta.PendingApprovalMaxPermittedAccessDuration{}
+	dto := &entitlements.EntitlementAccessRequestConfigMaxPermittedAccessDuration{}
 	if !timeUnit.IsNull() {
 		dto.SetTimeUnit(timeUnit.ValueString())
 	}

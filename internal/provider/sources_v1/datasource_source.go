@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/sources"
 
 	"terraform-provider-identitynow/internal/provider/sources_v1/datasource_source"
 )
@@ -109,8 +109,8 @@ func (d *sourceDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading Source data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.SourcesAPI.
-		GetSource(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.SourcesAPI.
+		GetSourceV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Source data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -133,7 +133,7 @@ func (d *sourceDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 // the data source's generated model/value types (a separate Go package
 // emitted by tfplugingen-framework, so the types are not identical even
 // though they're structurally the same).
-func datasourceDtoToModel(ctx context.Context, dto *api_beta.Source, fallback sourceDataSourceModel) (sourceDataSourceModel, diag.Diagnostics) {
+func datasourceDtoToModel(ctx context.Context, dto *sources.Source, fallback sourceDataSourceModel) (sourceDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -179,7 +179,7 @@ func datasourceDtoToModel(ctx context.Context, dto *api_beta.Source, fallback so
 		model.Features = types.ListNull(types.StringType)
 	}
 
-	owner, d := datasource_source.OwnerValue{}.FromApi_betaSourceOwner(ctx, dto.Owner.Get())
+	owner, d := datasource_source.OwnerValue{}.FromSourcesSourceOwner(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 
@@ -187,34 +187,34 @@ func datasourceDtoToModel(ctx context.Context, dto *api_beta.Source, fallback so
 	diags.Append(d...)
 	model.Cluster = clusterVal
 
-	accountCorrelationConfig, d := datasource_source.AccountCorrelationConfigValue{}.FromApi_betaMultiHostSourcesAccountCorrelationConfig(ctx, dto.AccountCorrelationConfig.Get())
+	accountCorrelationConfig, d := datasource_source.AccountCorrelationConfigValue{}.FromSourcesSourceAccountCorrelationConfig(ctx, dto.AccountCorrelationConfig.Get())
 	diags.Append(d...)
 	model.AccountCorrelationConfig = accountCorrelationConfig
 
-	accountCorrelationRule, d := datasource_source.AccountCorrelationRuleValue{}.FromApi_betaMultiHostSourcesAccountCorrelationRule(ctx, dto.AccountCorrelationRule.Get())
+	accountCorrelationRule, d := datasource_source.AccountCorrelationRuleValue{}.FromSourcesSourceAccountCorrelationRule(ctx, dto.AccountCorrelationRule.Get())
 	diags.Append(d...)
 	model.AccountCorrelationRule = accountCorrelationRule
 
-	managerCorrelationMapping, d := datasource_source.ManagerCorrelationMappingValue{}.FromApi_betaManagerCorrelationMapping(ctx, dto.ManagerCorrelationMapping.Get())
+	managerCorrelationMapping, d := datasource_source.ManagerCorrelationMappingValue{}.FromSourcesSourceManagerCorrelationMapping(ctx, dto.ManagerCorrelationMapping)
 	diags.Append(d...)
 	model.ManagerCorrelationMapping = managerCorrelationMapping
 
-	managerCorrelationRule, d := datasource_source.ManagerCorrelationRuleValue{}.FromApi_betaMultiHostSourcesManagerCorrelationRule(ctx, dto.ManagerCorrelationRule.Get())
+	managerCorrelationRule, d := datasource_source.ManagerCorrelationRuleValue{}.FromSourcesSourceManagerCorrelationRule(ctx, dto.ManagerCorrelationRule.Get())
 	diags.Append(d...)
 	model.ManagerCorrelationRule = managerCorrelationRule
 
-	beforeProvisioningRule, d := datasource_source.BeforeProvisioningRuleValue{}.FromApi_betaMultiHostSourcesBeforeProvisioningRule(ctx, dto.BeforeProvisioningRule.Get())
+	beforeProvisioningRule, d := datasource_source.BeforeProvisioningRuleValue{}.FromSourcesSourceBeforeProvisioningRule(ctx, dto.BeforeProvisioningRule.Get())
 	diags.Append(d...)
 	model.BeforeProvisioningRule = beforeProvisioningRule
 
-	managementWorkgroup, d := datasource_source.ManagementWorkgroupValue{}.FromApi_betaMultiHostIntegrationsManagementWorkgroup(ctx, dto.ManagementWorkgroup.Get())
+	managementWorkgroup, d := datasource_source.ManagementWorkgroupValue{}.FromSourcesSourceManagementWorkgroup(ctx, dto.ManagementWorkgroup.Get())
 	diags.Append(d...)
 	model.ManagementWorkgroup = managementWorkgroup
 
 	if len(dto.Schemas) > 0 {
 		values := make([]datasource_source.SchemasValue, 0, len(dto.Schemas))
 		for i := range dto.Schemas {
-			v, d := datasource_source.SchemasValue{}.FromApi_betaMultiHostSourcesSchemasInner(ctx, &dto.Schemas[i])
+			v, d := datasource_source.SchemasValue{}.FromSourcesSourceSchemasInner(ctx, &dto.Schemas[i])
 			diags.Append(d...)
 			values = append(values, v)
 		}
@@ -228,7 +228,7 @@ func datasourceDtoToModel(ctx context.Context, dto *api_beta.Source, fallback so
 	if len(dto.PasswordPolicies) > 0 {
 		values := make([]datasource_source.PasswordPoliciesValue, 0, len(dto.PasswordPolicies))
 		for i := range dto.PasswordPolicies {
-			v, d := datasource_source.PasswordPoliciesValue{}.FromApi_betaMultiHostSourcesPasswordPoliciesInner(ctx, &dto.PasswordPolicies[i])
+			v, d := datasource_source.PasswordPoliciesValue{}.FromSourcesSourcePasswordPoliciesInner(ctx, &dto.PasswordPolicies[i])
 			diags.Append(d...)
 			values = append(values, v)
 		}
@@ -244,7 +244,7 @@ func datasourceDtoToModel(ctx context.Context, dto *api_beta.Source, fallback so
 
 // datasourceClusterFromAPI mirrors clusterFromAPI in resource_source.go
 // against the data source's generated ClusterValue type.
-func datasourceClusterFromAPI(ctx context.Context, cluster *api_beta.MultiHostIntegrationsCluster) (datasource_source.ClusterValue, diag.Diagnostics) {
+func datasourceClusterFromAPI(ctx context.Context, cluster *sources.SourceCluster) (datasource_source.ClusterValue, diag.Diagnostics) {
 	if cluster == nil {
 		return datasource_source.NewClusterValueNull(), nil
 	}

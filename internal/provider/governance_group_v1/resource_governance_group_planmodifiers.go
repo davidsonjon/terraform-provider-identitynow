@@ -28,7 +28,7 @@ import (
 //     changes on every real Update, so it must NOT get this modifier - see
 //     resource_role_planmodifiers.go), this resource's dtoToModel always
 //     refreshes "modified" from the live API response on every Read/Update
-//     (api_beta.WorkgroupDto.Modified is a real typed *SailPointTime field,
+//     (governance_groups.WorkgroupDto.Modified is a real typed *SailPointTime field,
 //     read back unconditionally - not a constant/never-populated field the
 //     way service_desk_integration_v1's is). Applying UseStateForUnknown
 //     here would therefore suppress a legitimate diff after a real

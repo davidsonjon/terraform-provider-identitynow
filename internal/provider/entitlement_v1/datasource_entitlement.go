@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/entitlements"
 
 	"terraform-provider-identitynow/internal/provider/entitlement_v1/datasource_entitlement"
 )
@@ -143,8 +143,8 @@ func (d *entitlementDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	tflog.Debug(ctx, "Reading Entitlement data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.EntitlementsAPI.
-		GetEntitlement(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.EntitlementsAPI.
+		GetEntitlementV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Entitlement data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -161,7 +161,7 @@ func (d *entitlementDataSource) Read(ctx context.Context, req datasource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func entitlementDataSourceDtoToModel(ctx context.Context, dto *api_beta.Entitlement, fallback entitlementDataSourceModel) (entitlementDataSourceModel, diag.Diagnostics) {
+func entitlementDataSourceDtoToModel(ctx context.Context, dto *entitlements.EntitlementV2, fallback entitlementDataSourceModel) (entitlementDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -171,7 +171,7 @@ func entitlementDataSourceDtoToModel(ctx context.Context, dto *api_beta.Entitlem
 		model.Id = types.StringNull()
 	}
 	model.Name = types.StringPointerValue(dto.Name)
-	model.Attribute = types.StringPointerValue(dto.Attribute.Get())
+	model.Attribute = types.StringPointerValue(dto.Attribute)
 	model.Description = types.StringPointerValue(dto.Description.Get())
 	model.Value = types.StringPointerValue(dto.Value)
 	model.SourceSchemaObjectType = types.StringPointerValue(dto.SourceSchemaObjectType)
@@ -188,11 +188,11 @@ func entitlementDataSourceDtoToModel(ctx context.Context, dto *api_beta.Entitlem
 	diags.Append(d...)
 	model.DirectPermissions = directPermissions
 
-	owner, d := entitlementDatasourceOwnerFromAPI(ctx, dto.Owner)
+	owner, d := entitlementDatasourceOwnerFromAPI(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 
-	privilegeLevel, d := entitlementDatasourcePrivilegeLevelFromAPI(ctx, dto.AdditionalProperties)
+	privilegeLevel, d := entitlementDatasourcePrivilegeLevelFromAPI(ctx, dto.PrivilegeLevel)
 	diags.Append(d...)
 	model.PrivilegeLevel = privilegeLevel
 
@@ -204,7 +204,7 @@ func entitlementDataSourceDtoToModel(ctx context.Context, dto *api_beta.Entitlem
 	diags.Append(d...)
 	model.Source = source
 
-	tags, d := entitlementTagsFromAPI(ctx, dto.AdditionalProperties)
+	tags, d := entitlementTagsFromAPI(ctx, dto.Tags)
 	diags.Append(d...)
 	model.Tags = tags
 
@@ -219,7 +219,7 @@ func entitlementDataSourceDtoToModel(ctx context.Context, dto *api_beta.Entitlem
 	return model, diags
 }
 
-func entitlementDatasourceAccessModelMetadataFromAPI(ctx context.Context, dto *api_beta.EntitlementAccessModelMetadata) (datasource_entitlement.AccessModelMetadataValue, diag.Diagnostics) {
+func entitlementDatasourceAccessModelMetadataFromAPI(ctx context.Context, dto *entitlements.EntitlementV2AccessModelMetadata) (datasource_entitlement.AccessModelMetadataValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return datasource_entitlement.NewAccessModelMetadataValueNull(), diags
@@ -236,7 +236,7 @@ func entitlementDatasourceAccessModelMetadataFromAPI(ctx context.Context, dto *a
 	return v, diags
 }
 
-func entitlementDatasourceAttributeDTOListFromAPI(ctx context.Context, items []api_beta.AttributeDTO) (types.List, diag.Diagnostics) {
+func entitlementDatasourceAttributeDTOListFromAPI(ctx context.Context, items []entitlements.AccessModelMetadata) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_entitlement.AttributesValue{}.Type(ctx)
 	if items == nil {
@@ -273,7 +273,7 @@ func entitlementDatasourceAttributeDTOListFromAPI(ctx context.Context, items []a
 	return listVal, diags
 }
 
-func entitlementDatasourceAttributeValueDTOListFromAPI(ctx context.Context, items []api_beta.AttributeValueDTO) (types.List, diag.Diagnostics) {
+func entitlementDatasourceAttributeValueDTOListFromAPI(ctx context.Context, items []entitlements.AccessModelMetadataValuesInner) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_entitlement.ValuesValue{}.Type(ctx)
 	if items == nil {
@@ -299,7 +299,7 @@ func entitlementDatasourceAttributeValueDTOListFromAPI(ctx context.Context, item
 	return listVal, diags
 }
 
-func entitlementDatasourceDirectPermissionsFromAPI(ctx context.Context, items []api_beta.PermissionDto) (types.List, diag.Diagnostics) {
+func entitlementDatasourceDirectPermissionsFromAPI(ctx context.Context, items []entitlements.PermissionDTO) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_entitlement.DirectPermissionsValue{}.Type(ctx)
 	if items == nil {
@@ -326,7 +326,7 @@ func entitlementDatasourceDirectPermissionsFromAPI(ctx context.Context, items []
 	return listVal, diags
 }
 
-func entitlementDatasourceOwnerFromAPI(ctx context.Context, dto *api_beta.EntitlementOwner) (datasource_entitlement.OwnerValue, diag.Diagnostics) {
+func entitlementDatasourceOwnerFromAPI(ctx context.Context, dto *entitlements.EntitlementV2Owner) (datasource_entitlement.OwnerValue, diag.Diagnostics) {
 	if dto == nil {
 		return datasource_entitlement.NewOwnerValueNull(), nil
 	}
@@ -340,7 +340,7 @@ func entitlementDatasourceOwnerFromAPI(ctx context.Context, dto *api_beta.Entitl
 	)
 }
 
-func entitlementDatasourceSourceFromAPI(ctx context.Context, dto *api_beta.EntitlementSource) (datasource_entitlement.SourceValue, diag.Diagnostics) {
+func entitlementDatasourceSourceFromAPI(ctx context.Context, dto *entitlements.EntitlementV2Source) (datasource_entitlement.SourceValue, diag.Diagnostics) {
 	if dto == nil {
 		return datasource_entitlement.NewSourceValueNull(), nil
 	}
@@ -348,30 +348,25 @@ func entitlementDatasourceSourceFromAPI(ctx context.Context, dto *api_beta.Entit
 		datasource_entitlement.SourceValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
 			"id":   types.StringPointerValue(dto.Id),
-			"name": types.StringPointerValue(dto.Name.Get()),
+			"name": types.StringPointerValue(dto.Name),
 			"type": types.StringPointerValue(dto.Type),
 		},
 	)
 }
 
-func entitlementDatasourcePrivilegeLevelFromAPI(ctx context.Context, additional map[string]interface{}) (datasource_entitlement.PrivilegeLevelValue, diag.Diagnostics) {
+func entitlementDatasourcePrivilegeLevelFromAPI(ctx context.Context, pl *entitlements.EntitlementV2PrivilegeLevel) (datasource_entitlement.PrivilegeLevelValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	m, ok, err := additionalPropertiesObject(additional, "privilegeLevel")
-	if err != nil {
-		diags.AddError("Error decoding entitlement privilege level", err.Error())
-		return datasource_entitlement.NewPrivilegeLevelValueNull(), diags
-	}
-	if !ok {
+	if pl == nil {
 		return datasource_entitlement.NewPrivilegeLevelValueNull(), diags
 	}
 	v, d := datasource_entitlement.NewPrivilegeLevelValue(
 		datasource_entitlement.PrivilegeLevelValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
-			"direct":      stringAttrValue(m, "direct"),
-			"effective":   stringAttrValue(m, "effective"),
-			"inherited":   stringAttrValue(m, "inherited"),
-			"set_by":      stringAttrValue(m, "setBy"),
-			"set_by_type": stringAttrValue(m, "setByType"),
+			"direct":      types.StringPointerValue(pl.Direct),
+			"effective":   types.StringPointerValue(pl.Effective),
+			"inherited":   types.StringPointerValue(pl.Inherited.Get()),
+			"set_by":      types.StringPointerValue(pl.SetBy),
+			"set_by_type": types.StringPointerValue(pl.SetByType.Get()),
 		},
 	)
 	diags.Append(d...)

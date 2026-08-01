@@ -5,7 +5,7 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in resource_role and datasource_role,
-// backed by the golang-sdk v2 api_beta.RolesAPI client (the SDK does not yet
+// backed by the golang-sdk v3 roles.RolesAPI client (the SDK does not yet
 // publish a per-service v1 package; v1 is the stabilization of what was beta).
 //
 // Known limitations (tracked for follow-up before promoting out of the _v1 pilot
@@ -26,8 +26,8 @@
 //   - "entitlements" and "additional_owners" are populated on Create/Update from
 //     plan and read back from the API response, but converted by hand (not via a
 //     generated ToApi_beta.../FromApi_beta... helper) because
-//     api_beta.EntitlementRef.Name and api_beta.AdditionalOwnerRef.Name are
-//     api_beta.NullableString, a shape tfplugingen-framework's associated_external_type
+//     roles.EntitlementRef.Name and roles.AdditionalOwnerRef.Name are
+//     roles.NullableString, a shape tfplugingen-framework's associated_external_type
 //     converter templates cannot bridge to the schema's plain string attribute.
 package role_v1
 
@@ -44,8 +44,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/roles"
 
 	"terraform-provider-identitynow/internal/provider/role_v1/resource_role"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -128,8 +128,8 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	rolePassThroughWarning(ctx, &resp.Diagnostics, "membership", plan.Membership.IsNull())
 	rolePassThroughWarning(ctx, &resp.Diagnostics, "legacy_membership_info", plan.LegacyMembershipInfo.IsNull())
 
-	apiResp, httpResp, err := r.client.Beta.RolesAPI.
-		CreateRole(ctx).
+	apiResp, httpResp, err := r.client.RolesAPI.
+		CreateRoleV1(ctx).
 		Role(*dto).
 		Execute()
 	if err != nil {
@@ -158,8 +158,8 @@ func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	tflog.Debug(ctx, "Reading Role", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.RolesAPI.
-		GetRole(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.RolesAPI.
+		GetRoleV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -213,57 +213,57 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	// The v1 API updates via RFC 6902 JSON Patch. A "replace whole document"
 	// patch of every top-level writable field is the simplest correct
 	// approach for a pilot resource; a follow-up can move to a minimal diff.
-	patch := []api_beta.JsonPatchOperation{
-		roleJSONPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&dto.Name)),
+	patch := []roles.JsonPatchOperation{
+		roleJSONPatchReplace("/name", roles.StringAsJsonPatchOperationValue(&dto.Name)),
 	}
-	if m, err := roleStructToMap(dto.Owner); err == nil && m != nil {
-		patch = append(patch, roleJSONPatchReplace("/owner", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+	if m, err := roleStructToMap(dto.Owner.Get()); err == nil && m != nil {
+		patch = append(patch, roleJSONPatchReplace("/owner", roles.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 	}
 	if dto.Description.IsSet() {
 		desc := dto.Description.Get()
-		patch = append(patch, roleJSONPatchReplace("/description", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(desc)))
+		patch = append(patch, roleJSONPatchReplace("/description", roles.StringAsJsonPatchOperationValue(desc)))
 	}
 	if dto.Enabled != nil {
-		patch = append(patch, roleJSONPatchReplace("/enabled", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(dto.Enabled)))
+		patch = append(patch, roleJSONPatchReplace("/enabled", roles.BoolAsJsonPatchOperationValue(dto.Enabled)))
 	}
 	if dto.Requestable != nil {
-		patch = append(patch, roleJSONPatchReplace("/requestable", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(dto.Requestable)))
+		patch = append(patch, roleJSONPatchReplace("/requestable", roles.BoolAsJsonPatchOperationValue(dto.Requestable)))
 	}
 	if dto.AccessProfiles != nil {
 		if arr, err := roleSliceToArrayInner(dto.AccessProfiles); err == nil {
-			patch = append(patch, roleJSONPatchReplace("/accessProfiles", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+			patch = append(patch, roleJSONPatchReplace("/accessProfiles", roles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 		}
 	}
 	if dto.Entitlements != nil {
 		if arr, err := roleSliceToArrayInner(dto.Entitlements); err == nil {
-			patch = append(patch, roleJSONPatchReplace("/entitlements", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+			patch = append(patch, roleJSONPatchReplace("/entitlements", roles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 		}
 	}
 	if dto.AdditionalOwners != nil {
 		if arr, err := roleSliceToArrayInner(dto.AdditionalOwners); err == nil {
-			patch = append(patch, roleJSONPatchReplace("/additionalOwners", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+			patch = append(patch, roleJSONPatchReplace("/additionalOwners", roles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 		}
 	}
 	if dto.DimensionRefs != nil {
 		if arr, err := roleSliceToArrayInner(dto.DimensionRefs); err == nil {
-			patch = append(patch, roleJSONPatchReplace("/dimensionRefs", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+			patch = append(patch, roleJSONPatchReplace("/dimensionRefs", roles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 		}
 	}
 	if dto.Segments != nil {
-		arr := make([]api_beta.ArrayInner, 0, len(dto.Segments))
+		arr := make([]roles.ArrayInner, 0, len(dto.Segments))
 		for i := range dto.Segments {
-			arr = append(arr, api_beta.ArrayInner{String: &dto.Segments[i]})
+			arr = append(arr, roles.ArrayInner{String: &dto.Segments[i]})
 		}
-		patch = append(patch, roleJSONPatchReplace("/segments", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+		patch = append(patch, roleJSONPatchReplace("/segments", roles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 	}
 	if dto.PrivilegeLevel.IsSet() {
-		patch = append(patch, roleJSONPatchReplace("/privilegeLevel", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(dto.PrivilegeLevel.Get())))
+		patch = append(patch, roleJSONPatchReplace("/privilegeLevel", roles.StringAsJsonPatchOperationValue(dto.PrivilegeLevel.Get())))
 	}
 
 	tflog.Debug(ctx, "Patching Role", map[string]interface{}{"id": state.Id.ValueString(), "patch_ops": len(patch)})
 
-	apiResp, httpResp, err := r.client.Beta.RolesAPI.
-		PatchRole(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.RolesAPI.
+		PatchRoleV1(ctx, state.Id.ValueString()).
 		JsonPatchOperation(patch).
 		Execute()
 	if err != nil {
@@ -292,8 +292,8 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	tflog.Debug(ctx, "Deleting Role", map[string]interface{}{"id": state.Id.ValueString()})
 
-	httpResp, err := r.client.Beta.RolesAPI.
-		DeleteRole(ctx, state.Id.ValueString()).
+	httpResp, err := r.client.RolesAPI.
+		DeleteRoleV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -318,7 +318,7 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 // guarded the same way service_desk_integration_v1's modelToDto guards
 // before_provisioning_rule/cluster_ref/owner_ref, per that package's documented
 // Unknown-vs-Null pattern.
-func roleModelToDto(ctx context.Context, m resource_role.RoleModel) (*api_beta.Role, diag.Diagnostics) {
+func roleModelToDto(ctx context.Context, m resource_role.RoleModel) (*roles.Role, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	owner, d := m.Owner.ToApi_betaOwnerReference(ctx)
@@ -327,12 +327,12 @@ func roleModelToDto(ctx context.Context, m resource_role.RoleModel) (*api_beta.R
 		return nil, diags
 	}
 
-	dto := api_beta.NewRoleWithDefaults()
+	dto := roles.NewRoleWithDefaults()
 	dto.Name = m.Name.ValueString()
-	dto.Owner = *owner
+	dto.Owner = *roles.NewNullableOwnerReference(owner)
 
 	if !m.Description.IsNull() && !m.Description.IsUnknown() {
-		dto.Description = *api_beta.NewNullableString(m.Description.ValueStringPointer())
+		dto.Description = *roles.NewNullableString(m.Description.ValueStringPointer())
 	}
 	if !m.Enabled.IsNull() && !m.Enabled.IsUnknown() {
 		dto.Enabled = m.Enabled.ValueBoolPointer()
@@ -341,7 +341,7 @@ func roleModelToDto(ctx context.Context, m resource_role.RoleModel) (*api_beta.R
 		dto.Requestable = m.Requestable.ValueBoolPointer()
 	}
 	if !m.PrivilegeLevel.IsNull() && !m.PrivilegeLevel.IsUnknown() {
-		dto.PrivilegeLevel = *api_beta.NewNullableString(m.PrivilegeLevel.ValueStringPointer())
+		dto.PrivilegeLevel = *roles.NewNullableString(m.PrivilegeLevel.ValueStringPointer())
 	}
 
 	if !m.Segments.IsNull() && !m.Segments.IsUnknown() {
@@ -353,7 +353,7 @@ func roleModelToDto(ctx context.Context, m resource_role.RoleModel) (*api_beta.R
 	if !m.AccessProfiles.IsNull() && !m.AccessProfiles.IsUnknown() {
 		var items []resource_role.AccessProfilesValue
 		diags.Append(m.AccessProfiles.ElementsAs(ctx, &items, false)...)
-		refs := make([]api_beta.AccessProfileRef, 0, len(items))
+		refs := make([]roles.AccessProfileRef, 0, len(items))
 		for _, item := range items {
 			ref, d := item.ToApi_betaAccessProfileRef(ctx)
 			diags.Append(d...)
@@ -367,7 +367,7 @@ func roleModelToDto(ctx context.Context, m resource_role.RoleModel) (*api_beta.R
 	if !m.DimensionRefs.IsNull() && !m.DimensionRefs.IsUnknown() {
 		var items []resource_role.DimensionRefsValue
 		diags.Append(m.DimensionRefs.ElementsAs(ctx, &items, false)...)
-		refs := make([]api_beta.DimensionRef, 0, len(items))
+		refs := make([]roles.DimensionRef, 0, len(items))
 		for _, item := range items {
 			ref, d := item.ToApi_betaDimensionRef(ctx)
 			diags.Append(d...)
@@ -381,11 +381,11 @@ func roleModelToDto(ctx context.Context, m resource_role.RoleModel) (*api_beta.R
 	if !m.Entitlements.IsNull() && !m.Entitlements.IsUnknown() {
 		var items []resource_role.EntitlementsValue
 		diags.Append(m.Entitlements.ElementsAs(ctx, &items, false)...)
-		refs := make([]api_beta.EntitlementRef, 0, len(items))
+		refs := make([]roles.EntitlementRef, 0, len(items))
 		for _, item := range items {
-			refs = append(refs, api_beta.EntitlementRef{
+			refs = append(refs, roles.EntitlementRef{
 				Id:   item.Id.ValueStringPointer(),
-				Name: *api_beta.NewNullableString(item.Name.ValueStringPointer()),
+				Name: *roles.NewNullableString(item.Name.ValueStringPointer()),
 				Type: item.EntitlementsType.ValueStringPointer(),
 			})
 		}
@@ -395,11 +395,11 @@ func roleModelToDto(ctx context.Context, m resource_role.RoleModel) (*api_beta.R
 	if !m.AdditionalOwners.IsNull() && !m.AdditionalOwners.IsUnknown() {
 		var items []resource_role.AdditionalOwnersValue
 		diags.Append(m.AdditionalOwners.ElementsAs(ctx, &items, false)...)
-		refs := make([]api_beta.AdditionalOwnerRef, 0, len(items))
+		refs := make([]roles.AdditionalOwnerRef, 0, len(items))
 		for _, item := range items {
-			refs = append(refs, api_beta.AdditionalOwnerRef{
+			refs = append(refs, roles.AdditionalOwnerRef{
 				Id:   item.Id.ValueStringPointer(),
-				Name: *api_beta.NewNullableString(item.Name.ValueStringPointer()),
+				Name: *roles.NewNullableString(item.Name.ValueStringPointer()),
 				Type: item.AdditionalOwnersType.ValueStringPointer(),
 			})
 		}
@@ -412,7 +412,7 @@ func roleModelToDto(ctx context.Context, m resource_role.RoleModel) (*api_beta.R
 // roleDtoToModel converts an API response DTO into the Terraform state model,
 // preferring fields carried over from fallback (plan/prior state) for the
 // pass-through-only blocks documented in the package doc.
-func roleDtoToModel(ctx context.Context, dto *api_beta.Role, fallback resource_role.RoleModel) (resource_role.RoleModel, diag.Diagnostics) {
+func roleDtoToModel(ctx context.Context, dto *roles.Role, fallback resource_role.RoleModel) (resource_role.RoleModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -442,7 +442,7 @@ func roleDtoToModel(ctx context.Context, dto *api_beta.Role, fallback resource_r
 		model.Dimensional = types.BoolPointerValue(dto.Dimensional.Get())
 	}
 
-	owner, d := resource_role.OwnerValue{}.FromApi_betaOwnerReference(ctx, &dto.Owner)
+	owner, d := resource_role.OwnerValue{}.FromApi_betaOwnerReference(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 
@@ -577,8 +577,8 @@ func rolePassThroughWarning(ctx context.Context, diags *diag.Diagnostics, attrNa
 	)
 }
 
-func roleJSONPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{
+func roleJSONPatchReplace(path string, value roles.JsonPatchOperationValue) roles.JsonPatchOperation {
+	return roles.JsonPatchOperation{
 		Op:    "replace",
 		Path:  path,
 		Value: &value,
@@ -587,7 +587,7 @@ func roleJSONPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequ
 
 // roleStructToMap round-trips an SDK model struct through JSON to get a
 // map[string]interface{} suitable for
-// api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue, since the
+// roles.MapmapOfStringAnyAsJsonPatchOperationValue, since the
 // JSON Patch value wrapper type doesn't accept typed structs directly.
 func roleStructToMap(v interface{}) (map[string]interface{}, error) {
 	if v == nil {
@@ -605,10 +605,10 @@ func roleStructToMap(v interface{}) (map[string]interface{}, error) {
 }
 
 // roleSliceToArrayInner round-trips a slice of SDK model structs (e.g.
-// []api_beta.AccessProfileRef) through JSON to build a []api_beta.ArrayInner
-// suitable for api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue,
+// []roles.AccessProfileRef) through JSON to build a []roles.ArrayInner
+// suitable for roles.ArrayOfArrayInnerAsJsonPatchOperationValue,
 // since JsonPatchOperation.Value has no generic "array of objects" constructor.
-func roleSliceToArrayInner(v interface{}) ([]api_beta.ArrayInner, error) {
+func roleSliceToArrayInner(v interface{}) ([]roles.ArrayInner, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
@@ -617,10 +617,10 @@ func roleSliceToArrayInner(v interface{}) ([]api_beta.ArrayInner, error) {
 	if err := json.Unmarshal(b, &maps); err != nil {
 		return nil, err
 	}
-	arr := make([]api_beta.ArrayInner, 0, len(maps))
+	arr := make([]roles.ArrayInner, 0, len(maps))
 	for i := range maps {
 		m := maps[i]
-		arr = append(arr, api_beta.ArrayInner{MapmapOfStringAny: &m})
+		arr = append(arr, roles.ArrayInner{MapmapOfStringAny: &m})
 	}
 	return arr, nil
 }

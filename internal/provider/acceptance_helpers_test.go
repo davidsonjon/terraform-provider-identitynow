@@ -8,8 +8,11 @@ import (
 	"testing"
 	"time"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_profiles"
+	"github.com/sailpoint-oss/golang-sdk/v3/apps"
+	"github.com/sailpoint-oss/golang-sdk/v3/roles"
+	"github.com/sailpoint-oss/golang-sdk/v3/segments"
 )
 
 const (
@@ -74,20 +77,20 @@ func testAccCreateRoleFixture(t *testing.T, client *sailpoint.APIClient, name, d
 	ctx := context.Background()
 	ownerType := "IDENTITY"
 	ownerID := testAccFixtureOwnerID
-	dto := api_beta.NewRole(name, api_beta.OwnerReference{
+	dto := roles.NewRole(name, *roles.NewNullableOwnerReference(&roles.OwnerReference{
 		Id:   &ownerID,
 		Type: &ownerType,
-	})
+	}))
 	dto.SetDescription(description)
 	dto.SetEnabled(true)
 	dto.SetRequestable(false)
-	dto.SetAccessProfiles([]api_beta.AccessProfileRef{})
-	dto.SetDimensionRefs([]api_beta.DimensionRef{})
-	dto.SetEntitlements([]api_beta.EntitlementRef{})
-	dto.SetAdditionalOwners([]api_beta.AdditionalOwnerRef{})
+	dto.SetAccessProfiles([]roles.AccessProfileRef{})
+	dto.SetDimensionRefs([]roles.DimensionRef{})
+	dto.SetEntitlements([]roles.EntitlementRef{})
+	dto.SetAdditionalOwners([]roles.AdditionalOwnerRef{})
 	dto.SetSegments([]string{})
 
-	created, httpResp, err := client.Beta.RolesAPI.CreateRole(ctx).Role(*dto).Execute()
+	created, httpResp, err := client.RolesAPI.CreateRoleV1(ctx).Role(*dto).Execute()
 	if err != nil {
 		t.Fatalf("creating role fixture %q: %s", name, testAccHTTPError(err, httpResp))
 	}
@@ -103,7 +106,7 @@ func testAccDeleteRoleFixture(t *testing.T, client *sailpoint.APIClient, roleID 
 		return
 	}
 
-	httpResp, err := client.Beta.RolesAPI.DeleteRole(context.Background(), roleID).Execute()
+	httpResp, err := client.RolesAPI.DeleteRoleV1(context.Background(), roleID).Execute()
 	if err != nil && (httpResp == nil || httpResp.StatusCode != http.StatusNotFound) {
 		t.Fatalf("deleting role fixture %s: %s", roleID, testAccHTTPError(err, httpResp))
 	}
@@ -118,21 +121,21 @@ func testAccCreateAccessProfileFixture(t *testing.T, client *sailpoint.APIClient
 	sourceType := "SOURCE"
 	sourceID := testAccFixtureSourceID
 
-	dto := api_beta.NewAccessProfile(name, api_beta.OwnerReference{
+	dto := access_profiles.NewAccessProfile(name, *access_profiles.NewNullableOwnerReference(&access_profiles.OwnerReference{
 		Id:   &ownerID,
 		Type: &ownerType,
-	}, api_beta.AccessProfileSourceRef{
+	}), access_profiles.AccessProfileSourceRef{
 		Id:   &sourceID,
 		Type: &sourceType,
 	})
 	dto.SetDescription(description)
 	dto.SetEnabled(false)
 	dto.SetRequestable(false)
-	dto.SetEntitlements([]api_beta.EntitlementRef{})
-	dto.SetAdditionalOwners([]api_beta.AdditionalOwnerRef{})
+	dto.SetEntitlements([]access_profiles.EntitlementRef{})
+	dto.SetAdditionalOwners([]access_profiles.AdditionalOwnerRef{})
 	dto.SetSegments([]string{})
 
-	created, httpResp, err := client.Beta.AccessProfilesAPI.CreateAccessProfile(ctx).AccessProfile(*dto).Execute()
+	created, httpResp, err := client.AccessProfilesAPI.CreateAccessProfileV1(ctx).AccessProfile(*dto).Execute()
 	if err != nil {
 		t.Fatalf("creating access profile fixture %q: %s", name, testAccHTTPError(err, httpResp))
 	}
@@ -148,7 +151,7 @@ func testAccDeleteAccessProfileFixture(t *testing.T, client *sailpoint.APIClient
 		return
 	}
 
-	httpResp, err := client.Beta.AccessProfilesAPI.DeleteAccessProfile(context.Background(), accessProfileID).Execute()
+	httpResp, err := client.AccessProfilesAPI.DeleteAccessProfileV1(context.Background(), accessProfileID).Execute()
 	if err != nil && (httpResp == nil || httpResp.StatusCode != http.StatusNotFound) {
 		t.Fatalf("deleting access profile fixture %s: %s", accessProfileID, testAccHTTPError(err, httpResp))
 	}
@@ -157,7 +160,7 @@ func testAccDeleteAccessProfileFixture(t *testing.T, client *sailpoint.APIClient
 func testAccCreateSegmentFixture(t *testing.T, client *sailpoint.APIClient, name, description string) string {
 	t.Helper()
 
-	dto := api_beta.NewSegmentWithDefaults()
+	dto := segments.NewSegmentWithDefaults()
 	dto.SetName(name)
 	dto.SetDescription(description)
 	dto.SetActive(true)
@@ -166,18 +169,18 @@ func testAccCreateSegmentFixture(t *testing.T, client *sailpoint.APIClient, name
 	attribute := "uid"
 	valueType := "STRING"
 	value := testAccUniqueName("does-not-exist")
-	dto.SetVisibilityCriteria(api_beta.VisibilityCriteria{
-		Expression: &api_beta.Expression{
+	dto.SetVisibilityCriteria(segments.SegmentVisibilityCriteria{
+		Expression: &segments.Expression{
 			Operator:  &operator,
-			Attribute: *api_beta.NewNullableString(&attribute),
-			Value: *api_beta.NewNullableValue(&api_beta.Value{
-				Type:  *api_beta.NewNullableString(&valueType),
+			Attribute: *segments.NewNullableString(&attribute),
+			Value: *segments.NewNullableValue(&segments.Value{
+				Type:  &valueType,
 				Value: &value,
 			}),
 		},
 	})
 
-	created, httpResp, err := client.Beta.SegmentsAPI.CreateSegment(context.Background()).Segment(*dto).Execute()
+	created, httpResp, err := client.SegmentsAPI.CreateSegmentV1(context.Background()).Segment(*dto).Execute()
 	if err != nil {
 		t.Fatalf("creating segment fixture %q: %s", name, testAccHTTPError(err, httpResp))
 	}
@@ -193,7 +196,7 @@ func testAccDeleteSegmentFixture(t *testing.T, client *sailpoint.APIClient, segm
 		return
 	}
 
-	httpResp, err := client.Beta.SegmentsAPI.DeleteSegment(context.Background(), segmentID).Execute()
+	httpResp, err := client.SegmentsAPI.DeleteSegmentV1(context.Background(), segmentID).Execute()
 	if err != nil && (httpResp == nil || httpResp.StatusCode != http.StatusNotFound) {
 		t.Fatalf("deleting segment fixture %s: %s", segmentID, testAccHTTPError(err, httpResp))
 	}
@@ -203,12 +206,12 @@ func testAccCreateApplicationFixture(t *testing.T, client *sailpoint.APIClient, 
 	t.Helper()
 
 	ctx := context.Background()
-	source := api_beta.NewSourceAppCreateDtoAccountSource(testAccFixtureSourceID)
+	source := apps.NewSourceAppCreateDtoAccountSource(testAccFixtureSourceID)
 	sourceType := "SOURCE"
 	source.SetType(sourceType)
-	dto := api_beta.NewSourceAppCreateDto(name, description, *source)
+	dto := apps.NewSourceAppCreateDto(name, description, *source)
 
-	created, httpResp, err := client.Beta.AppsAPI.CreateSourceApp(ctx).SourceAppCreateDto(*dto).Execute()
+	created, httpResp, err := client.AppsAPI.CreateSourceAppV1(ctx).SourceAppCreateDto(*dto).Execute()
 	if err != nil {
 		t.Fatalf("creating application fixture %q: %s", name, testAccHTTPError(err, httpResp))
 	}
@@ -216,31 +219,31 @@ func testAccCreateApplicationFixture(t *testing.T, client *sailpoint.APIClient, 
 		t.Fatalf("creating application fixture %q returned no id", name)
 	}
 
-	patch := make([]api_beta.JsonPatchOperation, 0, 5)
+	patch := make([]apps.JsonPatchOperation, 0, 5)
 	ownerType := "IDENTITY"
 	ownerMap := map[string]interface{}{
 		"id":   testAccFixtureOwnerID,
 		"type": ownerType,
 	}
-	patch = append(patch, api_beta.JsonPatchOperation{
+	patch = append(patch, apps.JsonPatchOperation{
 		Op:   "replace",
 		Path: "/owner",
-		Value: func() *api_beta.UpdateMultiHostSourcesRequestInnerValue {
-			v := api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&ownerMap)
+		Value: func() *apps.JsonPatchOperationValue {
+			v := apps.MapmapOfStringAnyAsJsonPatchOperationValue(&ownerMap)
 			return &v
 		}(),
 	})
 
-	arr := make([]api_beta.ArrayInner, 0, len(accessProfileIDs))
+	arr := make([]apps.ArrayInner, 0, len(accessProfileIDs))
 	for _, accessProfileID := range accessProfileIDs {
 		id := accessProfileID
-		arr = append(arr, api_beta.ArrayInner{String: &id})
+		arr = append(arr, apps.ArrayInner{String: &id})
 	}
-	patch = append(patch, api_beta.JsonPatchOperation{
+	patch = append(patch, apps.JsonPatchOperation{
 		Op:   "replace",
 		Path: "/accessProfiles",
-		Value: func() *api_beta.UpdateMultiHostSourcesRequestInnerValue {
-			v := api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)
+		Value: func() *apps.JsonPatchOperationValue {
+			v := apps.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)
 			return &v
 		}(),
 	})
@@ -249,33 +252,33 @@ func testAccCreateApplicationFixture(t *testing.T, client *sailpoint.APIClient, 
 	provisionRequestEnabled := false
 	appCenterEnabled := true
 	patch = append(patch,
-		api_beta.JsonPatchOperation{
+		apps.JsonPatchOperation{
 			Op:   "replace",
 			Path: "/enabled",
-			Value: func() *api_beta.UpdateMultiHostSourcesRequestInnerValue {
-				v := api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&enabled)
+			Value: func() *apps.JsonPatchOperationValue {
+				v := apps.BoolAsJsonPatchOperationValue(&enabled)
 				return &v
 			}(),
 		},
-		api_beta.JsonPatchOperation{
+		apps.JsonPatchOperation{
 			Op:   "replace",
 			Path: "/provisionRequestEnabled",
-			Value: func() *api_beta.UpdateMultiHostSourcesRequestInnerValue {
-				v := api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&provisionRequestEnabled)
+			Value: func() *apps.JsonPatchOperationValue {
+				v := apps.BoolAsJsonPatchOperationValue(&provisionRequestEnabled)
 				return &v
 			}(),
 		},
-		api_beta.JsonPatchOperation{
+		apps.JsonPatchOperation{
 			Op:   "replace",
 			Path: "/appCenterEnabled",
-			Value: func() *api_beta.UpdateMultiHostSourcesRequestInnerValue {
-				v := api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&appCenterEnabled)
+			Value: func() *apps.JsonPatchOperationValue {
+				v := apps.BoolAsJsonPatchOperationValue(&appCenterEnabled)
 				return &v
 			}(),
 		},
 	)
 
-	_, httpResp, err = client.Beta.AppsAPI.PatchSourceApp(ctx, *created.Id).JsonPatchOperation(patch).Execute()
+	_, httpResp, err = client.AppsAPI.PatchSourceAppV1(ctx, *created.Id).JsonPatchOperation(patch).Execute()
 	if err != nil {
 		t.Fatalf("patching application fixture %q: %s", name, testAccHTTPError(err, httpResp))
 	}
@@ -289,7 +292,7 @@ func testAccDeleteApplicationFixture(t *testing.T, client *sailpoint.APIClient, 
 		return
 	}
 
-	_, httpResp, err := client.Beta.AppsAPI.DeleteSourceApp(context.Background(), applicationID).Execute()
+	_, httpResp, err := client.AppsAPI.DeleteSourceAppV1(context.Background(), applicationID).Execute()
 	if err != nil && (httpResp == nil || httpResp.StatusCode != http.StatusNotFound) {
 		t.Fatalf("deleting application fixture %s: %s", applicationID, testAccHTTPError(err, httpResp))
 	}
@@ -300,8 +303,8 @@ func testAccListApplicationAccessProfileIDs(client *sailpoint.APIClient, applica
 
 	var offset int32
 	for {
-		page, httpResp, err := client.Beta.AppsAPI.
-			ListAccessProfilesForSourceApp(context.Background(), applicationID).
+		page, httpResp, err := client.AppsAPI.
+			ListAccessProfilesForSourceAppV1(context.Background(), applicationID).
 			Limit(250).
 			Offset(offset).
 			Execute()

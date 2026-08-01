@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_model_metadata"
 
 	"terraform-provider-identitynow/internal/provider/access_model_metadata_attribute_v1/datasource_access_model_metadata_attribute"
 )
@@ -68,8 +68,8 @@ func (d *accessModelMetadataAttributeDataSource) Read(ctx context.Context, req d
 
 	tflog.Debug(ctx, "Reading Access Model Metadata Attribute data source", map[string]interface{}{"key": config.Key.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.AccessModelMetadataAPI.
-		GetAccessModelMetadataAttribute(ctx, config.Key.ValueString()).
+	dto, httpResp, err := d.client.AccessModelMetadataAPI.
+		GetAccessModelMetadataAttributeV1(ctx, config.Key.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Access Model Metadata Attribute data source", map[string]interface{}{"key": config.Key.ValueString(), "error": err.Error()})
@@ -90,7 +90,7 @@ func (d *accessModelMetadataAttributeDataSource) Read(ctx context.Context, req d
 
 // datasourceDtoToModel mirrors ammDtoToModel in resource_access_model_metadata_attribute.go
 // but against the data source's (separately generated) model type.
-func datasourceDtoToModel(ctx context.Context, dto *api_beta.AttributeDTO, fallback datasource_access_model_metadata_attribute.AccessModelMetadataAttributeModel) (datasource_access_model_metadata_attribute.AccessModelMetadataAttributeModel, error) {
+func datasourceDtoToModel(ctx context.Context, dto *access_model_metadata.AttributeDTO, fallback datasource_access_model_metadata_attribute.AccessModelMetadataAttributeModel) (datasource_access_model_metadata_attribute.AccessModelMetadataAttributeModel, error) {
 	model := fallback
 
 	model.Key = types.StringPointerValue(dto.Key)

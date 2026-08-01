@@ -5,7 +5,7 @@
 // identitynow_identities: a separate plural data source wrapping a List*
 // SDK call with filter/sort/pagination support, rather than overloading the
 // singular data source). It queries GET /access-profiles/v1
-// (api_beta.AccessProfilesAPI.ListAccessProfiles) instead of
+// (access_profiles.AccessProfilesAPI.ListAccessProfilesV1) instead of
 // GET /access-profiles/v1/{id}, and returns every matching Access Profile
 // using the exact same nested object shape as identitynow_access_profile_v1
 // (reusing datasource_access_profile's generated schema/model/value types and
@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/access_profile_v1/datasource_access_profile"
 )
@@ -177,7 +177,7 @@ func (d *accessProfilesDataSource) Read(ctx context.Context, req datasource.Read
 
 	tflog.Debug(ctx, "Reading Access Profiles data source", map[string]interface{}{"filters": config.Filters.ValueString()})
 
-	apiReq := d.client.Beta.AccessProfilesAPI.ListAccessProfiles(ctx)
+	apiReq := d.client.AccessProfilesAPI.ListAccessProfilesV1(ctx)
 
 	if !config.Filters.IsNull() && !config.Filters.IsUnknown() {
 		apiReq = apiReq.Filters(config.Filters.ValueString())

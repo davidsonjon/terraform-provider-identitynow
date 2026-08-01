@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -1434,7 +1434,7 @@ func (v OwnerValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	}
 }
 
-func (v AuthoritativeSourceValue) ToApi_betaIdentityProfileAllOfAuthoritativeSource(ctx context.Context) (*api_beta.IdentityProfileAllOfAuthoritativeSource, diag.Diagnostics) {
+func (v AuthoritativeSourceValue) ToIdentity_profilesIdentityProfileAllOfAuthoritativeSource(ctx context.Context) (*identity_profiles.IdentityProfileAllOfAuthoritativeSource, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -1450,14 +1450,14 @@ func (v AuthoritativeSourceValue) ToApi_betaIdentityProfileAllOfAuthoritativeSou
 		return nil, diags
 	}
 
-	return &api_beta.IdentityProfileAllOfAuthoritativeSource{
+	return &identity_profiles.IdentityProfileAllOfAuthoritativeSource{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.AuthoritativeSourceType.ValueStringPointer(),
 	}, diags
 }
 
-func (v AuthoritativeSourceValue) FromApi_betaIdentityProfileAllOfAuthoritativeSource(ctx context.Context, apiObject *api_beta.IdentityProfileAllOfAuthoritativeSource) (AuthoritativeSourceValue, diag.Diagnostics) {
+func (v AuthoritativeSourceValue) FromIdentity_profilesIdentityProfileAllOfAuthoritativeSource(ctx context.Context, apiObject *identity_profiles.IdentityProfileAllOfAuthoritativeSource) (AuthoritativeSourceValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -1472,7 +1472,7 @@ func (v AuthoritativeSourceValue) FromApi_betaIdentityProfileAllOfAuthoritativeS
 	}, diags
 }
 
-func (v IdentityExceptionReportReferenceValue) ToApi_betaIdentityExceptionReportReference(ctx context.Context) (*api_beta.IdentityExceptionReportReference, diag.Diagnostics) {
+func (v IdentityExceptionReportReferenceValue) ToIdentity_profilesIdentityExceptionReportReference(ctx context.Context) (*identity_profiles.IdentityExceptionReportReference, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -1488,13 +1488,13 @@ func (v IdentityExceptionReportReferenceValue) ToApi_betaIdentityExceptionReport
 		return nil, diags
 	}
 
-	return &api_beta.IdentityExceptionReportReference{
+	return &identity_profiles.IdentityExceptionReportReference{
 		ReportName:   v.ReportName.ValueStringPointer(),
 		TaskResultId: v.TaskResultId.ValueStringPointer(),
 	}, diags
 }
 
-func (v IdentityExceptionReportReferenceValue) FromApi_betaIdentityExceptionReportReference(ctx context.Context, apiObject *api_beta.IdentityExceptionReportReference) (IdentityExceptionReportReferenceValue, diag.Diagnostics) {
+func (v IdentityExceptionReportReferenceValue) FromIdentity_profilesIdentityExceptionReportReference(ctx context.Context, apiObject *identity_profiles.IdentityExceptionReportReference) (IdentityExceptionReportReferenceValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -1508,7 +1508,7 @@ func (v IdentityExceptionReportReferenceValue) FromApi_betaIdentityExceptionRepo
 	}, diags
 }
 
-func (v OwnerValue) ToApi_betaIdentityProfileAllOfOwner(ctx context.Context) (*api_beta.IdentityProfileAllOfOwner, diag.Diagnostics) {
+func (v OwnerValue) ToIdentity_profilesIdentityProfileAllOfOwner(ctx context.Context) (*identity_profiles.IdentityProfileAllOfOwner, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -1524,14 +1524,14 @@ func (v OwnerValue) ToApi_betaIdentityProfileAllOfOwner(ctx context.Context) (*a
 		return nil, diags
 	}
 
-	return &api_beta.IdentityProfileAllOfOwner{
+	return &identity_profiles.IdentityProfileAllOfOwner{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.OwnerType.ValueStringPointer(),
 	}, diags
 }
 
-func (v OwnerValue) FromApi_betaIdentityProfileAllOfOwner(ctx context.Context, apiObject *api_beta.IdentityProfileAllOfOwner) (OwnerValue, diag.Diagnostics) {
+func (v OwnerValue) FromIdentity_profilesIdentityProfileAllOfOwner(ctx context.Context, apiObject *identity_profiles.IdentityProfileAllOfOwner) (OwnerValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

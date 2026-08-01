@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 )
 
 // TestAccSegmentV1Resource is an acceptance test exercising the full CRUD
@@ -138,8 +138,8 @@ func testAccCheckSegmentV1Destroy(s *terraform.State) error {
 			continue
 		}
 
-		_, httpResp, err := client.Beta.SegmentsAPI.
-			GetSegment(context.Background(), rs.Primary.ID).
+		_, httpResp, err := client.SegmentsAPI.
+			GetSegmentV1(context.Background(), rs.Primary.ID).
 			Execute()
 		if err == nil {
 			return fmt.Errorf("segment %s still exists", rs.Primary.ID)

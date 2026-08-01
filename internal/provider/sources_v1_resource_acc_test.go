@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 )
 
 // TestAccSourceV1Resource is an acceptance test exercising the full CRUD
@@ -135,8 +135,8 @@ func testAccCheckSourceV1Destroy(s *terraform.State) error {
 			if attempt > 0 {
 				time.Sleep(2 * time.Second)
 			}
-			_, httpResp, err := client.Beta.SourcesAPI.
-				GetSource(context.Background(), rs.Primary.ID).
+			_, httpResp, err := client.SourcesAPI.
+				GetSourceV1(context.Background(), rs.Primary.ID).
 				Execute()
 			if err == nil {
 				lastErr = fmt.Errorf("source %s still exists", rs.Primary.ID)

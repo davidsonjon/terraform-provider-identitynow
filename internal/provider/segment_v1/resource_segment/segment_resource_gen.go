@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/segments"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -543,7 +543,7 @@ func (v OwnerValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	}
 }
 
-func (v OwnerValue) ToApi_betaOwnerReferenceSegments(ctx context.Context) (*api_beta.OwnerReferenceSegments, diag.Diagnostics) {
+func (v OwnerValue) ToApi_betaOwnerReferenceSegments(ctx context.Context) (*segments.OwnerReferenceSegments, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -559,14 +559,14 @@ func (v OwnerValue) ToApi_betaOwnerReferenceSegments(ctx context.Context) (*api_
 		return nil, diags
 	}
 
-	return &api_beta.OwnerReferenceSegments{
+	return &segments.OwnerReferenceSegments{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.OwnerType.ValueStringPointer(),
 	}, diags
 }
 
-func (v OwnerValue) FromApi_betaOwnerReferenceSegments(ctx context.Context, apiObject *api_beta.OwnerReferenceSegments) (OwnerValue, diag.Diagnostics) {
+func (v OwnerValue) FromApi_betaOwnerReferenceSegments(ctx context.Context, apiObject *segments.OwnerReferenceSegments) (OwnerValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

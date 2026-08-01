@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/segments"
 
 	"terraform-provider-identitynow/internal/provider/segment_v1/resource_segment"
 )
@@ -99,7 +99,7 @@ func TestSegmentResourceModelToDTO(t *testing.T) {
 	if owner == nil || owner.Id == nil || *owner.Id != "owner-id" {
 		t.Errorf("Owner = %+v, want Id = %q", owner, "owner-id")
 	}
-	vc := dto.VisibilityCriteria.Get()
+	vc := dto.VisibilityCriteria
 	if vc == nil || vc.Expression == nil {
 		t.Fatalf("VisibilityCriteria = %v, want a populated expression", vc)
 	}
@@ -129,25 +129,25 @@ func TestSegmentResourceDTOToModel_RoundTrip(t *testing.T) {
 	valueType := "STRING"
 	value := "N1"
 
-	dto := &api_beta.Segment{
+	dto := &segments.Segment{
 		Id:          &segmentID,
 		Name:        &name,
 		Description: &description,
 		Active:      &active,
-		Owner: *api_beta.NewNullableOwnerReferenceSegments(&api_beta.OwnerReferenceSegments{
+		Owner: *segments.NewNullableOwnerReferenceSegments(&segments.OwnerReferenceSegments{
 			Id:   &ownerID,
 			Type: &ownerType,
 		}),
-		VisibilityCriteria: *api_beta.NewNullableVisibilityCriteria(&api_beta.VisibilityCriteria{
-			Expression: &api_beta.Expression{
+		VisibilityCriteria: &segments.SegmentVisibilityCriteria{
+			Expression: &segments.Expression{
 				Operator:  &operator,
-				Attribute: *api_beta.NewNullableString(&attribute),
-				Value: *api_beta.NewNullableValue(&api_beta.Value{
-					Type:  *api_beta.NewNullableString(&valueType),
+				Attribute: *segments.NewNullableString(&attribute),
+				Value: *segments.NewNullableValue(&segments.Value{
+					Type:  &valueType,
 					Value: &value,
 				}),
 			},
-		}),
+		},
 	}
 
 	model, diags := segmentResourceDTOToModel(ctx, dto, types.StringNull())
@@ -220,7 +220,7 @@ func TestSegmentPatchOps_ScalarChanges(t *testing.T) {
 		t.Fatalf("len(ops) = %d, want 2: %+v", len(ops), ops)
 	}
 
-	byPath := map[string]api_beta.JsonPatchOperation{}
+	byPath := map[string]segmentJSONPatchOp{}
 	for _, op := range ops {
 		byPath[op.Path] = op
 	}
@@ -328,8 +328,8 @@ func TestSegmentVisibilityCriteriaPatchOps(t *testing.T) {
 
 func TestSegmentPatchRequestBody(t *testing.T) {
 	name := "new-name"
-	ops := []api_beta.JsonPatchOperation{
-		segmentJSONPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&name)),
+	ops := []segmentJSONPatchOp{
+		segmentJSONPatchReplace("/name", name),
 	}
 
 	body := segmentPatchRequestBody(ops)

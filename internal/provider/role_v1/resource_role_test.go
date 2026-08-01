@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/roles"
 
 	"terraform-provider-identitynow/internal/provider/role_v1/resource_role"
 )
@@ -75,11 +75,11 @@ func TestRoleModelToDto(t *testing.T) {
 	if !dto.Description.IsSet() || dto.Description.Get() == nil || *dto.Description.Get() != "a test role" {
 		t.Errorf("Description = %v, want %q", dto.Description, "a test role")
 	}
-	if dto.Owner.Id == nil || *dto.Owner.Id != ownerId {
-		t.Errorf("Owner.Id = %v, want %q", dto.Owner.Id, ownerId)
+	if dto.Owner.Get().Id == nil || *dto.Owner.Get().Id != ownerId {
+		t.Errorf("Owner.Id = %v, want %q", dto.Owner.Get().Id, ownerId)
 	}
-	if dto.Owner.Type == nil || *dto.Owner.Type != ownerType {
-		t.Errorf("Owner.Type = %v, want %q", dto.Owner.Type, ownerType)
+	if dto.Owner.Get().Type == nil || *dto.Owner.Get().Type != ownerType {
+		t.Errorf("Owner.Type = %v, want %q", dto.Owner.Get().Type, ownerType)
 	}
 	if dto.Enabled == nil || !*dto.Enabled {
 		t.Errorf("Enabled = %v, want true", dto.Enabled)
@@ -100,14 +100,14 @@ func TestRoleDtoToModel_RoundTrip(t *testing.T) {
 	enabled := true
 	requestable := false
 
-	dto := &api_beta.Role{
+	dto := &roles.Role{
 		Id:   &roleId,
 		Name: "test-role",
-		Owner: api_beta.OwnerReference{
+		Owner: *roles.NewNullableOwnerReference(&roles.OwnerReference{
 			Id:   &ownerId,
 			Type: &ownerType,
-		},
-		Description: *api_beta.NewNullableString(&description),
+		}),
+		Description: *roles.NewNullableString(&description),
 		Enabled:     &enabled,
 		Requestable: &requestable,
 	}
@@ -151,7 +151,7 @@ func TestRoleStructToMap(t *testing.T) {
 	t.Run("struct input round-trips through JSON", func(t *testing.T) {
 		id := "owner-id"
 		typ := "IDENTITY"
-		owner := api_beta.OwnerReference{Id: &id, Type: &typ}
+		owner := roles.OwnerReference{Id: &id, Type: &typ}
 
 		m, err := roleStructToMap(owner)
 		if err != nil {
@@ -168,7 +168,7 @@ func TestRoleStructToMap(t *testing.T) {
 
 func TestRoleSliceToArrayInner(t *testing.T) {
 	id1, id2 := "ap-1", "ap-2"
-	refs := []api_beta.AccessProfileRef{
+	refs := []roles.AccessProfileRef{
 		{Id: &id1},
 		{Id: &id2},
 	}
@@ -193,7 +193,7 @@ func TestRoleSliceToArrayInner(t *testing.T) {
 
 func TestRoleJSONPatchReplace(t *testing.T) {
 	name := "new-name"
-	op := roleJSONPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&name))
+	op := roleJSONPatchReplace("/name", roles.StringAsJsonPatchOperationValue(&name))
 
 	if op.Op != "replace" {
 		t.Errorf("Op = %q, want %q", op.Op, "replace")

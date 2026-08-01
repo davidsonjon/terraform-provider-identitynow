@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/sources"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/source_provisioning_policy_v1/datasource_source_provisioning_policy"
 )
@@ -111,8 +111,8 @@ func (d *sourceProvisioningPolicyDataSource) Read(ctx context.Context, req datas
 	usageType := config.UsageType.ValueString()
 	tflog.Debug(ctx, "Reading Source Provisioning Policy data source", map[string]interface{}{"source_id": sourceID, "usage_type": usageType})
 
-	dto, httpResp, err := d.client.Beta.SourcesAPI.
-		GetProvisioningPolicy(ctx, sourceID, api_beta.UsageType(usageType)).
+	dto, httpResp, err := d.client.SourcesAPI.
+		GetProvisioningPolicyV1(ctx, sourceID, sources.UsageType(usageType)).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Source Provisioning Policy data source", map[string]interface{}{"source_id": sourceID, "usage_type": usageType, "error": err.Error()})
@@ -131,7 +131,7 @@ func (d *sourceProvisioningPolicyDataSource) Read(ctx context.Context, req datas
 
 // datasourceDtoToModel mirrors dtoToModel in resource_source_provisioning_policy.go
 // but against the data source's model type.
-func datasourceDtoToModel(dto *api_beta.ProvisioningPolicyDto, sourceID string, fallback sourceProvisioningPolicyDataSourceModel) (sourceProvisioningPolicyDataSourceModel, diag.Diagnostics) {
+func datasourceDtoToModel(dto *sources.ProvisioningPolicyDto, sourceID string, fallback sourceProvisioningPolicyDataSourceModel) (sourceProvisioningPolicyDataSourceModel, diag.Diagnostics) {
 	model := fallback
 
 	usageType := ""

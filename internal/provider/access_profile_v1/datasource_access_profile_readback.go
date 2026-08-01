@@ -28,12 +28,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_profiles"
 
 	"terraform-provider-identitynow/internal/provider/access_profile_v1/datasource_access_profile"
 )
 
-func accessProfileDatasourceAccessModelMetadataFromApi(ctx context.Context, dto *api_beta.AttributeDTOList) (datasource_access_profile.AccessModelMetadataValue, diag.Diagnostics) {
+func accessProfileDatasourceAccessModelMetadataFromApi(ctx context.Context, dto *access_profiles.AttributeDTOList) (datasource_access_profile.AccessModelMetadataValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return datasource_access_profile.NewAccessModelMetadataValueNull(), diags
@@ -50,7 +50,7 @@ func accessProfileDatasourceAccessModelMetadataFromApi(ctx context.Context, dto 
 	return v, diags
 }
 
-func accessProfileDatasourceAttributeDTOListFromApi(ctx context.Context, items []api_beta.AttributeDTO) (types.List, diag.Diagnostics) {
+func accessProfileDatasourceAttributeDTOListFromApi(ctx context.Context, items []access_profiles.AttributeDTO) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_access_profile.AttributesValue{}.Type(ctx)
 	if items == nil {
@@ -87,7 +87,7 @@ func accessProfileDatasourceAttributeDTOListFromApi(ctx context.Context, items [
 	return listVal, diags
 }
 
-func accessProfileDatasourceAttributeValueDTOListFromApi(ctx context.Context, items []api_beta.AttributeValueDTO) (types.List, diag.Diagnostics) {
+func accessProfileDatasourceAttributeValueDTOListFromApi(ctx context.Context, items []access_profiles.AttributeValueDTO) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_access_profile.ValuesValue{}.Type(ctx)
 	if items == nil {
@@ -113,7 +113,7 @@ func accessProfileDatasourceAttributeValueDTOListFromApi(ctx context.Context, it
 	return listVal, diags
 }
 
-func accessProfileDatasourceApprovalSchemeListFromApi(ctx context.Context, items []api_beta.AccessProfileApprovalScheme) (types.List, diag.Diagnostics) {
+func accessProfileDatasourceApprovalSchemeListFromApi(ctx context.Context, items []access_profiles.AccessProfileApprovalScheme) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_access_profile.ApprovalSchemesValue{}.Type(ctx)
 	if items == nil {
@@ -138,7 +138,7 @@ func accessProfileDatasourceApprovalSchemeListFromApi(ctx context.Context, items
 	return listVal, diags
 }
 
-func accessProfileDatasourceRevocationApprovalSchemeListFromApi(ctx context.Context, items []api_beta.AccessProfileApprovalScheme) (types.List, diag.Diagnostics) {
+func accessProfileDatasourceRevocationApprovalSchemeListFromApi(ctx context.Context, items []access_profiles.AccessProfileApprovalScheme) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_access_profile.RevocationApprovalSchemesValue{}.Type(ctx)
 	if items == nil {
@@ -163,7 +163,7 @@ func accessProfileDatasourceRevocationApprovalSchemeListFromApi(ctx context.Cont
 	return listVal, diags
 }
 
-func accessProfileDatasourceMaxPermittedAccessDurationFromApi(ctx context.Context, dto *api_beta.AccessDuration) (types.Object, diag.Diagnostics) {
+func accessProfileDatasourceMaxPermittedAccessDurationFromApi(ctx context.Context, dto *access_profiles.AccessDuration) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	attrTypes := datasource_access_profile.MaxPermittedAccessDurationValue{}.AttributeTypes(ctx)
 	if dto == nil {
@@ -188,7 +188,7 @@ func accessProfileDatasourceMaxPermittedAccessDurationFromApi(ctx context.Contex
 	return v.ToObjectValue(ctx)
 }
 
-func accessProfileDatasourceAccessRequestConfigFromApi(ctx context.Context, dto *api_beta.Requestability) (datasource_access_profile.AccessRequestConfigValue, diag.Diagnostics) {
+func accessProfileDatasourceAccessRequestConfigFromApi(ctx context.Context, dto *access_profiles.Requestability) (datasource_access_profile.AccessRequestConfigValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return datasource_access_profile.NewAccessRequestConfigValueNull(), diags
@@ -215,7 +215,7 @@ func accessProfileDatasourceAccessRequestConfigFromApi(ctx context.Context, dto 
 	return v, diags
 }
 
-func accessProfileDatasourceRevocationRequestConfigFromApi(ctx context.Context, dto *api_beta.Revocability) (datasource_access_profile.RevocationRequestConfigValue, diag.Diagnostics) {
+func accessProfileDatasourceRevocationRequestConfigFromApi(ctx context.Context, dto *access_profiles.Revocability) (datasource_access_profile.RevocationRequestConfigValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return datasource_access_profile.NewRevocationRequestConfigValueNull(), diags
@@ -234,7 +234,7 @@ func accessProfileDatasourceRevocationRequestConfigFromApi(ctx context.Context, 
 	return v, diags
 }
 
-func accessProfileDatasourceProvisioningCriteriaFromApi(ctx context.Context, dto *api_beta.ProvisioningCriteriaLevel1) (datasource_access_profile.ProvisioningCriteriaValue, diag.Diagnostics) {
+func accessProfileDatasourceProvisioningCriteriaFromApi(ctx context.Context, dto *access_profiles.ProvisioningCriteriaLevel1) (datasource_access_profile.ProvisioningCriteriaValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return datasource_access_profile.NewProvisioningCriteriaValueNull(), diags
@@ -263,7 +263,7 @@ func accessProfileDatasourceProvisioningCriteriaFromApi(ctx context.Context, dto
 	return v, diags
 }
 
-func accessProfileDatasourceProvisioningCriteriaLevel2ListFromApi(ctx context.Context, items []api_beta.ProvisioningCriteriaLevel2) (types.List, diag.Diagnostics) {
+func accessProfileDatasourceProvisioningCriteriaLevel2ListFromApi(ctx context.Context, items []access_profiles.ProvisioningCriteriaLevel2) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_access_profile.ChildrenValue{}.Type(ctx)
 	if items == nil {
@@ -300,7 +300,7 @@ func accessProfileDatasourceProvisioningCriteriaLevel2ListFromApi(ctx context.Co
 	return listVal, diags
 }
 
-func accessProfileDatasourceProvisioningCriteriaLevel3ListFromApi(ctx context.Context, items []api_beta.ProvisioningCriteriaLevel3) (types.List, diag.Diagnostics) {
+func accessProfileDatasourceProvisioningCriteriaLevel3ListFromApi(ctx context.Context, items []access_profiles.ProvisioningCriteriaLevel3) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_access_profile.GrandchildrenValue{}.Type(ctx)
 	if items == nil {

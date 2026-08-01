@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/sod_policies"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -622,7 +622,7 @@ func (v OwnerRefValue) AttributeTypes(ctx context.Context) map[string]attr.Type 
 	}
 }
 
-func (v OwnerRefValue) ToApi_betaSodPolicyOwnerRef(ctx context.Context) (*api_beta.SodPolicyOwnerRef, diag.Diagnostics) {
+func (v OwnerRefValue) ToApi_betaSodPolicyOwnerRef(ctx context.Context) (*sod_policies.SodPolicyOwnerRef, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -638,14 +638,14 @@ func (v OwnerRefValue) ToApi_betaSodPolicyOwnerRef(ctx context.Context) (*api_be
 		return nil, diags
 	}
 
-	return &api_beta.SodPolicyOwnerRef{
+	return &sod_policies.SodPolicyOwnerRef{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.OwnerRefType.ValueStringPointer(),
 	}, diags
 }
 
-func (v OwnerRefValue) FromApi_betaSodPolicyOwnerRef(ctx context.Context, apiObject *api_beta.SodPolicyOwnerRef) (OwnerRefValue, diag.Diagnostics) {
+func (v OwnerRefValue) FromApi_betaSodPolicyOwnerRef(ctx context.Context, apiObject *sod_policies.SodPolicyOwnerRef) (OwnerRefValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_profiles"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -7641,7 +7641,7 @@ func (v SourceValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	}
 }
 
-func (v OwnerValue) ToApi_betaOwnerReference(ctx context.Context) (*api_beta.OwnerReference, diag.Diagnostics) {
+func (v OwnerValue) ToApi_betaOwnerReference(ctx context.Context) (*access_profiles.OwnerReference, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -7657,14 +7657,14 @@ func (v OwnerValue) ToApi_betaOwnerReference(ctx context.Context) (*api_beta.Own
 		return nil, diags
 	}
 
-	return &api_beta.OwnerReference{
+	return &access_profiles.OwnerReference{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.OwnerType.ValueStringPointer(),
 	}, diags
 }
 
-func (v OwnerValue) FromApi_betaOwnerReference(ctx context.Context, apiObject *api_beta.OwnerReference) (OwnerValue, diag.Diagnostics) {
+func (v OwnerValue) FromApi_betaOwnerReference(ctx context.Context, apiObject *access_profiles.OwnerReference) (OwnerValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -7679,7 +7679,7 @@ func (v OwnerValue) FromApi_betaOwnerReference(ctx context.Context, apiObject *a
 	}, diags
 }
 
-func (v SourceValue) ToApi_betaAccessProfileSourceRef(ctx context.Context) (*api_beta.AccessProfileSourceRef, diag.Diagnostics) {
+func (v SourceValue) ToApi_betaAccessProfileSourceRef(ctx context.Context) (*access_profiles.AccessProfileSourceRef, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -7695,14 +7695,14 @@ func (v SourceValue) ToApi_betaAccessProfileSourceRef(ctx context.Context) (*api
 		return nil, diags
 	}
 
-	return &api_beta.AccessProfileSourceRef{
+	return &access_profiles.AccessProfileSourceRef{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.SourceType.ValueStringPointer(),
 	}, diags
 }
 
-func (v SourceValue) FromApi_betaAccessProfileSourceRef(ctx context.Context, apiObject *api_beta.AccessProfileSourceRef) (SourceValue, diag.Diagnostics) {
+func (v SourceValue) FromApi_betaAccessProfileSourceRef(ctx context.Context, apiObject *access_profiles.AccessProfileSourceRef) (SourceValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

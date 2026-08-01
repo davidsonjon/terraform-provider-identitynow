@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/apps"
 
 	"terraform-provider-identitynow/internal/provider/application_v1/resource_application"
 )
@@ -105,10 +105,10 @@ func TestApplicationDtoToModel_RoundTrip(t *testing.T) {
 	appCenterEnabled := true
 	matchAllAccounts := false
 	ownerId := "owner-id"
-	ownerType := api_beta.DTOTYPE_IDENTITY
+	ownerType := apps.DTOTYPE_IDENTITY
 	sourceId := "source-id"
 
-	dto := &api_beta.SourceApp{
+	dto := &apps.SourceApp{
 		Id:                      &appId,
 		Name:                    &name,
 		Description:             &description,
@@ -116,11 +116,11 @@ func TestApplicationDtoToModel_RoundTrip(t *testing.T) {
 		ProvisionRequestEnabled: &provisionRequestEnabled,
 		AppCenterEnabled:        &appCenterEnabled,
 		MatchAllAccounts:        &matchAllAccounts,
-		Owner: *api_beta.NewNullableBaseReferenceDto(&api_beta.BaseReferenceDto{
+		Owner: *apps.NewNullableBaseReferenceDto(&apps.BaseReferenceDto{
 			Id:   &ownerId,
 			Type: &ownerType,
 		}),
-		AccountSource: *api_beta.NewNullableSourceAppAccountSource(&api_beta.SourceAppAccountSource{
+		AccountSource: *apps.NewNullableSourceAppAccountSource(&apps.SourceAppAccountSource{
 			Id: &sourceId,
 		}),
 	}
@@ -196,8 +196,8 @@ func TestOwnerFromAPI(t *testing.T) {
 
 	t.Run("populated dto", func(t *testing.T) {
 		id := "owner-id"
-		typ := api_beta.DTOTYPE_IDENTITY
-		v, diags := ownerFromAPI(ctx, &api_beta.BaseReferenceDto{Id: &id, Type: &typ})
+		typ := apps.DTOTYPE_IDENTITY
+		v, diags := ownerFromAPI(ctx, &apps.BaseReferenceDto{Id: &id, Type: &typ})
 		if diags.HasError() {
 			t.Fatalf("ownerFromAPI returned diagnostics: %v", diags)
 		}
@@ -250,7 +250,7 @@ func TestStringSetToArrayInner(t *testing.T) {
 
 func TestApplicationJSONPatchReplace(t *testing.T) {
 	name := "new-name"
-	op := applicationJSONPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&name))
+	op := applicationJSONPatchReplace("/name", apps.StringAsJsonPatchOperationValue(&name))
 
 	if op.Op != "replace" {
 		t.Errorf("Op = %q, want %q", op.Op, "replace")

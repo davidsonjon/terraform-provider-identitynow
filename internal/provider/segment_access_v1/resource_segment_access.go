@@ -41,8 +41,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_profiles"
+	"github.com/sailpoint-oss/golang-sdk/v3/roles"
 
 	"terraform-provider-identitynow/internal/provider/util"
 )
@@ -333,7 +334,7 @@ func (r *segmentAccessResource) reconcileAssignmentSegment(ctx context.Context, 
 }
 
 func (r *segmentAccessResource) reconcileRoleSegment(ctx context.Context, roleID, segmentID string, ensurePresent bool) (*http.Response, error) {
-	role, httpResp, err := r.client.Beta.RolesAPI.GetRole(ctx, roleID).Execute()
+	role, httpResp, err := r.client.RolesAPI.GetRoleV1(ctx, roleID).Execute()
 	if err != nil {
 		if !ensurePresent && httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
 			tflog.Warn(ctx, "Role already absent while removing Segment access assignment", map[string]interface{}{"role_id": roleID, "segment_id": segmentID})
@@ -348,9 +349,9 @@ func (r *segmentAccessResource) reconcileRoleSegment(ctx context.Context, roleID
 		return httpResp, nil
 	}
 
-	_, httpResp, err = r.client.Beta.RolesAPI.
-		PatchRole(ctx, roleID).
-		JsonPatchOperation(segmentAccessSegmentsPatch(desiredSegments)).
+	_, httpResp, err = r.client.RolesAPI.
+		PatchRoleV1(ctx, roleID).
+		JsonPatchOperation(segmentAccessRoleSegmentsPatch(desiredSegments)).
 		Execute()
 	if err != nil {
 		if !ensurePresent && httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -365,7 +366,7 @@ func (r *segmentAccessResource) reconcileRoleSegment(ctx context.Context, roleID
 }
 
 func (r *segmentAccessResource) reconcileAccessProfileSegment(ctx context.Context, accessProfileID, segmentID string, ensurePresent bool) (*http.Response, error) {
-	accessProfile, httpResp, err := r.client.Beta.AccessProfilesAPI.GetAccessProfile(ctx, accessProfileID).Execute()
+	accessProfile, httpResp, err := r.client.AccessProfilesAPI.GetAccessProfileV1(ctx, accessProfileID).Execute()
 	if err != nil {
 		if !ensurePresent && httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
 			tflog.Warn(ctx, "Access Profile already absent while removing Segment access assignment", map[string]interface{}{"access_profile_id": accessProfileID, "segment_id": segmentID})
@@ -380,9 +381,9 @@ func (r *segmentAccessResource) reconcileAccessProfileSegment(ctx context.Contex
 		return httpResp, nil
 	}
 
-	_, httpResp, err = r.client.Beta.AccessProfilesAPI.
-		PatchAccessProfile(ctx, accessProfileID).
-		JsonPatchOperation(segmentAccessSegmentsPatch(desiredSegments)).
+	_, httpResp, err = r.client.AccessProfilesAPI.
+		PatchAccessProfileV1(ctx, accessProfileID).
+		JsonPatchOperation(segmentAccessAccessProfileSegmentsPatch(desiredSegments)).
 		Execute()
 	if err != nil {
 		if !ensurePresent && httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -399,8 +400,8 @@ func (r *segmentAccessResource) reconcileAccessProfileSegment(ctx context.Contex
 func (r *segmentAccessResource) readSegmentAssignments(ctx context.Context, segmentID string) ([]segmentAccessAssignment, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	accessProfiles, httpResp, err := r.client.Beta.AccessProfilesAPI.
-		ListAccessProfiles(ctx).
+	accessProfiles, httpResp, err := r.client.AccessProfilesAPI.
+		ListAccessProfilesV1(ctx).
 		ForSegmentIds(segmentID).
 		IncludeUnsegmented(false).
 		Execute()
@@ -410,8 +411,8 @@ func (r *segmentAccessResource) readSegmentAssignments(ctx context.Context, segm
 		return nil, diags
 	}
 
-	roles, httpResp, err := r.client.Beta.RolesAPI.
-		ListRoles(ctx).
+	roles, httpResp, err := r.client.RolesAPI.
+		ListRolesV1(ctx).
 		ForSegmentIds(segmentID).
 		IncludeUnsegmented(false).
 		Execute()
@@ -562,22 +563,35 @@ func segmentAccessRemoveSegment(current []string, segmentID string) ([]string, b
 	return updated, true
 }
 
-func segmentAccessSegmentsPatch(segments []string) []api_beta.JsonPatchOperation {
-	arr := make([]api_beta.ArrayInner, 0, len(segments))
+func segmentAccessRoleSegmentsPatch(segments []string) []roles.JsonPatchOperation {
+	arr := make([]roles.ArrayInner, 0, len(segments))
 	for _, segmentID := range segments {
 		segment := segmentID
-		arr = append(arr, api_beta.ArrayInner{String: &segment})
+		arr = append(arr, roles.ArrayInner{String: &segment})
 	}
-	return []api_beta.JsonPatchOperation{
-		segmentAccessJSONPatchReplace("/segments", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)),
+	value := roles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)
+	return []roles.JsonPatchOperation{
+		{
+			Op:    "replace",
+			Path:  "/segments",
+			Value: &value,
+		},
 	}
 }
 
-func segmentAccessJSONPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{
-		Op:    "replace",
-		Path:  path,
-		Value: &value,
+func segmentAccessAccessProfileSegmentsPatch(segments []string) []access_profiles.JsonPatchOperation {
+	arr := make([]access_profiles.ArrayInner, 0, len(segments))
+	for _, segmentID := range segments {
+		segment := segmentID
+		arr = append(arr, access_profiles.ArrayInner{String: &segment})
+	}
+	value := access_profiles.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)
+	return []access_profiles.JsonPatchOperation{
+		{
+			Op:    "replace",
+			Path:  "/segments",
+			Value: &value,
+		},
 	}
 }
 

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/task_management"
 )
 
 func TestParseImportStateID(t *testing.T) {
@@ -94,12 +94,12 @@ func TestEntitlementImportTaskStatusListFilter(t *testing.T) {
 func TestNormalizedCompletionStatus(t *testing.T) {
 	tests := []struct {
 		name string
-		in   api_beta.NullableString
+		in   task_management.NullableString
 		want string
 	}{
-		{name: "unset", in: api_beta.NullableString{}, want: ""},
-		{name: "success", in: *api_beta.NewNullableString(strPtr("success")), want: "SUCCESS"},
-		{name: "warning with spaces", in: *api_beta.NewNullableString(strPtr(" warning ")), want: "WARNING"},
+		{name: "unset", in: task_management.NullableString{}, want: ""},
+		{name: "success", in: *task_management.NewNullableString(strPtr("success")), want: "SUCCESS"},
+		{name: "warning with spaces", in: *task_management.NewNullableString(strPtr(" warning ")), want: "WARNING"},
 	}
 
 	for _, tt := range tests {
@@ -134,11 +134,11 @@ func TestIsSuccessfulCompletionStatus(t *testing.T) {
 }
 
 func TestTaskCompletionResult(t *testing.T) {
-	now := api_beta.SailPointTime{Time: time.Now()}
+	now := task_management.SailPointTime{Time: time.Now()}
 
 	tests := []struct {
 		name           string
-		status         *api_beta.TaskStatus
+		status         *task_management.TaskStatus
 		wantFinished   bool
 		wantCompletion string
 	}{
@@ -149,38 +149,38 @@ func TestTaskCompletionResult(t *testing.T) {
 		},
 		{
 			name:         "not yet completed",
-			status:       &api_beta.TaskStatus{},
+			status:       &task_management.TaskStatus{},
 			wantFinished: false,
 		},
 		{
 			name: "completed set but completionStatus still empty (observed race condition)",
-			status: &api_beta.TaskStatus{
-				Completed:        *api_beta.NewNullableTime(&now),
-				CompletionStatus: api_beta.NullableString{},
+			status: &task_management.TaskStatus{
+				Completed:        *task_management.NewNullableTime(&now),
+				CompletionStatus: task_management.NullableString{},
 			},
 			wantFinished: false,
 		},
 		{
 			name: "completionStatus set but completed not yet set",
-			status: &api_beta.TaskStatus{
-				CompletionStatus: *api_beta.NewNullableString(strPtr("SUCCESS")),
+			status: &task_management.TaskStatus{
+				CompletionStatus: *task_management.NewNullableString(strPtr("SUCCESS")),
 			},
 			wantFinished: false,
 		},
 		{
 			name: "completed and completionStatus both set",
-			status: &api_beta.TaskStatus{
-				Completed:        *api_beta.NewNullableTime(&now),
-				CompletionStatus: *api_beta.NewNullableString(strPtr("success")),
+			status: &task_management.TaskStatus{
+				Completed:        *task_management.NewNullableTime(&now),
+				CompletionStatus: *task_management.NewNullableString(strPtr("success")),
 			},
 			wantFinished:   true,
 			wantCompletion: "SUCCESS",
 		},
 		{
 			name: "completed and completionStatus both set with failure status",
-			status: &api_beta.TaskStatus{
-				Completed:        *api_beta.NewNullableTime(&now),
-				CompletionStatus: *api_beta.NewNullableString(strPtr("ERROR")),
+			status: &task_management.TaskStatus{
+				Completed:        *task_management.NewNullableTime(&now),
+				CompletionStatus: *task_management.NewNullableString(strPtr("ERROR")),
 			},
 			wantFinished:   true,
 			wantCompletion: "ERROR",

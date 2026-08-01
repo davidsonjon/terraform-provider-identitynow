@@ -36,8 +36,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/apps"
 
 	"terraform-provider-identitynow/internal/provider/util"
 )
@@ -321,21 +321,21 @@ func (r *applicationAccessAssociationResource) ImportState(ctx context.Context, 
 }
 
 func (r *applicationAccessAssociationResource) patchApplicationAccessProfiles(ctx context.Context, applicationID string, ids []string) error {
-	arr := make([]api_beta.ArrayInner, 0, len(ids))
+	arr := make([]apps.ArrayInner, 0, len(ids))
 	for i := range ids {
 		id := ids[i]
-		arr = append(arr, api_beta.ArrayInner{String: &id})
+		arr = append(arr, apps.ArrayInner{String: &id})
 	}
 
-	patch := []api_beta.JsonPatchOperation{
+	patch := []apps.JsonPatchOperation{
 		applicationAccessAssociationJSONPatchAdd(
 			"/accessProfiles",
-			api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr),
+			apps.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr),
 		),
 	}
 
-	_, httpResp, err := r.client.Beta.AppsAPI.
-		PatchSourceApp(ctx, applicationID).
+	_, httpResp, err := r.client.AppsAPI.
+		PatchSourceAppV1(ctx, applicationID).
 		JsonPatchOperation(patch).
 		Execute()
 	if err != nil {
@@ -350,8 +350,8 @@ func listApplicationAccessProfileIDs(ctx context.Context, client *sailpoint.APIC
 
 	var offset int32
 	for {
-		page, httpResp, err := client.Beta.AppsAPI.
-			ListAccessProfilesForSourceApp(ctx, applicationID).
+		page, httpResp, err := client.AppsAPI.
+			ListAccessProfilesForSourceAppV1(ctx, applicationID).
 			Limit(applicationAccessAssociationListMaxLimit).
 			Offset(offset).
 			Execute()
@@ -510,8 +510,8 @@ func applicationAccessAssociationErrDetail(err error, httpResp *http.Response) s
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-func applicationAccessAssociationJSONPatchAdd(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{
+func applicationAccessAssociationJSONPatchAdd(path string, value apps.JsonPatchOperationValue) apps.JsonPatchOperation {
+	return apps.JsonPatchOperation{
 		Op:    "add",
 		Path:  path,
 		Value: &value,

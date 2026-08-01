@@ -33,9 +33,9 @@
               ],
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
                 },
-                "type": "*api_beta.IdentityProfileAllOfAuthoritativeSource"
+                "type": "*identity_profiles.IdentityProfileAllOfAuthoritativeSource"
               }
             }
           },
@@ -96,9 +96,9 @@
               ],
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
                 },
-                "type": "*api_beta.IdentityExceptionReportReference"
+                "type": "*identity_profiles.IdentityExceptionReportReference"
               }
             }
           },
@@ -153,9 +153,9 @@
               "description": "Identity profile's owner.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
                 },
-                "type": "*api_beta.IdentityProfileAllOfOwner"
+                "type": "*identity_profiles.IdentityProfileAllOfOwner"
               }
             }
           },
@@ -219,9 +219,9 @@
               ],
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
                 },
-                "type": "*api_beta.IdentityProfileAllOfAuthoritativeSource"
+                "type": "*identity_profiles.IdentityProfileAllOfAuthoritativeSource"
               }
             }
           },
@@ -285,9 +285,9 @@
               ],
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
                 },
-                "type": "*api_beta.IdentityExceptionReportReference"
+                "type": "*identity_profiles.IdentityExceptionReportReference"
               }
             }
           },
@@ -354,9 +354,9 @@
               "description": "Identity profile's owner.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
                 },
-                "type": "*api_beta.IdentityProfileAllOfOwner"
+                "type": "*identity_profiles.IdentityProfileAllOfOwner"
               }
             }
           },

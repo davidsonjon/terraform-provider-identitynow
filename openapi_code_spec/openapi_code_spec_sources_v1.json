@@ -41,9 +41,9 @@
               "description": "Reference to account correlation config object.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostSourcesAccountCorrelationConfig"
+                "type": "*sources.SourceAccountCorrelationConfig"
               }
             }
           },
@@ -77,9 +77,9 @@
               "description": "Reference to a rule that can do COMPLEX correlation. Only use this rule when you can't use accountCorrelationConfig.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostSourcesAccountCorrelationRule"
+                "type": "*sources.SourceAccountCorrelationRule"
               }
             }
           },
@@ -120,9 +120,9 @@
               "description": "Rule that runs on the CCG and allows for customization of provisioning plans before the API calls the connector. ",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostSourcesBeforeProvisioningRule"
+                "type": "*sources.SourceBeforeProvisioningRule"
               }
             }
           },
@@ -280,9 +280,9 @@
               "description": "Reference to management workgroup for the source.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostIntegrationsManagementWorkgroup"
+                "type": "*sources.SourceManagementWorkgroup"
               }
             }
           },
@@ -309,9 +309,9 @@
               "description": "Filter object used during manager correlation to match incoming manager values to an existing manager's\naccount/identity.\n",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.ManagerCorrelationMapping"
+                "type": "*sources.SourceManagerCorrelationMapping"
               }
             }
           },
@@ -345,9 +345,9 @@
               "description": "Reference to the ManagerCorrelationRule. Only use this rule when a simple filter isn't sufficient.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostSourcesManagerCorrelationRule"
+                "type": "*sources.SourceManagerCorrelationRule"
               }
             }
           },
@@ -395,9 +395,9 @@
               "description": "Reference to identity object who owns the source.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.SourceOwner"
+                "type": "*sources.SourceOwner"
               }
             }
           },
@@ -431,9 +431,9 @@
                 ],
                 "associated_external_type": {
                   "import": {
-                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                    "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                   },
-                  "type": "*api_beta.MultiHostSourcesPasswordPoliciesInner"
+                  "type": "*sources.SourcePasswordPoliciesInner"
                 }
               },
               "description": "List of references to the associated PasswordPolicy objects."
@@ -469,9 +469,9 @@
                 ],
                 "associated_external_type": {
                   "import": {
-                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                    "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                   },
-                  "type": "*api_beta.MultiHostSourcesSchemasInner"
+                  "type": "*sources.SourceSchemasInner"
                 }
               },
               "description": "List of references to schema objects."
@@ -552,9 +552,9 @@
               "description": "Reference to account correlation config object.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostSourcesAccountCorrelationConfig"
+                "type": "*sources.SourceAccountCorrelationConfig"
               }
             }
           },
@@ -600,9 +600,9 @@
               "description": "Reference to a rule that can do COMPLEX correlation. Only use this rule when you can't use accountCorrelationConfig.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostSourcesAccountCorrelationRule"
+                "type": "*sources.SourceAccountCorrelationRule"
               }
             }
           },
@@ -658,9 +658,9 @@
               "description": "Rule that runs on the CCG and allows for customization of provisioning plans before the API calls the connector. ",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostSourcesBeforeProvisioningRule"
+                "type": "*sources.SourceBeforeProvisioningRule"
               }
             }
           },
@@ -852,9 +852,9 @@
               "description": "Reference to management workgroup for the source.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostIntegrationsManagementWorkgroup"
+                "type": "*sources.SourceManagementWorkgroup"
               }
             }
           },
@@ -881,9 +881,9 @@
               "description": "Filter object used during manager correlation to match incoming manager values to an existing manager's\naccount/identity.\n",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.ManagerCorrelationMapping"
+                "type": "*sources.SourceManagerCorrelationMapping"
               }
             }
           },
@@ -929,9 +929,9 @@
               "description": "Reference to the ManagerCorrelationRule. Only use this rule when a simple filter isn't sufficient.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.MultiHostSourcesManagerCorrelationRule"
+                "type": "*sources.SourceManagerCorrelationRule"
               }
             }
           },
@@ -991,9 +991,9 @@
               "description": "Reference to identity object who owns the source.",
               "associated_external_type": {
                 "import": {
-                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                  "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                 },
-                "type": "*api_beta.SourceOwner"
+                "type": "*sources.SourceOwner"
               }
             }
           },
@@ -1039,9 +1039,9 @@
                 ],
                 "associated_external_type": {
                   "import": {
-                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                    "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                   },
-                  "type": "*api_beta.MultiHostSourcesPasswordPoliciesInner"
+                  "type": "*sources.SourcePasswordPoliciesInner"
                 }
               },
               "description": "List of references to the associated PasswordPolicy objects."
@@ -1089,9 +1089,9 @@
                 ],
                 "associated_external_type": {
                   "import": {
-                    "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                    "path": "github.com/sailpoint-oss/golang-sdk/v3/sources"
                   },
-                  "type": "*api_beta.MultiHostSourcesSchemasInner"
+                  "type": "*sources.SourceSchemasInner"
                 }
               },
               "description": "List of references to schema objects."

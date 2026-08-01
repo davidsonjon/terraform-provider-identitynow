@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/roles"
 
 	"terraform-provider-identitynow/internal/provider/role_v1/resource_role"
 )
@@ -29,63 +29,63 @@ func TestRoleDtoToModel_ReadBackWhenUnconfigured(t *testing.T) {
 	maxDurationValue := int32(30)
 	maxDurationUnit := "DAYS"
 
-	criteriaOp := api_beta.RoleCriteriaOperation("AND")
-	criteriaKeyType := api_beta.RoleCriteriaKeyType("IDENTITY")
-	childOp := api_beta.RoleCriteriaOperation("EQUALS")
+	criteriaOp := roles.RoleCriteriaOperation("AND")
+	criteriaKeyType := roles.RoleCriteriaKeyType("IDENTITY")
+	childOp := roles.RoleCriteriaOperation("EQUALS")
 	childStringValue := "engineering"
 
-	membershipType := api_beta.RoleMembershipSelectorType("STANDARD")
+	membershipType := roles.RoleMembershipSelectorType("STANDARD")
 
-	dto := &api_beta.Role{
+	dto := &roles.Role{
 		Id:   &roleId,
 		Name: "test-role",
-		Owner: api_beta.OwnerReference{
+		Owner: *roles.NewNullableOwnerReference(&roles.OwnerReference{
 			Id:   func() *string { s := "owner-id"; return &s }(),
 			Type: func() *string { s := "IDENTITY"; return &s }(),
-		},
-		AccessModelMetadata: &api_beta.AttributeDTOList{
-			Attributes: []api_beta.AttributeDTO{
+		}),
+		AccessModelMetadata: &roles.AttributeDTOList{
+			Attributes: []roles.AttributeDTO{
 				{
 					Key:  func() *string { s := "risk"; return &s }(),
 					Name: func() *string { s := "Risk"; return &s }(),
 				},
 			},
 		},
-		AccessRequestConfig: &api_beta.RequestabilityForRole{
-			CommentsRequired: *api_beta.NewNullableBool(&commentsRequired),
-			ApprovalSchemes: []api_beta.ApprovalSchemeForRole{
+		AccessRequestConfig: &roles.RequestabilityForRole{
+			CommentsRequired: *roles.NewNullableBool(&commentsRequired),
+			ApprovalSchemes: []roles.ApprovalSchemeForRole{
 				{
-					ApproverId:   *api_beta.NewNullableString(&approverId),
+					ApproverId:   *roles.NewNullableString(&approverId),
 					ApproverType: &approverType,
 				},
 			},
-			FormDefinitionId: *api_beta.NewNullableString(&formDefId),
-			MaxPermittedAccessDuration: *api_beta.NewNullableAccessDuration(&api_beta.AccessDuration{
+			FormDefinitionId: *roles.NewNullableString(&formDefId),
+			MaxPermittedAccessDuration: *roles.NewNullableAccessDuration(&roles.AccessDuration{
 				Value:    &maxDurationValue,
 				TimeUnit: &maxDurationUnit,
 			}),
 		},
-		RevocationRequestConfig: &api_beta.RevocabilityForRole{
-			CommentsRequired: *api_beta.NewNullableBool(&commentsRequired),
-			ApprovalSchemes: []api_beta.ApprovalSchemeForRole{
+		RevocationRequestConfig: &roles.RevocabilityForRole{
+			CommentsRequired: *roles.NewNullableBool(&commentsRequired),
+			ApprovalSchemes: []roles.ApprovalSchemeForRole{
 				{
-					ApproverId:   *api_beta.NewNullableString(&approverId),
+					ApproverId:   *roles.NewNullableString(&approverId),
 					ApproverType: &approverType,
 				},
 			},
 		},
-		Membership: *api_beta.NewNullableRoleMembershipSelector(&api_beta.RoleMembershipSelector{
+		Membership: *roles.NewNullableRoleMembershipSelector(&roles.RoleMembershipSelector{
 			Type: &membershipType,
-			Criteria: *api_beta.NewNullableRoleCriteriaLevel1(&api_beta.RoleCriteriaLevel1{
+			Criteria: *roles.NewNullableRoleCriteriaLevel1(&roles.RoleCriteriaLevel1{
 				Operation: &criteriaOp,
-				Key: *api_beta.NewNullableRoleCriteriaKey(&api_beta.RoleCriteriaKey{
+				Key: *roles.NewNullableRoleCriteriaKey(&roles.RoleCriteriaKey{
 					Type:     criteriaKeyType,
 					Property: "department",
 				}),
-				Children: []api_beta.RoleCriteriaLevel2{
+				Children: []roles.RoleCriteriaLevel2{
 					{
 						Operation:   &childOp,
-						StringValue: *api_beta.NewNullableString(&childStringValue),
+						StringValue: *roles.NewNullableString(&childStringValue),
 					},
 				},
 			}),
@@ -178,18 +178,18 @@ func TestRoleDtoToModel_PassThroughWhenConfigured(t *testing.T) {
 	apiApproverId := "approver-id"
 	apiApproverType := "GOVERNANCE_GROUP"
 
-	dto := &api_beta.Role{
+	dto := &roles.Role{
 		Id:   &roleId,
 		Name: "test-role",
-		Owner: api_beta.OwnerReference{
+		Owner: *roles.NewNullableOwnerReference(&roles.OwnerReference{
 			Id:   func() *string { s := "owner-id"; return &s }(),
 			Type: func() *string { s := "IDENTITY"; return &s }(),
-		},
-		RevocationRequestConfig: &api_beta.RevocabilityForRole{
-			CommentsRequired: *api_beta.NewNullableBool(&apiCommentsRequired),
-			ApprovalSchemes: []api_beta.ApprovalSchemeForRole{
+		}),
+		RevocationRequestConfig: &roles.RevocabilityForRole{
+			CommentsRequired: *roles.NewNullableBool(&apiCommentsRequired),
+			ApprovalSchemes: []roles.ApprovalSchemeForRole{
 				{
-					ApproverId:   *api_beta.NewNullableString(&apiApproverId),
+					ApproverId:   *roles.NewNullableString(&apiApproverId),
 					ApproverType: &apiApproverType,
 				},
 			},

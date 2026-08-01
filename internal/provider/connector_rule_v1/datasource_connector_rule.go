@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/connector_rule_management"
 
 	"terraform-provider-identitynow/internal/provider/connector_rule_v1/datasource_connector_rule"
 )
@@ -106,8 +106,8 @@ func (d *connectorRuleDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	tflog.Debug(ctx, "Reading Connector Rule data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.ConnectorRuleManagementAPI.
-		GetConnectorRule(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.ConnectorRuleManagementAPI.
+		GetConnectorRuleV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Connector Rule data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -129,7 +129,7 @@ func (d *connectorRuleDataSource) Read(ctx context.Context, req datasource.ReadR
 // connectorRuleDatasourceDtoToModel mirrors connectorRuleResponseToModel in
 // resource_connector_rule.go but against the data source's generated model
 // type (a distinct Go type from the resource's, per package).
-func connectorRuleDatasourceDtoToModel(ctx context.Context, dto *api_beta.ConnectorRuleResponse, fallback connectorRuleDataSourceModel) (connectorRuleDataSourceModel, diag.Diagnostics) {
+func connectorRuleDatasourceDtoToModel(ctx context.Context, dto *connector_rule_management.ConnectorRuleResponse, fallback connectorRuleDataSourceModel) (connectorRuleDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -138,8 +138,8 @@ func connectorRuleDatasourceDtoToModel(ctx context.Context, dto *api_beta.Connec
 	model.Name = types.StringValue(dto.Name)
 	model.Type = types.StringValue(dto.Type)
 
-	if dto.Description != nil {
-		model.Description = types.StringValue(*dto.Description)
+	if dto.Description.IsSet() && dto.Description.Get() != nil {
+		model.Description = types.StringValue(*dto.Description.Get())
 	} else {
 		model.Description = types.StringNull()
 	}

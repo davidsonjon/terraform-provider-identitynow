@@ -2,7 +2,7 @@
 // identitynow_source_provisioning_policy_v1 data source in
 // datasource_source_provisioning_policy.go, mirroring role_v1/datasource_roles.go's
 // established pattern. It queries GET /sources/v1/{sourceId}/provisioning-policies
-// (api_beta.SourcesAPIService.ListProvisioningPolicies) instead of
+// (sources.SourcesAPIService.ListProvisioningPolicies) instead of
 // GET /sources/v1/{sourceId}/provisioning-policies/{usageType}, and returns
 // every provisioning policy defined on the source using the same nested
 // object shape as identitynow_source_provisioning_policy_v1.
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/source_provisioning_policy_v1/datasource_source_provisioning_policy"
 )
@@ -128,7 +128,7 @@ func (d *sourceProvisioningPoliciesDataSource) Read(ctx context.Context, req dat
 	sourceID := config.SourceId.ValueString()
 	tflog.Debug(ctx, "Reading Source Provisioning Policies data source", map[string]interface{}{"source_id": sourceID})
 
-	dtos, httpResp, err := d.client.Beta.SourcesAPI.ListProvisioningPolicies(ctx, sourceID).Execute()
+	dtos, httpResp, err := d.client.SourcesAPI.ListProvisioningPoliciesV1(ctx, sourceID).Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Source Provisioning Policies data source", map[string]interface{}{"source_id": sourceID, "error": err.Error()})
 		resp.Diagnostics.AddError("Error listing Source Provisioning Policies", errDetail(err, httpResp))

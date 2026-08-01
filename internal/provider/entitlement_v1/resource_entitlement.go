@@ -67,8 +67,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/entitlements"
 
 	"terraform-provider-identitynow/internal/provider/entitlement_v1/resource_entitlement"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -306,8 +306,8 @@ func (r *entitlementResource) Create(ctx context.Context, req resource.CreateReq
 
 	if len(patchOps) > 0 {
 		tflog.Debug(ctx, "Patching adopted Entitlement after initial GET", map[string]interface{}{"id": id, "patch_ops": len(patchOps)})
-		_, httpResp, err := r.client.Beta.EntitlementsAPI.
-			PatchEntitlement(ctx, id).
+		_, httpResp, err := r.client.EntitlementsAPI.
+			PatchEntitlementV1(ctx, id).
 			JsonPatchOperation(patchOps).
 			Execute()
 		if err != nil {
@@ -349,8 +349,8 @@ func (r *entitlementResource) resolveEntitlementAdoptionID(ctx context.Context, 
 	}
 
 	filter := fmt.Sprintf("source.id eq %q and value eq %q", plan.SourceId.ValueString(), plan.Value.ValueString())
-	results, httpResp, err := r.client.Beta.EntitlementsAPI.
-		ListEntitlements(ctx).
+	results, httpResp, err := r.client.EntitlementsAPI.
+		ListEntitlementsV1(ctx).
 		Filters(filter).
 		Limit(2).
 		Execute()
@@ -426,8 +426,8 @@ func (r *entitlementResource) Update(ctx context.Context, req resource.UpdateReq
 
 	if len(patchOps) > 0 {
 		tflog.Debug(ctx, "Patching Entitlement", map[string]interface{}{"id": state.Id.ValueString(), "patch_ops": len(patchOps)})
-		_, httpResp, err := r.client.Beta.EntitlementsAPI.
-			PatchEntitlement(ctx, state.Id.ValueString()).
+		_, httpResp, err := r.client.EntitlementsAPI.
+			PatchEntitlementV1(ctx, state.Id.ValueString()).
 			JsonPatchOperation(patchOps).
 			Execute()
 		if err != nil {
@@ -466,8 +466,8 @@ func (r *entitlementResource) Delete(ctx context.Context, req resource.DeleteReq
 func (r *entitlementResource) readEntitlementState(ctx context.Context, id string, fallback entitlementResourceModel) (entitlementResourceModel, bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	dto, httpResp, err := r.client.Beta.EntitlementsAPI.
-		GetEntitlement(ctx, id).
+	dto, httpResp, err := r.client.EntitlementsAPI.
+		GetEntitlementV1(ctx, id).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -482,9 +482,9 @@ func (r *entitlementResource) readEntitlementState(ctx context.Context, id strin
 	return model, false, diags
 }
 
-func entitlementResourcePatchOps(ctx context.Context, plan, state entitlementResourceModel) ([]api_beta.JsonPatchOperation, diag.Diagnostics) {
+func entitlementResourcePatchOps(ctx context.Context, plan, state entitlementResourceModel) ([]entitlements.JsonPatchOperation, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	patch := make([]api_beta.JsonPatchOperation, 0, 5)
+	patch := make([]entitlements.JsonPatchOperation, 0, 5)
 
 	patch = append(patch, entitlementStringPatchOps("/name", plan.Name, state.Name)...)
 	patch = append(patch, entitlementStringPatchOps("/description", plan.Description, state.Description)...)
@@ -501,7 +501,7 @@ func entitlementResourcePatchOps(ctx context.Context, plan, state entitlementRes
 	return patch, diags
 }
 
-func entitlementStringPatchOps(path string, plan, state types.String) []api_beta.JsonPatchOperation {
+func entitlementStringPatchOps(path string, plan, state types.String) []entitlements.JsonPatchOperation {
 	if plan.IsUnknown() || plan.Equal(state) {
 		return nil
 	}
@@ -509,27 +509,27 @@ func entitlementStringPatchOps(path string, plan, state types.String) []api_beta
 		if state.IsNull() || state.IsUnknown() {
 			return nil
 		}
-		return []api_beta.JsonPatchOperation{entitlementJSONPatchRemove(path)}
+		return []entitlements.JsonPatchOperation{entitlementJSONPatchRemove(path)}
 	}
 	v := plan.ValueString()
 	if state.IsNull() || state.IsUnknown() {
-		return []api_beta.JsonPatchOperation{entitlementJSONPatchAdd(path, api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&v))}
+		return []entitlements.JsonPatchOperation{entitlementJSONPatchAdd(path, entitlements.StringAsJsonPatchOperationValue(&v))}
 	}
-	return []api_beta.JsonPatchOperation{entitlementJSONPatchReplace(path, api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&v))}
+	return []entitlements.JsonPatchOperation{entitlementJSONPatchReplace(path, entitlements.StringAsJsonPatchOperationValue(&v))}
 }
 
-func entitlementBoolPatchOps(path string, plan, state types.Bool) []api_beta.JsonPatchOperation {
+func entitlementBoolPatchOps(path string, plan, state types.Bool) []entitlements.JsonPatchOperation {
 	if plan.IsUnknown() || plan.IsNull() || plan.Equal(state) {
 		return nil
 	}
 	v := plan.ValueBool()
 	if state.IsNull() || state.IsUnknown() {
-		return []api_beta.JsonPatchOperation{entitlementJSONPatchAdd(path, api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v))}
+		return []entitlements.JsonPatchOperation{entitlementJSONPatchAdd(path, entitlements.BoolAsJsonPatchOperationValue(&v))}
 	}
-	return []api_beta.JsonPatchOperation{entitlementJSONPatchReplace(path, api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v))}
+	return []entitlements.JsonPatchOperation{entitlementJSONPatchReplace(path, entitlements.BoolAsJsonPatchOperationValue(&v))}
 }
 
-func entitlementListPatchOps(ctx context.Context, path string, plan, state types.List) ([]api_beta.JsonPatchOperation, diag.Diagnostics) {
+func entitlementListPatchOps(ctx context.Context, path string, plan, state types.List) ([]entitlements.JsonPatchOperation, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if plan.IsUnknown() || plan.Equal(state) {
 		return nil, diags
@@ -538,21 +538,21 @@ func entitlementListPatchOps(ctx context.Context, path string, plan, state types
 		if state.IsNull() || state.IsUnknown() {
 			return nil, diags
 		}
-		return []api_beta.JsonPatchOperation{entitlementJSONPatchRemove(path)}, diags
+		return []entitlements.JsonPatchOperation{entitlementJSONPatchRemove(path)}, diags
 	}
 	arr, d := entitlementStringListToArrayInner(ctx, plan)
 	diags.Append(d...)
 	if diags.HasError() {
 		return nil, diags
 	}
-	value := api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)
+	value := entitlements.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)
 	if state.IsNull() || state.IsUnknown() {
-		return []api_beta.JsonPatchOperation{entitlementJSONPatchAdd(path, value)}, diags
+		return []entitlements.JsonPatchOperation{entitlementJSONPatchAdd(path, value)}, diags
 	}
-	return []api_beta.JsonPatchOperation{entitlementJSONPatchReplace(path, value)}, diags
+	return []entitlements.JsonPatchOperation{entitlementJSONPatchReplace(path, value)}, diags
 }
 
-func entitlementOwnerPatchOps(plan, state resource_entitlement.OwnerValue) ([]api_beta.JsonPatchOperation, diag.Diagnostics) {
+func entitlementOwnerPatchOps(plan, state resource_entitlement.OwnerValue) ([]entitlements.JsonPatchOperation, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if plan.IsUnknown() || entitlementResourceOwnersEqual(plan, state) {
 		return nil, diags
@@ -561,18 +561,18 @@ func entitlementOwnerPatchOps(plan, state resource_entitlement.OwnerValue) ([]ap
 		if state.IsNull() || state.IsUnknown() {
 			return nil, diags
 		}
-		return []api_beta.JsonPatchOperation{entitlementJSONPatchRemove("/owner")}, diags
+		return []entitlements.JsonPatchOperation{entitlementJSONPatchRemove("/owner")}, diags
 	}
 	ownerMap, d := entitlementResourceOwnerToPatchMap(plan)
 	diags.Append(d...)
 	if diags.HasError() || ownerMap == nil {
 		return nil, diags
 	}
-	value := api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&ownerMap)
+	value := entitlements.MapmapOfStringAnyAsJsonPatchOperationValue(&ownerMap)
 	if state.IsNull() || state.IsUnknown() {
-		return []api_beta.JsonPatchOperation{entitlementJSONPatchAdd("/owner", value)}, diags
+		return []entitlements.JsonPatchOperation{entitlementJSONPatchAdd("/owner", value)}, diags
 	}
-	return []api_beta.JsonPatchOperation{entitlementJSONPatchReplace("/owner", value)}, diags
+	return []entitlements.JsonPatchOperation{entitlementJSONPatchReplace("/owner", value)}, diags
 }
 
 func entitlementResourceOwnersEqual(a, b resource_entitlement.OwnerValue) bool {
@@ -600,7 +600,7 @@ func entitlementResourceOwnerToPatchMap(v resource_entitlement.OwnerValue) (map[
 	}, diags
 }
 
-func entitlementResourceDtoToModel(ctx context.Context, dto *api_beta.Entitlement, fallback entitlementResourceModel) (entitlementResourceModel, diag.Diagnostics) {
+func entitlementResourceDtoToModel(ctx context.Context, dto *entitlements.EntitlementV2, fallback entitlementResourceModel) (entitlementResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -610,7 +610,7 @@ func entitlementResourceDtoToModel(ctx context.Context, dto *api_beta.Entitlemen
 		model.Id = types.StringNull()
 	}
 	model.Name = types.StringPointerValue(dto.Name)
-	model.Attribute = types.StringPointerValue(dto.Attribute.Get())
+	model.Attribute = types.StringPointerValue(dto.Attribute)
 	model.Description = types.StringPointerValue(dto.Description.Get())
 	model.Value = types.StringPointerValue(dto.Value)
 	model.SourceSchemaObjectType = types.StringPointerValue(dto.SourceSchemaObjectType)
@@ -627,11 +627,11 @@ func entitlementResourceDtoToModel(ctx context.Context, dto *api_beta.Entitlemen
 	diags.Append(d...)
 	model.DirectPermissions = directPermissions
 
-	owner, d := entitlementResourceOwnerFromAPI(ctx, dto.Owner)
+	owner, d := entitlementResourceOwnerFromAPI(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 
-	privilegeLevel, d := entitlementResourcePrivilegeLevelFromAPI(ctx, dto.AdditionalProperties)
+	privilegeLevel, d := entitlementResourcePrivilegeLevelFromAPI(ctx, dto.PrivilegeLevel)
 	diags.Append(d...)
 	model.PrivilegeLevel = privilegeLevel
 
@@ -643,7 +643,7 @@ func entitlementResourceDtoToModel(ctx context.Context, dto *api_beta.Entitlemen
 	diags.Append(d...)
 	model.Source = source
 
-	tags, d := entitlementTagsFromAPI(ctx, dto.AdditionalProperties)
+	tags, d := entitlementTagsFromAPI(ctx, dto.Tags)
 	diags.Append(d...)
 	model.Tags = tags
 
@@ -658,7 +658,7 @@ func entitlementResourceDtoToModel(ctx context.Context, dto *api_beta.Entitlemen
 	return model, diags
 }
 
-func entitlementResourceAccessModelMetadataFromAPI(ctx context.Context, dto *api_beta.EntitlementAccessModelMetadata) (resource_entitlement.AccessModelMetadataValue, diag.Diagnostics) {
+func entitlementResourceAccessModelMetadataFromAPI(ctx context.Context, dto *entitlements.EntitlementV2AccessModelMetadata) (resource_entitlement.AccessModelMetadataValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return resource_entitlement.NewAccessModelMetadataValueNull(), diags
@@ -675,7 +675,7 @@ func entitlementResourceAccessModelMetadataFromAPI(ctx context.Context, dto *api
 	return v, diags
 }
 
-func entitlementResourceAttributeDTOListFromAPI(ctx context.Context, items []api_beta.AttributeDTO) (types.List, diag.Diagnostics) {
+func entitlementResourceAttributeDTOListFromAPI(ctx context.Context, items []entitlements.AccessModelMetadata) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_entitlement.AttributesValue{}.Type(ctx)
 	if items == nil {
@@ -712,7 +712,7 @@ func entitlementResourceAttributeDTOListFromAPI(ctx context.Context, items []api
 	return listVal, diags
 }
 
-func entitlementResourceAttributeValueDTOListFromAPI(ctx context.Context, items []api_beta.AttributeValueDTO) (types.List, diag.Diagnostics) {
+func entitlementResourceAttributeValueDTOListFromAPI(ctx context.Context, items []entitlements.AccessModelMetadataValuesInner) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_entitlement.ValuesValue{}.Type(ctx)
 	if items == nil {
@@ -738,7 +738,7 @@ func entitlementResourceAttributeValueDTOListFromAPI(ctx context.Context, items 
 	return listVal, diags
 }
 
-func entitlementResourceDirectPermissionsFromAPI(ctx context.Context, items []api_beta.PermissionDto) (types.List, diag.Diagnostics) {
+func entitlementResourceDirectPermissionsFromAPI(ctx context.Context, items []entitlements.PermissionDTO) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_entitlement.DirectPermissionsValue{}.Type(ctx)
 	if items == nil {
@@ -765,7 +765,7 @@ func entitlementResourceDirectPermissionsFromAPI(ctx context.Context, items []ap
 	return listVal, diags
 }
 
-func entitlementResourceOwnerFromAPI(ctx context.Context, dto *api_beta.EntitlementOwner) (resource_entitlement.OwnerValue, diag.Diagnostics) {
+func entitlementResourceOwnerFromAPI(ctx context.Context, dto *entitlements.EntitlementV2Owner) (resource_entitlement.OwnerValue, diag.Diagnostics) {
 	if dto == nil {
 		return resource_entitlement.NewOwnerValueNull(), nil
 	}
@@ -779,7 +779,7 @@ func entitlementResourceOwnerFromAPI(ctx context.Context, dto *api_beta.Entitlem
 	)
 }
 
-func entitlementResourceSourceFromAPI(ctx context.Context, dto *api_beta.EntitlementSource) (resource_entitlement.SourceValue, diag.Diagnostics) {
+func entitlementResourceSourceFromAPI(ctx context.Context, dto *entitlements.EntitlementV2Source) (resource_entitlement.SourceValue, diag.Diagnostics) {
 	if dto == nil {
 		return resource_entitlement.NewSourceValueNull(), nil
 	}
@@ -787,30 +787,25 @@ func entitlementResourceSourceFromAPI(ctx context.Context, dto *api_beta.Entitle
 		resource_entitlement.SourceValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
 			"id":   types.StringPointerValue(dto.Id),
-			"name": types.StringPointerValue(dto.Name.Get()),
+			"name": types.StringPointerValue(dto.Name),
 			"type": types.StringPointerValue(dto.Type),
 		},
 	)
 }
 
-func entitlementResourcePrivilegeLevelFromAPI(ctx context.Context, additional map[string]interface{}) (resource_entitlement.PrivilegeLevelValue, diag.Diagnostics) {
+func entitlementResourcePrivilegeLevelFromAPI(ctx context.Context, pl *entitlements.EntitlementV2PrivilegeLevel) (resource_entitlement.PrivilegeLevelValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	m, ok, err := additionalPropertiesObject(additional, "privilegeLevel")
-	if err != nil {
-		diags.AddError("Error decoding entitlement privilege level", err.Error())
-		return resource_entitlement.NewPrivilegeLevelValueNull(), diags
-	}
-	if !ok {
+	if pl == nil {
 		return resource_entitlement.NewPrivilegeLevelValueNull(), diags
 	}
 	v, d := resource_entitlement.NewPrivilegeLevelValue(
 		resource_entitlement.PrivilegeLevelValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
-			"direct":      stringAttrValue(m, "direct"),
-			"effective":   stringAttrValue(m, "effective"),
-			"inherited":   stringAttrValue(m, "inherited"),
-			"set_by":      stringAttrValue(m, "setBy"),
-			"set_by_type": stringAttrValue(m, "setByType"),
+			"direct":      types.StringPointerValue(pl.Direct),
+			"effective":   types.StringPointerValue(pl.Effective),
+			"inherited":   types.StringPointerValue(pl.Inherited.Get()),
+			"set_by":      types.StringPointerValue(pl.SetBy),
+			"set_by_type": types.StringPointerValue(pl.SetByType.Get()),
 		},
 	)
 	diags.Append(d...)
@@ -824,30 +819,39 @@ func entitlementManuallyUpdatedFieldsAttrTypes() map[string]attr.Type {
 	}
 }
 
-func entitlementManuallyUpdatedFieldsFromAPI(dto *api_beta.EntitlementManuallyUpdatedFields) (types.Object, diag.Diagnostics) {
+func entitlementManuallyUpdatedFieldsFromAPI(m map[string]interface{}) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	attrTypes := entitlementManuallyUpdatedFieldsAttrTypes()
-	if dto == nil {
+	if m == nil {
 		return types.ObjectNull(attrTypes), diags
 	}
+	// golang-sdk v3's EntitlementV2.ManuallyUpdatedFields is an untyped
+	// map[string]interface{} (v2 exposed a typed EntitlementManuallyUpdatedFields
+	// struct), so extract the two known boolean keys defensively.
+	boolPtr := func(k string) *bool {
+		if v, ok := m[k].(bool); ok {
+			return &v
+		}
+		return nil
+	}
 	obj, d := types.ObjectValue(attrTypes, map[string]attr.Value{
-		"display_name": types.BoolPointerValue(dto.DISPLAY_NAME),
-		"description":  types.BoolPointerValue(dto.DESCRIPTION),
+		"display_name": types.BoolPointerValue(boolPtr("DISPLAY_NAME")),
+		"description":  types.BoolPointerValue(boolPtr("DESCRIPTION")),
 	})
 	diags.Append(d...)
 	return obj, diags
 }
 
-func entitlementStringListToArrayInner(ctx context.Context, v types.List) ([]api_beta.ArrayInner, diag.Diagnostics) {
+func entitlementStringListToArrayInner(ctx context.Context, v types.List) ([]entitlements.ArrayInner, diag.Diagnostics) {
 	var values []string
 	if v.IsNull() || v.IsUnknown() {
 		return nil, nil
 	}
 	diags := v.ElementsAs(ctx, &values, false)
-	arr := make([]api_beta.ArrayInner, 0, len(values))
+	arr := make([]entitlements.ArrayInner, 0, len(values))
 	for i := range values {
 		value := values[i]
-		arr = append(arr, api_beta.ArrayInner{String: &value})
+		arr = append(arr, entitlements.ArrayInner{String: &value})
 	}
 	return arr, diags
 }
@@ -859,69 +863,30 @@ func stringListValueFromAPI(ctx context.Context, values []string) (types.List, d
 	return types.ListValueFrom(ctx, types.StringType, values)
 }
 
-func entitlementTagsFromAPI(ctx context.Context, additional map[string]interface{}) (types.List, diag.Diagnostics) {
+func entitlementTagsFromAPI(ctx context.Context, tags []string) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	raw, ok := additional["tags"]
-	if !ok || raw == nil {
+	if tags == nil {
 		return types.ListNull(types.StringType), diags
 	}
-	b, err := json.Marshal(raw)
-	if err != nil {
-		diags.AddError("Error decoding entitlement tags", err.Error())
-		return types.ListNull(types.StringType), diags
-	}
-	var values []string
-	if err := json.Unmarshal(b, &values); err != nil {
-		diags.AddError("Error decoding entitlement tags", err.Error())
-		return types.ListNull(types.StringType), diags
-	}
-	listVal, d := types.ListValueFrom(ctx, types.StringType, values)
+	listVal, d := types.ListValueFrom(ctx, types.StringType, tags)
 	diags.Append(d...)
 	return listVal, diags
-}
-
-func additionalPropertiesObject(additional map[string]interface{}, key string) (map[string]interface{}, bool, error) {
-	raw, ok := additional[key]
-	if !ok || raw == nil {
-		return nil, false, nil
-	}
-	b, err := json.Marshal(raw)
-	if err != nil {
-		return nil, false, err
-	}
-	var out map[string]interface{}
-	if err := json.Unmarshal(b, &out); err != nil {
-		return nil, false, err
-	}
-	return out, true, nil
-}
-
-func stringAttrValue(m map[string]interface{}, key string) types.String {
-	v, ok := m[key]
-	if !ok || v == nil {
-		return types.StringNull()
-	}
-	s, ok := v.(string)
-	if !ok {
-		return types.StringNull()
-	}
-	return types.StringValue(s)
 }
 
 func entitlementErrDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-func entitlementJSONPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{Op: "replace", Path: path, Value: &value}
+func entitlementJSONPatchReplace(path string, value entitlements.JsonPatchOperationValue) entitlements.JsonPatchOperation {
+	return entitlements.JsonPatchOperation{Op: "replace", Path: path, Value: &value}
 }
 
-func entitlementJSONPatchAdd(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{Op: "add", Path: path, Value: &value}
+func entitlementJSONPatchAdd(path string, value entitlements.JsonPatchOperationValue) entitlements.JsonPatchOperation {
+	return entitlements.JsonPatchOperation{Op: "add", Path: path, Value: &value}
 }
 
-func entitlementJSONPatchRemove(path string) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{Op: "remove", Path: path}
+func entitlementJSONPatchRemove(path string) entitlements.JsonPatchOperation {
+	return entitlements.JsonPatchOperation{Op: "remove", Path: path}
 }
 
 func normalizedJSONFromMap(v map[string]interface{}) (jsontypes.Normalized, diag.Diagnostics) {
@@ -937,7 +902,7 @@ func normalizedJSONFromMap(v map[string]interface{}) (jsontypes.Normalized, diag
 	return jsontypes.NewNormalizedValue(string(b)), diags
 }
 
-func timeToStringValue(t *api_beta.SailPointTime) types.String {
+func timeToStringValue(t *entitlements.SailPointTime) types.String {
 	if t == nil {
 		return types.StringNull()
 	}

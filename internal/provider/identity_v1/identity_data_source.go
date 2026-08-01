@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/identities"
 
 	"terraform-provider-identitynow/internal/provider/identity_v1/datasource_identity"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -164,13 +164,13 @@ func (d *identityDataSource) Read(ctx context.Context, req datasource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (d *identityDataSource) lookupIdentity(ctx context.Context, config identityDataSourceModel) (*api_beta.Identity, diag.Diagnostics) {
+func (d *identityDataSource) lookupIdentity(ctx context.Context, config identityDataSourceModel) (*identities.Identity, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	spec := identityLookupSpecFromConfig(config)
 
 	if spec.LookupID != "" || (!config.Id.IsNull() && !config.Id.IsUnknown()) {
 		tflog.Debug(ctx, "Reading Identity data source by id", map[string]interface{}{"id": spec.LookupID})
-		dto, httpResp, err := d.client.Beta.IdentitiesAPI.GetIdentity(ctx, spec.LookupID).Execute()
+		dto, httpResp, err := d.client.IdentitiesAPI.GetIdentityV1(ctx, spec.LookupID).Execute()
 		if err != nil {
 			tflog.Error(ctx, "Error reading Identity data source by id", map[string]interface{}{"id": spec.LookupID, "error": err.Error()})
 			diags.AddError("Error reading Identity", errDetail(err, httpResp))
@@ -182,16 +182,16 @@ func (d *identityDataSource) lookupIdentity(ctx context.Context, config identity
 	return d.lookupIdentityByFilter(ctx, spec.FilterPattern, spec.LookupValue, spec.LookupAttr, spec.LookupLabel)
 }
 
-func (d *identityDataSource) lookupIdentityByFilter(ctx context.Context, filterPattern, lookupValue, lookupAttr, lookupLabel string) (*api_beta.Identity, diag.Diagnostics) {
+func (d *identityDataSource) lookupIdentityByFilter(ctx context.Context, filterPattern, lookupValue, lookupAttr, lookupLabel string) (*identities.Identity, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	tflog.Debug(ctx, "Reading Identity data source by alternate lookup", map[string]interface{}{lookupAttr: lookupValue})
 
-	matches := make([]api_beta.Identity, 0, 2)
+	matches := make([]identities.Identity, 0, 2)
 	var offset int32
 	for {
-		items, httpResp, err := d.client.Beta.IdentitiesAPI.
-			ListIdentities(ctx).
+		items, httpResp, err := d.client.IdentitiesAPI.
+			ListIdentitiesV1(ctx).
 			Filters(fmt.Sprintf(filterPattern, lookupValue)).
 			Limit(identityLookupPageSize).
 			Offset(offset).
@@ -236,7 +236,7 @@ func identityLookupSpecFromConfig(config identityDataSourceModel) identityLookup
 	}
 }
 
-func identityFromMatches(matches []api_beta.Identity, lookupValue, lookupAttr, lookupLabel string) (*api_beta.Identity, diag.Diagnostics) {
+func identityFromMatches(matches []identities.Identity, lookupValue, lookupAttr, lookupLabel string) (*identities.Identity, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	switch len(matches) {
@@ -263,7 +263,7 @@ func identityFromMatches(matches []api_beta.Identity, lookupValue, lookupAttr, l
 	}
 }
 
-func identityDataSourceDTOToModel(ctx context.Context, dto *api_beta.Identity, fallback identityDataSourceModel) (identityDataSourceModel, diag.Diagnostics) {
+func identityDataSourceDTOToModel(ctx context.Context, dto *identities.Identity, fallback identityDataSourceModel) (identityDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	model := fallback
@@ -324,14 +324,14 @@ func nullableStringValue(v *string, ok bool) types.String {
 	return types.StringValue(*v)
 }
 
-func nullableIdentityManagerRef(v *api_beta.IdentityManagerRef, ok bool) *api_beta.IdentityManagerRef {
+func nullableIdentityManagerRef(v *identities.IdentityManagerRef, ok bool) *identities.IdentityManagerRef {
 	if !ok || v == nil {
 		return nil
 	}
 	return v
 }
 
-func identityLifecycleStateValueFromAPI(ctx context.Context, dto *api_beta.IdentityLifecycleState) (datasource_identity.LifecycleStateValue, diag.Diagnostics) {
+func identityLifecycleStateValueFromAPI(ctx context.Context, dto *identities.IdentityLifecycleState) (datasource_identity.LifecycleStateValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return datasource_identity.NewLifecycleStateValueNull(), diags
@@ -347,7 +347,7 @@ func identityLifecycleStateValueFromAPI(ctx context.Context, dto *api_beta.Ident
 	return value, diags
 }
 
-func identityManagerRefValueFromAPI(ctx context.Context, dto *api_beta.IdentityManagerRef) (datasource_identity.ManagerRefValue, diag.Diagnostics) {
+func identityManagerRefValueFromAPI(ctx context.Context, dto *identities.IdentityManagerRef) (datasource_identity.ManagerRefValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if dto == nil {
 		return datasource_identity.NewManagerRefValueNull(), diags
@@ -381,7 +381,7 @@ func errDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-func timeToStringValue(t *api_beta.SailPointTime) types.String {
+func timeToStringValue(t *identities.SailPointTime) types.String {
 	if t == nil {
 		return types.StringNull()
 	}

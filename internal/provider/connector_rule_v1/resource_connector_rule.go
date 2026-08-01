@@ -18,23 +18,23 @@
 // Type-mapping note: generator_config_connector_rule_v1.yml intentionally
 // applies zero type_mappings (no type_mappings_connector_rule_v1.yml file
 // exists). Two candidates were investigated and rejected:
-//   - "source_code" (api_beta.SourceCode{Version, Script string}) looked safe
+//   - "source_code" (connector_rule_management.SourceCode{Version, Script string}) looked safe
 //     at a glance (plain strings, no Nullable fields), but tfplugingen-framework's
 //     generated single_nested To/FromApi converters unconditionally call
 //     .ValueStringPointer()/types.StringPointerValue() on every leaf field,
 //     which only compiles if the SDK struct's fields are *string pointers -
-//     api_beta.SourceCode's fields are plain (non-pointer) strings, so mapping
+//     connector_rule_management.SourceCode's fields are plain (non-pointer) strings, so mapping
 //     it broke the build. This is a new, distinct sub-case of the "leaf-only
 //     mapping" pitfall (previously only the NullableString-incompatibility case
 //     was documented) - see the knowledge.md entry.
-//   - "signature"/its nested "input"/"output" (api_beta.Argument) has a
+//   - "signature"/its nested "input"/"output" (connector_rule_management.Argument) has a
 //     Type field typed NullableString, the same pre-existing incompatibility
 //     as sdk-issues.md #4 (AdditionalOwnerRef.Name/EntitlementRef.Name).
 //
 // As a result "signature" and "source_code" remain generated single_nested
 // blocks (resource_connector_rule.SignatureValue/SourceCodeValue etc.), and
 // this file hand-converts between those generated Value types and the SDK's
-// api_beta.ConnectorRuleCreateRequestSignature/SourceCode/Argument types.
+// connector_rule_management.ConnectorRuleCreateRequestSignature/SourceCode/Argument types.
 package connector_rule_v1
 
 import (
@@ -52,8 +52,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/connector_rule_management"
 
 	"terraform-provider-identitynow/internal/provider/connector_rule_v1/resource_connector_rule"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -177,7 +177,7 @@ func (r *connectorRuleResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	dto := api_beta.NewConnectorRuleCreateRequest(plan.Name.ValueString(), plan.Type.ValueString(), *sourceCode)
+	dto := connector_rule_management.NewConnectorRuleCreateRequest(plan.Name.ValueString(), plan.Type.ValueString(), *sourceCode)
 	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
 		dto.SetDescription(plan.Description.ValueString())
 	}
@@ -186,8 +186,8 @@ func (r *connectorRuleResource) Create(ctx context.Context, req resource.CreateR
 	}
 	dto.SetAttributes(attrs)
 
-	apiResp, httpResp, err := r.client.Beta.ConnectorRuleManagementAPI.
-		CreateConnectorRule(ctx).
+	apiResp, httpResp, err := r.client.ConnectorRuleManagementAPI.
+		CreateConnectorRuleV1(ctx).
 		ConnectorRuleCreateRequest(*dto).
 		Execute()
 	if err != nil {
@@ -216,8 +216,8 @@ func (r *connectorRuleResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading Connector Rule", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.ConnectorRuleManagementAPI.
-		GetConnectorRule(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.ConnectorRuleManagementAPI.
+		GetConnectorRuleV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -274,7 +274,7 @@ func (r *connectorRuleResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	dto := api_beta.NewConnectorRuleUpdateRequest(plan.Name.ValueString(), plan.Type.ValueString(), *sourceCode, state.Id.ValueString())
+	dto := connector_rule_management.NewConnectorRuleUpdateRequest(plan.Name.ValueString(), plan.Type.ValueString(), *sourceCode, state.Id.ValueString())
 	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
 		dto.SetDescription(plan.Description.ValueString())
 	}
@@ -283,8 +283,8 @@ func (r *connectorRuleResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	dto.SetAttributes(attrs)
 
-	apiResp, httpResp, err := r.client.Beta.ConnectorRuleManagementAPI.
-		UpdateConnectorRule(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.ConnectorRuleManagementAPI.
+		PutConnectorRuleV1(ctx, state.Id.ValueString()).
 		ConnectorRuleUpdateRequest(*dto).
 		Execute()
 	if err != nil {
@@ -313,8 +313,8 @@ func (r *connectorRuleResource) Delete(ctx context.Context, req resource.DeleteR
 
 	tflog.Debug(ctx, "Deleting Connector Rule", map[string]interface{}{"id": state.Id.ValueString()})
 
-	httpResp, err := r.client.Beta.ConnectorRuleManagementAPI.
-		DeleteConnectorRule(ctx, state.Id.ValueString()).
+	httpResp, err := r.client.ConnectorRuleManagementAPI.
+		DeleteConnectorRuleV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -331,15 +331,15 @@ func (r *connectorRuleResource) Delete(ctx context.Context, req resource.DeleteR
 
 // sourceCodeModelToAPI converts the generated SourceCodeValue (a
 // schema.Required single_nested block, so always known/non-null once past
-// plan validation) into api_beta.SourceCode.
-func sourceCodeModelToAPI(v resource_connector_rule.SourceCodeValue) (*api_beta.SourceCode, diag.Diagnostics) {
+// plan validation) into connector_rule_management.SourceCode.
+func sourceCodeModelToAPI(v resource_connector_rule.SourceCodeValue) (*connector_rule_management.SourceCode, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	return api_beta.NewSourceCode(v.Version.ValueString(), v.Script.ValueString()), diags
+	return connector_rule_management.NewSourceCode(v.Version.ValueString(), v.Script.ValueString()), diags
 }
 
-// sourceCodeFromAPI converts an api_beta.SourceCode API response into the
+// sourceCodeFromAPI converts an connector_rule_management.SourceCode API response into the
 // generated SourceCodeValue.
-func sourceCodeFromAPI(ctx context.Context, dto api_beta.SourceCode) (resource_connector_rule.SourceCodeValue, diag.Diagnostics) {
+func sourceCodeFromAPI(ctx context.Context, dto connector_rule_management.SourceCode) (resource_connector_rule.SourceCodeValue, diag.Diagnostics) {
 	return resource_connector_rule.NewSourceCodeValue(
 		resource_connector_rule.SourceCodeValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
@@ -350,9 +350,9 @@ func sourceCodeFromAPI(ctx context.Context, dto api_beta.SourceCode) (resource_c
 }
 
 // signatureModelToAPI converts the generated SignatureValue (a schema.Optional+Computed
-// single_nested block) into *api_beta.ConnectorRuleCreateRequestSignature,
+// single_nested block) into *connector_rule_management.ConnectorRuleCreateRequestSignature,
 // returning nil if the practitioner omitted "signature" entirely.
-func signatureModelToAPI(ctx context.Context, v resource_connector_rule.SignatureValue) (*api_beta.ConnectorRuleCreateRequestSignature, diag.Diagnostics) {
+func signatureModelToAPI(ctx context.Context, v resource_connector_rule.SignatureValue) (*connector_rule_management.ConnectorRuleCreateRequestSignature, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if v.IsNull() {
 		return nil, diags
@@ -368,7 +368,7 @@ func signatureModelToAPI(ctx context.Context, v resource_connector_rule.Signatur
 		return nil, diags
 	}
 
-	sig := api_beta.NewConnectorRuleCreateRequestSignature(input)
+	sig := connector_rule_management.NewConnectorRuleCreateRequestSignature(input)
 
 	output, d := argumentObjectModelToAPI(v.Output)
 	diags.Append(d...)
@@ -383,11 +383,11 @@ func signatureModelToAPI(ctx context.Context, v resource_connector_rule.Signatur
 }
 
 // argumentListModelToAPI converts the generated "input" basetypes.ListValue
-// (elements are resource_connector_rule.InputValue) into []api_beta.Argument.
-func argumentListModelToAPI(ctx context.Context, list basetypes.ListValue) ([]api_beta.Argument, diag.Diagnostics) {
+// (elements are resource_connector_rule.InputValue) into []connector_rule_management.Argument.
+func argumentListModelToAPI(ctx context.Context, list basetypes.ListValue) ([]connector_rule_management.Argument, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if list.IsNull() || list.IsUnknown() {
-		return []api_beta.Argument{}, diags
+		return []connector_rule_management.Argument{}, diags
 	}
 
 	var items []resource_connector_rule.InputValue
@@ -396,9 +396,9 @@ func argumentListModelToAPI(ctx context.Context, list basetypes.ListValue) ([]ap
 		return nil, diags
 	}
 
-	out := make([]api_beta.Argument, 0, len(items))
+	out := make([]connector_rule_management.Argument, 0, len(items))
 	for _, item := range items {
-		arg := api_beta.NewArgument(item.Name.ValueString())
+		arg := connector_rule_management.NewArgument(item.Name.ValueString())
 		if !item.Description.IsNull() && !item.Description.IsUnknown() {
 			arg.SetDescription(item.Description.ValueString())
 		}
@@ -411,9 +411,9 @@ func argumentListModelToAPI(ctx context.Context, list basetypes.ListValue) ([]ap
 }
 
 // argumentObjectModelToAPI converts the generated "output" basetypes.ObjectValue
-// (a single resource_connector_rule.OutputValue) into *api_beta.Argument,
+// (a single resource_connector_rule.OutputValue) into *connector_rule_management.Argument,
 // returning nil if the practitioner omitted "output" entirely.
-func argumentObjectModelToAPI(obj basetypes.ObjectValue) (*api_beta.Argument, diag.Diagnostics) {
+func argumentObjectModelToAPI(obj basetypes.ObjectValue) (*connector_rule_management.Argument, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if obj.IsNull() {
 		return nil, diags
@@ -428,7 +428,7 @@ func argumentObjectModelToAPI(obj basetypes.ObjectValue) (*api_beta.Argument, di
 	description, _ := attrs["description"].(basetypes.StringValue)
 	outputType, _ := attrs["type"].(basetypes.StringValue)
 
-	arg := api_beta.NewArgument(name.ValueString())
+	arg := connector_rule_management.NewArgument(name.ValueString())
 	if !description.IsNull() && !description.IsUnknown() {
 		arg.SetDescription(description.ValueString())
 	}
@@ -438,10 +438,10 @@ func argumentObjectModelToAPI(obj basetypes.ObjectValue) (*api_beta.Argument, di
 	return arg, diags
 }
 
-// signatureFromAPI converts an *api_beta.ConnectorRuleCreateRequestSignature
+// signatureFromAPI converts an *connector_rule_management.ConnectorRuleCreateRequestSignature
 // API response into the generated SignatureValue, returning a null
 // SignatureValue if the API omitted "signature" entirely.
-func signatureFromAPI(ctx context.Context, dto *api_beta.ConnectorRuleCreateRequestSignature) (resource_connector_rule.SignatureValue, diag.Diagnostics) {
+func signatureFromAPI(ctx context.Context, dto *connector_rule_management.ConnectorRuleCreateRequestSignature) (resource_connector_rule.SignatureValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	attrTypes := resource_connector_rule.SignatureValue{}.AttributeTypes(ctx)
 	if dto == nil {
@@ -465,9 +465,9 @@ func signatureFromAPI(ctx context.Context, dto *api_beta.ConnectorRuleCreateRequ
 	return v, diags
 }
 
-// argumentListFromAPI converts []api_beta.Argument into the generated
+// argumentListFromAPI converts []connector_rule_management.Argument into the generated
 // "input" basetypes.ListValue of InputValue elements.
-func argumentListFromAPI(ctx context.Context, items []api_beta.Argument) (types.List, diag.Diagnostics) {
+func argumentListFromAPI(ctx context.Context, items []connector_rule_management.Argument) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := resource_connector_rule.InputValue{}.Type(ctx)
 	if items == nil {
@@ -477,8 +477,8 @@ func argumentListFromAPI(ctx context.Context, items []api_beta.Argument) (types.
 	values := make([]resource_connector_rule.InputValue, 0, len(items))
 	for _, item := range items {
 		description := types.StringNull()
-		if item.Description != nil {
-			description = types.StringValue(*item.Description)
+		if item.Description.IsSet() && item.Description.Get() != nil {
+			description = types.StringValue(*item.Description.Get())
 		}
 		inputType := types.StringNull()
 		if item.Type.IsSet() && item.Type.Get() != nil {
@@ -505,7 +505,7 @@ func argumentListFromAPI(ctx context.Context, items []api_beta.Argument) (types.
 // argumentObjectFromAPI converts a NullableArgument API response into the
 // generated "output" basetypes.ObjectValue (an OutputValue), returning a null
 // object if the API's "output" was absent/null.
-func argumentObjectFromAPI(ctx context.Context, dto api_beta.NullableArgument) (basetypes.ObjectValue, diag.Diagnostics) {
+func argumentObjectFromAPI(ctx context.Context, dto connector_rule_management.NullableArgument) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	attrTypes := resource_connector_rule.OutputValue{}.AttributeTypes(ctx)
 	if !dto.IsSet() || dto.Get() == nil {
@@ -514,8 +514,8 @@ func argumentObjectFromAPI(ctx context.Context, dto api_beta.NullableArgument) (
 	item := dto.Get()
 
 	description := types.StringNull()
-	if item.Description != nil {
-		description = types.StringValue(*item.Description)
+	if item.Description.IsSet() && item.Description.Get() != nil {
+		description = types.StringValue(*item.Description.Get())
 	}
 	outputType := types.StringNull()
 	if item.Type.IsSet() && item.Type.Get() != nil {
@@ -536,9 +536,9 @@ func argumentObjectFromAPI(ctx context.Context, dto api_beta.NullableArgument) (
 	return obj, diags
 }
 
-// connectorRuleResponseToModel converts an api_beta.ConnectorRuleResponse API
+// connectorRuleResponseToModel converts an connector_rule_management.ConnectorRuleResponse API
 // response into the resource's state model.
-func connectorRuleResponseToModel(ctx context.Context, dto *api_beta.ConnectorRuleResponse, fallback connectorRuleResourceModel) (connectorRuleResourceModel, diag.Diagnostics) {
+func connectorRuleResponseToModel(ctx context.Context, dto *connector_rule_management.ConnectorRuleResponse, fallback connectorRuleResourceModel) (connectorRuleResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -547,8 +547,8 @@ func connectorRuleResponseToModel(ctx context.Context, dto *api_beta.ConnectorRu
 	model.Name = types.StringValue(dto.Name)
 	model.Type = types.StringValue(dto.Type)
 
-	if dto.Description != nil {
-		model.Description = types.StringValue(*dto.Description)
+	if dto.Description.IsSet() && dto.Description.Get() != nil {
+		model.Description = types.StringValue(*dto.Description.Get())
 	} else {
 		model.Description = types.StringNull()
 	}
@@ -579,7 +579,7 @@ func connectorRuleResponseToModel(ctx context.Context, dto *api_beta.ConnectorRu
 }
 
 // attributesToMap decodes the practitioner-supplied "attributes" JSON string
-// into a map[string]interface{} suitable for api_beta.ConnectorRuleCreateRequest/
+// into a map[string]interface{} suitable for connector_rule_management.ConnectorRuleCreateRequest/
 // UpdateRequest. A null jsontypes.Normalized decodes to an empty map rather
 // than nil, since the API accepts (and this resource always sends)
 // "attributes" as a real object, even if empty.

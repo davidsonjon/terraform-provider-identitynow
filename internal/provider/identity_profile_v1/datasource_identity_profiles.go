@@ -2,7 +2,7 @@
 // identitynow_identity_profile_v1 data source in datasource_identity_profile.go,
 // mirroring sources_v1's datasource_sources.go / role_v1's
 // datasource_roles.go pattern. It queries GET /identity-profiles/v1
-// (api_beta.IdentityProfilesAPI.ListIdentityProfiles) instead of GET
+// (identity_profiles.IdentityProfilesAPI.ListIdentityProfilesV1) instead of GET
 // /identity-profiles/v1/{id}, and returns every matching Identity Profile
 // using the exact same nested object shape as identitynow_identity_profile_v1
 // (reusing datasource_identity_profile's generated schema/model/value types
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/identity_profile_v1/datasource_identity_profile"
 )
@@ -150,7 +150,7 @@ func (d *identityProfilesDataSource) Read(ctx context.Context, req datasource.Re
 
 	tflog.Debug(ctx, "Reading Identity Profiles data source", map[string]interface{}{"filters": config.Filters.ValueString()})
 
-	apiReq := d.client.Beta.IdentityProfilesAPI.ListIdentityProfiles(ctx)
+	apiReq := d.client.IdentityProfilesAPI.ListIdentityProfilesV1(ctx)
 
 	if !config.Filters.IsNull() && !config.Filters.IsUnknown() {
 		apiReq = apiReq.Filters(config.Filters.ValueString())

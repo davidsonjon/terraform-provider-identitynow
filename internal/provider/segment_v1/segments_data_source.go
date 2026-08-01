@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/segments"
 
 	"terraform-provider-identitynow/internal/provider/segment_v1/datasource_segments"
 )
@@ -83,7 +83,7 @@ func (d *segmentsDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	tflog.Debug(ctx, "Reading Segments data source")
 
-	apiReq := d.client.Beta.SegmentsAPI.ListSegments(ctx)
+	apiReq := d.client.SegmentsAPI.ListSegmentsV1(ctx)
 	if !config.Limit.IsNull() && !config.Limit.IsUnknown() {
 		apiReq = apiReq.Limit(int32(config.Limit.ValueInt64()))
 	}
@@ -139,7 +139,7 @@ func segmentsDataSourceSchema(ctx context.Context) datasourceschema.Schema {
 	return s
 }
 
-func segmentListItemFromDTO(ctx context.Context, dto *api_beta.Segment) (segmentsListItemModel, diag.Diagnostics) {
+func segmentListItemFromDTO(ctx context.Context, dto *segments.Segment) (segmentsListItemModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	item := segmentsListItemModel{
 		Active:             types.BoolNull(),
@@ -174,14 +174,14 @@ func segmentListItemFromDTO(ctx context.Context, dto *api_beta.Segment) (segment
 	diags.Append(d...)
 	item.Owner = ownerObj
 
-	vc, d := visibilityCriteriaObjectFromAPI(ctx, dto.VisibilityCriteria.Get())
+	vc, d := visibilityCriteriaObjectFromAPI(ctx, dto.VisibilityCriteria)
 	diags.Append(d...)
 	item.VisibilityCriteria = vc
 
 	return item, diags
 }
 
-func pluralSegmentOwnerObjectFromAPI(ctx context.Context, owner *api_beta.OwnerReferenceSegments) (types.Object, diag.Diagnostics) {
+func pluralSegmentOwnerObjectFromAPI(ctx context.Context, owner *segments.OwnerReferenceSegments) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if owner == nil {
 		return types.ObjectNull(datasource_segments.OwnerValue{}.AttributeTypes(ctx)), diags

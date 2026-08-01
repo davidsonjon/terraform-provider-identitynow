@@ -9,7 +9,7 @@
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model/value types in resource_sod_policy,
 // datasource_sod_policy, and datasource_sod_policies, backed by the golang-sdk
-// v2 api_beta.SODPoliciesAPI client (the SDK does not yet publish a
+// v2 sod_policies.SODPoliciesAPI client (the SDK does not yet publish a
 // per-service v1 package; v1 is the stabilization of what was beta - see the
 // "SDK path note" below).
 //
@@ -30,7 +30,7 @@
 //     attribute names from the spec.
 //   - "owner_ref" (top-level only, not the one nested inside
 //     violation_owner_assignment_config) IS generated + associated_external_type
-//     mapped to api_beta.SodPolicyOwnerRef - see type_mappings_sod_policy_v1.yml.
+//     mapped to sod_policies.SodPolicyOwnerRef - see type_mappings_sod_policy_v1.yml.
 //   - This is a General-or-Conflicting-Access-Based "either/or" resource per
 //     SailPoint's own API design: a GENERAL policy only meaningfully uses
 //     name/description/policy_query/state/tags/owner_ref/etc., while a
@@ -45,7 +45,7 @@
 //     evaluate/violation-report/violation-report-status endpoints are
 //     intentionally out of scope for this CRUD resource - see the package's
 //     "Known Limitations & Live Testing Notes" doc section.
-//   - SDK path note: every api_beta.SODPoliciesAPIService method is annotated
+//   - SDK path note: every sod_policies.SODPoliciesAPIService method is annotated
 //     "Deprecated" in the SDK's generated doc comments - this is a blanket
 //     annotation applied uniformly across the whole api_beta package as part
 //     of SailPoint's versioning migration (see
@@ -68,8 +68,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/sod_policies"
 
 	"terraform-provider-identitynow/internal/provider/sod_policy_v1/resource_sod_policy"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -175,8 +175,8 @@ func (r *sodPolicyResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.SODPoliciesAPI.
-		CreateSodPolicy(ctx).
+	apiResp, httpResp, err := r.client.SODPoliciesAPI.
+		CreateSodPolicyV1(ctx).
 		SodPolicy(*dto).
 		Execute()
 	if err != nil {
@@ -205,8 +205,8 @@ func (r *sodPolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading SOD Policy", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.SODPoliciesAPI.
-		GetSodPolicy(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.SODPoliciesAPI.
+		GetSodPolicyV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -249,8 +249,8 @@ func (r *sodPolicyResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.SODPoliciesAPI.
-		PutSodPolicy(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.SODPoliciesAPI.
+		PutSodPolicyV1(ctx, state.Id.ValueString()).
 		SodPolicy(*dto).
 		Execute()
 	if err != nil {
@@ -279,8 +279,8 @@ func (r *sodPolicyResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting SOD Policy", map[string]interface{}{"id": state.Id.ValueString()})
 
-	httpResp, err := r.client.Beta.SODPoliciesAPI.
-		DeleteSodPolicy(ctx, state.Id.ValueString()).
+	httpResp, err := r.client.SODPoliciesAPI.
+		DeleteSodPolicyV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -302,27 +302,27 @@ func sodPolicyResourceSchema(ctx context.Context) resourceschema.Schema {
 	return s
 }
 
-// sodPolicyModelToDTO builds the full api_beta.SodPolicy request body sent to
+// sodPolicyModelToDTO builds the full sod_policies.SodPolicy request body sent to
 // both Create (POST) and Update (PUT) - the sod-policies v1 API's PUT is a
 // full-replace, not a partial patch, so both operations share this helper.
-func sodPolicyModelToDTO(ctx context.Context, m sodPolicyResourceModel) (*api_beta.SodPolicy, diag.Diagnostics) {
+func sodPolicyModelToDTO(ctx context.Context, m sodPolicyResourceModel) (*sod_policies.SodPolicy, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	dto := api_beta.NewSodPolicyWithDefaults()
+	dto := sod_policies.NewSodPolicyWithDefaults()
 	if !m.Name.IsNull() && !m.Name.IsUnknown() {
 		dto.Name = m.Name.ValueStringPointer()
 	}
 	if !m.Description.IsUnknown() {
-		dto.Description = *api_beta.NewNullableString(m.Description.ValueStringPointer())
+		dto.Description = *sod_policies.NewNullableString(m.Description.ValueStringPointer())
 	}
 	if !m.ExternalPolicyReference.IsUnknown() {
-		dto.ExternalPolicyReference = *api_beta.NewNullableString(m.ExternalPolicyReference.ValueStringPointer())
+		dto.ExternalPolicyReference = *sod_policies.NewNullableString(m.ExternalPolicyReference.ValueStringPointer())
 	}
 	if !m.CompensatingControls.IsUnknown() {
-		dto.CompensatingControls = *api_beta.NewNullableString(m.CompensatingControls.ValueStringPointer())
+		dto.CompensatingControls = *sod_policies.NewNullableString(m.CompensatingControls.ValueStringPointer())
 	}
 	if !m.CorrectionAdvice.IsUnknown() {
-		dto.CorrectionAdvice = *api_beta.NewNullableString(m.CorrectionAdvice.ValueStringPointer())
+		dto.CorrectionAdvice = *sod_policies.NewNullableString(m.CorrectionAdvice.ValueStringPointer())
 	}
 	if !m.State.IsNull() && !m.State.IsUnknown() {
 		dto.State = m.State.ValueStringPointer()
@@ -357,7 +357,7 @@ func sodPolicyModelToDTO(ctx context.Context, m sodPolicyResourceModel) (*api_be
 	return dto, diags
 }
 
-func sodPolicyDTOToModel(ctx context.Context, dto *api_beta.SodPolicy) (sodPolicyResourceModel, diag.Diagnostics) {
+func sodPolicyDTOToModel(ctx context.Context, dto *sod_policies.SodPolicy) (sodPolicyResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	model := sodPolicyResourceModel{
@@ -451,7 +451,7 @@ func errDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-func timeToStringValue(t *api_beta.SailPointTime) types.String {
+func timeToStringValue(t *sod_policies.SailPointTime) types.String {
 	if t == nil {
 		return types.StringNull()
 	}

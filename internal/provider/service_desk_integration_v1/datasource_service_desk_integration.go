@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/service_desk_integration"
 
 	"terraform-provider-identitynow/internal/provider/service_desk_integration_v1/datasource_service_desk_integration"
 )
@@ -69,8 +69,8 @@ func (d *serviceDeskIntegrationDataSource) Read(ctx context.Context, req datasou
 
 	tflog.Debug(ctx, "Reading Service Desk Integration data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.ServiceDeskIntegrationAPI.
-		GetServiceDeskIntegration(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.ServiceDeskIntegrationAPI.
+		GetServiceDeskIntegrationV1(ctx, config.Id.ValueString()).
 		Execute()
 	dto, httpResp, err = withManagedResourceRefsFallback(ctx, dto, httpResp, err)
 	if err != nil {
@@ -94,7 +94,7 @@ func (d *serviceDeskIntegrationDataSource) Read(ctx context.Context, req datasou
 // but against the data source's generated model/value types (a separate Go
 // package emitted by tfplugingen-framework, so the types are not identical even
 // though they're structurally the same).
-func datasourceDtoToModel(ctx context.Context, dto *api_beta.ServiceDeskIntegrationDto, fallback datasource_service_desk_integration.ServiceDeskIntegrationModel) (datasource_service_desk_integration.ServiceDeskIntegrationModel, diag.Diagnostics) {
+func datasourceDtoToModel(ctx context.Context, dto *service_desk_integration.ServiceDeskIntegrationDto, fallback datasource_service_desk_integration.ServiceDeskIntegrationModel) (datasource_service_desk_integration.ServiceDeskIntegrationModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -104,8 +104,8 @@ func datasourceDtoToModel(ctx context.Context, dto *api_beta.ServiceDeskIntegrat
 	model.Name = types.StringValue(dto.Name)
 	model.Description = types.StringValue(dto.Description)
 	model.Type = types.StringValue(dto.Type)
-	if dto.Cluster != nil {
-		model.Cluster = types.StringPointerValue(dto.Cluster)
+	if dto.Cluster.IsSet() {
+		model.Cluster = types.StringPointerValue(dto.Cluster.Get())
 	}
 
 	beforeProvisioningRule, d := datasource_service_desk_integration.BeforeProvisioningRuleValue{}.FromApi_betaBeforeProvisioningRuleDto(ctx, dto.BeforeProvisioningRule)

@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/governance_groups"
 )
 
 // governanceGroupConnectionsListPageLimit matches GET .../connections'
@@ -154,11 +154,11 @@ func (d *governanceGroupConnectionsDataSource) Read(ctx context.Context, req dat
 
 	tflog.Debug(ctx, "Reading Governance Group connections", map[string]interface{}{"governance_group_id": workgroupID})
 
-	var dtos []api_beta.WorkgroupConnectionDto
+	var dtos []governance_groups.WorkgroupConnectionDto
 	var offset int32
 	for {
-		page, httpResp, err := d.client.Beta.GovernanceGroupsAPI.
-			ListConnections(ctx, workgroupID).
+		page, httpResp, err := d.client.GovernanceGroupsAPI.
+			ListConnectionsV1(ctx, workgroupID).
 			Offset(offset).
 			Limit(governanceGroupConnectionsListPageLimit).
 			Execute()
@@ -191,8 +191,8 @@ func (d *governanceGroupConnectionsDataSource) Read(ctx context.Context, req dat
 			if dto.Object.Name != nil {
 				model.ObjectName = types.StringValue(*dto.Object.Name)
 			}
-			if dto.Object.Description != nil {
-				model.ObjectDescription = types.StringValue(*dto.Object.Description)
+			if dto.Object.Description.IsSet() && dto.Object.Description.Get() != nil {
+				model.ObjectDescription = types.StringValue(*dto.Object.Description.Get())
 			}
 		}
 		models = append(models, model)

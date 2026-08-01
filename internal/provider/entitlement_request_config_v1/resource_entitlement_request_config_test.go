@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/entitlements"
 
 	"terraform-provider-identitynow/internal/provider/entitlement_request_config_v1/resource_entitlement_request_config"
 )
@@ -140,26 +140,26 @@ func TestEntitlementRequestConfigDtoToModel(t *testing.T) {
 	t.Run("populated dto", func(t *testing.T) {
 		fallback := minimalEntitlementRequestConfigModel()
 
-		dto := api_beta.NewEntitlementRequestConfig()
+		dto := entitlements.NewEntitlementRequestConfig()
 
-		access := api_beta.NewEntitlementAccessRequestConfig()
-		access.SetApprovalSchemes([]api_beta.EntitlementApprovalScheme{
+		access := entitlements.NewEntitlementAccessRequestConfig()
+		access.SetApprovalSchemes([]entitlements.EntitlementApprovalScheme{
 			{ApproverType: strPtr("MANAGER")},
-			{ApproverType: strPtr("GOVERNANCE_GROUP"), ApproverId: *api_beta.NewNullableString(strPtr("gov-group-id"))},
+			{ApproverType: strPtr("GOVERNANCE_GROUP"), ApproverId: *entitlements.NewNullableString(strPtr("gov-group-id"))},
 		})
 		access.SetRequestCommentRequired(false)
 		access.SetDenialCommentRequired(true)
 		access.SetReauthorizationRequired(true)
 		access.SetRequireEndDate(true)
-		duration := api_beta.NewPendingApprovalMaxPermittedAccessDuration()
+		duration := entitlements.NewEntitlementAccessRequestConfigMaxPermittedAccessDuration()
 		duration.SetValue(30)
 		duration.SetTimeUnit("DAYS")
 		access.SetMaxPermittedAccessDuration(*duration)
 		dto.SetAccessRequestConfig(*access)
 
-		revocation := api_beta.NewEntitlementRevocationRequestConfig()
-		revocation.SetApprovalSchemes([]api_beta.EntitlementApprovalScheme{
-			{ApproverType: strPtr("WORKFLOW"), ApproverId: *api_beta.NewNullableString(strPtr("workflow-id"))},
+		revocation := entitlements.NewEntitlementRevocationRequestConfig()
+		revocation.SetApprovalSchemes([]entitlements.EntitlementApprovalScheme{
+			{ApproverType: strPtr("WORKFLOW"), ApproverId: *entitlements.NewNullableString(strPtr("workflow-id"))},
 		})
 		dto.SetRevocationRequestConfig(*revocation)
 
@@ -223,7 +223,7 @@ func TestEntitlementRequestConfigDtoToModel(t *testing.T) {
 
 	t.Run("missing nested configs", func(t *testing.T) {
 		fallback := minimalEntitlementRequestConfigModel()
-		model, diags := entitlementRequestConfigDtoToModel(ctx, "entitlement-id", api_beta.NewEntitlementRequestConfig(), fallback)
+		model, diags := entitlementRequestConfigDtoToModel(ctx, "entitlement-id", entitlements.NewEntitlementRequestConfig(), fallback)
 		if diags.HasError() {
 			t.Fatalf("entitlementRequestConfigDtoToModel returned diagnostics: %v", diags)
 		}

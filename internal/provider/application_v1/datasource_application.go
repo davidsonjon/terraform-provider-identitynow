@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/apps"
 
 	"terraform-provider-identitynow/internal/provider/application_v1/datasource_application"
 )
@@ -104,8 +104,8 @@ func (d *applicationDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	tflog.Debug(ctx, "Reading Application data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.AppsAPI.
-		GetSourceApp(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.AppsAPI.
+		GetSourceAppV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Application data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -128,7 +128,7 @@ func (d *applicationDataSource) Read(ctx context.Context, req datasource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func applicationDatasourceDtoToModel(ctx context.Context, dto *api_beta.SourceApp, accessProfileIDs []string, fallback applicationDataSourceModel) (applicationDataSourceModel, diag.Diagnostics) {
+func applicationDatasourceDtoToModel(ctx context.Context, dto *apps.SourceApp, accessProfileIDs []string, fallback applicationDataSourceModel) (applicationDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -162,7 +162,7 @@ func applicationDatasourceDtoToModel(ctx context.Context, dto *api_beta.SourceAp
 	return model, diags
 }
 
-func datasourceOwnerFromAPI(ctx context.Context, dto *api_beta.BaseReferenceDto) (datasource_application.OwnerValue, diag.Diagnostics) {
+func datasourceOwnerFromAPI(ctx context.Context, dto *apps.BaseReferenceDto) (datasource_application.OwnerValue, diag.Diagnostics) {
 	if dto == nil {
 		return datasource_application.NewOwnerValueNull(), nil
 	}
@@ -177,7 +177,7 @@ func datasourceOwnerFromAPI(ctx context.Context, dto *api_beta.BaseReferenceDto)
 	return datasource_application.NewOwnerValue(datasource_application.OwnerValue{}.AttributeTypes(ctx), attrs)
 }
 
-func datasourceAccountSourceFromAPI(ctx context.Context, dto *api_beta.SourceAppAccountSource) (datasource_application.AccountSourceValue, diag.Diagnostics) {
+func datasourceAccountSourceFromAPI(ctx context.Context, dto *apps.SourceAppAccountSource) (datasource_application.AccountSourceValue, diag.Diagnostics) {
 	if dto == nil {
 		return datasource_application.NewAccountSourceValueNull(), nil
 	}
@@ -197,7 +197,7 @@ func datasourceAccountSourceFromAPI(ctx context.Context, dto *api_beta.SourceApp
 	return datasource_application.NewAccountSourceValue(datasource_application.AccountSourceValue{}.AttributeTypes(ctx), attrs)
 }
 
-func datasourcePasswordPoliciesFromAPI(ctx context.Context, policies []api_beta.BaseReferenceDto) (types.List, diag.Diagnostics) {
+func datasourcePasswordPoliciesFromAPI(ctx context.Context, policies []apps.BaseReferenceDto) (types.List, diag.Diagnostics) {
 	if len(policies) == 0 {
 		return types.ListNull(datasource_application.PasswordPoliciesValue{}.Type(ctx)), nil
 	}

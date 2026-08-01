@@ -4,8 +4,8 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model/value types in resource_segment,
-// datasource_segment, and datasource_segments, backed by the golang-sdk v2
-// api_beta.SegmentsAPI client (the SDK does not yet publish a per-service v1
+// datasource_segment, and datasource_segments, backed by the golang-sdk v3
+// segments.SegmentsAPI client (the SDK does not yet publish a per-service v1
 // package; v1 is the stabilization of what was beta).
 //
 // Known limitations / design notes:
@@ -45,8 +45,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/segments"
 
 	"terraform-provider-identitynow/internal/provider/segment_v1/resource_segment"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -154,8 +154,8 @@ func (r *segmentResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.SegmentsAPI.
-		CreateSegment(ctx).
+	apiResp, httpResp, err := r.client.SegmentsAPI.
+		CreateSegmentV1(ctx).
 		Segment(*dto).
 		Execute()
 	if err != nil {
@@ -182,8 +182,8 @@ func (r *segmentResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tflog.Debug(ctx, "Reading Segment", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.SegmentsAPI.
-		GetSegment(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.SegmentsAPI.
+		GetSegmentV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -231,8 +231,8 @@ func (r *segmentResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	tflog.Debug(ctx, "Patching Segment", map[string]interface{}{"id": state.Id.ValueString(), "patch_ops": len(patch)})
 
-	apiResp, httpResp, err := r.client.Beta.SegmentsAPI.
-		PatchSegment(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.SegmentsAPI.
+		PatchSegmentV1(ctx, state.Id.ValueString()).
 		RequestBody(segmentPatchRequestBody(patch)).
 		Execute()
 	if err != nil {
@@ -259,8 +259,8 @@ func (r *segmentResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	tflog.Debug(ctx, "Deleting Segment", map[string]interface{}{"id": state.Id.ValueString()})
 
-	httpResp, err := r.client.Beta.SegmentsAPI.
-		DeleteSegment(ctx, state.Id.ValueString()).
+	httpResp, err := r.client.SegmentsAPI.
+		DeleteSegmentV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -279,10 +279,10 @@ func segmentResourceSchema(ctx context.Context) resourceschema.Schema {
 	return s
 }
 
-func segmentResourceModelToDTO(ctx context.Context, m segmentResourceModel) (*api_beta.Segment, diag.Diagnostics) {
+func segmentResourceModelToDTO(ctx context.Context, m segmentResourceModel) (*segments.Segment, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	dto := api_beta.NewSegmentWithDefaults()
+	dto := segments.NewSegmentWithDefaults()
 	if !m.Name.IsNull() && !m.Name.IsUnknown() {
 		dto.Name = m.Name.ValueStringPointer()
 	}
@@ -296,20 +296,20 @@ func segmentResourceModelToDTO(ctx context.Context, m segmentResourceModel) (*ap
 		owner, d := m.Owner.ToApi_betaOwnerReferenceSegments(ctx)
 		diags.Append(d...)
 		if owner != nil {
-			dto.Owner = *api_beta.NewNullableOwnerReferenceSegments(owner)
+			dto.Owner = *segments.NewNullableOwnerReferenceSegments(owner)
 		}
 	}
 
 	vc, d := visibilityCriteriaObjectToAPI(ctx, m.VisibilityCriteria)
 	diags.Append(d...)
 	if vc != nil {
-		dto.VisibilityCriteria = *api_beta.NewNullableVisibilityCriteria(vc)
+		dto.VisibilityCriteria = vc
 	}
 
 	return dto, diags
 }
 
-func segmentResourceDTOToModel(ctx context.Context, dto *api_beta.Segment, fallbackID types.String) (segmentResourceModel, diag.Diagnostics) {
+func segmentResourceDTOToModel(ctx context.Context, dto *segments.Segment, fallbackID types.String) (segmentResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	model := segmentResourceModel{
@@ -345,16 +345,16 @@ func segmentResourceDTOToModel(ctx context.Context, dto *api_beta.Segment, fallb
 	diags.Append(d...)
 	model.Owner = owner
 
-	vc, d := visibilityCriteriaObjectFromAPI(ctx, dto.VisibilityCriteria.Get())
+	vc, d := visibilityCriteriaObjectFromAPI(ctx, dto.VisibilityCriteria)
 	diags.Append(d...)
 	model.VisibilityCriteria = vc
 
 	return model, diags
 }
 
-func segmentPatchOps(ctx context.Context, plan, state segmentResourceModel) ([]api_beta.JsonPatchOperation, diag.Diagnostics) {
+func segmentPatchOps(ctx context.Context, plan, state segmentResourceModel) ([]segmentJSONPatchOp, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	patch := make([]api_beta.JsonPatchOperation, 0, 5)
+	patch := make([]segmentJSONPatchOp, 0, 5)
 
 	patch = append(patch, segmentStringPatchOps("/name", plan.Name, state.Name)...)
 	patch = append(patch, segmentStringPatchOps("/description", plan.Description, state.Description)...)
@@ -371,7 +371,7 @@ func segmentPatchOps(ctx context.Context, plan, state segmentResourceModel) ([]a
 	return patch, diags
 }
 
-func segmentStringPatchOps(path string, plan, state types.String) []api_beta.JsonPatchOperation {
+func segmentStringPatchOps(path string, plan, state types.String) []segmentJSONPatchOp {
 	if plan.IsUnknown() || plan.Equal(state) {
 		return nil
 	}
@@ -379,27 +379,27 @@ func segmentStringPatchOps(path string, plan, state types.String) []api_beta.Jso
 		if state.IsNull() || state.IsUnknown() {
 			return nil
 		}
-		return []api_beta.JsonPatchOperation{segmentJSONPatchRemove(path)}
+		return []segmentJSONPatchOp{segmentJSONPatchRemove(path)}
 	}
 	v := plan.ValueString()
 	if state.IsNull() || state.IsUnknown() {
-		return []api_beta.JsonPatchOperation{segmentJSONPatchAdd(path, api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&v))}
+		return []segmentJSONPatchOp{segmentJSONPatchAdd(path, v)}
 	}
-	return []api_beta.JsonPatchOperation{segmentJSONPatchReplace(path, api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&v))}
+	return []segmentJSONPatchOp{segmentJSONPatchReplace(path, v)}
 }
 
-func segmentBoolPatchOps(path string, plan, state types.Bool) []api_beta.JsonPatchOperation {
+func segmentBoolPatchOps(path string, plan, state types.Bool) []segmentJSONPatchOp {
 	if plan.IsUnknown() || plan.IsNull() || plan.Equal(state) {
 		return nil
 	}
 	v := plan.ValueBool()
 	if state.IsNull() || state.IsUnknown() {
-		return []api_beta.JsonPatchOperation{segmentJSONPatchAdd(path, api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v))}
+		return []segmentJSONPatchOp{segmentJSONPatchAdd(path, v)}
 	}
-	return []api_beta.JsonPatchOperation{segmentJSONPatchReplace(path, api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(&v))}
+	return []segmentJSONPatchOp{segmentJSONPatchReplace(path, v)}
 }
 
-func segmentOwnerPatchOps(ctx context.Context, plan, state resource_segment.OwnerValue) ([]api_beta.JsonPatchOperation, diag.Diagnostics) {
+func segmentOwnerPatchOps(ctx context.Context, plan, state resource_segment.OwnerValue) ([]segmentJSONPatchOp, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if plan.IsUnknown() || plan.Equal(state) {
 		return nil, diags
@@ -408,7 +408,7 @@ func segmentOwnerPatchOps(ctx context.Context, plan, state resource_segment.Owne
 		if state.IsNull() || state.IsUnknown() {
 			return nil, diags
 		}
-		return []api_beta.JsonPatchOperation{segmentJSONPatchRemove("/owner")}, diags
+		return []segmentJSONPatchOp{segmentJSONPatchRemove("/owner")}, diags
 	}
 
 	owner, d := plan.ToApi_betaOwnerReferenceSegments(ctx)
@@ -421,14 +421,14 @@ func segmentOwnerPatchOps(ctx context.Context, plan, state resource_segment.Owne
 		diags.AddError("Error preparing owner patch value", err.Error())
 		return nil, diags
 	}
-	value := api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&ownerMap)
+	value := ownerMap
 	if state.IsNull() || state.IsUnknown() {
-		return []api_beta.JsonPatchOperation{segmentJSONPatchAdd("/owner", value)}, diags
+		return []segmentJSONPatchOp{segmentJSONPatchAdd("/owner", value)}, diags
 	}
-	return []api_beta.JsonPatchOperation{segmentJSONPatchReplace("/owner", value)}, diags
+	return []segmentJSONPatchOp{segmentJSONPatchReplace("/owner", value)}, diags
 }
 
-func segmentVisibilityCriteriaPatchOps(ctx context.Context, plan, state types.Object) ([]api_beta.JsonPatchOperation, diag.Diagnostics) {
+func segmentVisibilityCriteriaPatchOps(ctx context.Context, plan, state types.Object) ([]segmentJSONPatchOp, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if plan.IsUnknown() || plan.Equal(state) {
 		return nil, diags
@@ -437,7 +437,7 @@ func segmentVisibilityCriteriaPatchOps(ctx context.Context, plan, state types.Ob
 		if state.IsNull() || state.IsUnknown() {
 			return nil, diags
 		}
-		return []api_beta.JsonPatchOperation{segmentJSONPatchRemove("/visibilityCriteria")}, diags
+		return []segmentJSONPatchOp{segmentJSONPatchRemove("/visibilityCriteria")}, diags
 	}
 
 	vc, d := visibilityCriteriaObjectToAPI(ctx, plan)
@@ -450,11 +450,11 @@ func segmentVisibilityCriteriaPatchOps(ctx context.Context, plan, state types.Ob
 		diags.AddError("Error preparing visibility_criteria patch value", err.Error())
 		return nil, diags
 	}
-	value := api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&vcMap)
+	value := vcMap
 	if state.IsNull() || state.IsUnknown() {
-		return []api_beta.JsonPatchOperation{segmentJSONPatchAdd("/visibilityCriteria", value)}, diags
+		return []segmentJSONPatchOp{segmentJSONPatchAdd("/visibilityCriteria", value)}, diags
 	}
-	return []api_beta.JsonPatchOperation{segmentJSONPatchReplace("/visibilityCriteria", value)}, diags
+	return []segmentJSONPatchOp{segmentJSONPatchReplace("/visibilityCriteria", value)}, diags
 }
 
 func applyResourceVisibilityCriteriaField(attrs *map[string]resourceschema.Attribute) {
@@ -660,7 +660,7 @@ func visibilityValueAttrTypes() map[string]attr.Type {
 	}
 }
 
-func visibilityCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*api_beta.VisibilityCriteria, diag.Diagnostics) {
+func visibilityCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*segments.SegmentVisibilityCriteria, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if obj.IsNull() {
 		return nil, diags
@@ -682,14 +682,14 @@ func visibilityCriteriaObjectToAPI(ctx context.Context, obj types.Object) (*api_
 		return nil, diags
 	}
 
-	vc := api_beta.NewVisibilityCriteria()
+	vc := segments.NewSegmentVisibilityCriteria()
 	if expr != nil {
 		vc.Expression = expr
 	}
 	return vc, diags
 }
 
-func visibilityExpressionObjectToAPI(ctx context.Context, obj types.Object) (*api_beta.Expression, diag.Diagnostics) {
+func visibilityExpressionObjectToAPI(ctx context.Context, obj types.Object) (*segments.Expression, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if obj.IsNull() {
 		return nil, diags
@@ -705,7 +705,7 @@ func visibilityExpressionObjectToAPI(ctx context.Context, obj types.Object) (*ap
 		return nil, diags
 	}
 
-	expr := api_beta.NewExpression()
+	expr := segments.NewExpression()
 	if !model.Operator.IsNull() && !model.Operator.IsUnknown() {
 		op := model.Operator.ValueString()
 		expr.Operator = &op
@@ -729,7 +729,7 @@ func visibilityExpressionObjectToAPI(ctx context.Context, obj types.Object) (*ap
 	if !model.Children.IsNull() && !model.Children.IsUnknown() {
 		var items []visibilityChildModel
 		diags.Append(model.Children.ElementsAs(ctx, &items, false)...)
-		children := make([]api_beta.Children, 0, len(items))
+		children := make([]segments.ExpressionChildrenInner, 0, len(items))
 		for _, item := range items {
 			child, d := visibilityChildModelToAPI(ctx, item)
 			diags.Append(d...)
@@ -743,9 +743,9 @@ func visibilityExpressionObjectToAPI(ctx context.Context, obj types.Object) (*ap
 	return expr, diags
 }
 
-func visibilityChildModelToAPI(ctx context.Context, model visibilityChildModel) (*api_beta.Children, diag.Diagnostics) {
+func visibilityChildModelToAPI(ctx context.Context, model visibilityChildModel) (*segments.ExpressionChildrenInner, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	child := api_beta.NewChildren()
+	child := segments.NewExpressionChildrenInner()
 
 	if !model.Operator.IsNull() && !model.Operator.IsUnknown() {
 		op := model.Operator.ValueString()
@@ -770,7 +770,7 @@ func visibilityChildModelToAPI(ctx context.Context, model visibilityChildModel) 
 	return child, diags
 }
 
-func visibilityValueObjectToAPI(ctx context.Context, obj types.Object) (*api_beta.Value, diag.Diagnostics) {
+func visibilityValueObjectToAPI(ctx context.Context, obj types.Object) (*segments.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if obj.IsNull() {
 		return nil, diags
@@ -786,10 +786,10 @@ func visibilityValueObjectToAPI(ctx context.Context, obj types.Object) (*api_bet
 		return nil, diags
 	}
 
-	value := api_beta.NewValue()
+	value := segments.NewValue()
 	if !model.Type.IsUnknown() {
 		if model.Type.IsNull() {
-			value.SetTypeNil()
+			value.Type = nil
 		} else {
 			value.SetType(model.Type.ValueString())
 		}
@@ -800,7 +800,7 @@ func visibilityValueObjectToAPI(ctx context.Context, obj types.Object) (*api_bet
 	return value, diags
 }
 
-func visibilityCriteriaObjectFromAPI(ctx context.Context, vc *api_beta.VisibilityCriteria) (types.Object, diag.Diagnostics) {
+func visibilityCriteriaObjectFromAPI(ctx context.Context, vc *segments.SegmentVisibilityCriteria) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if vc == nil {
 		return types.ObjectNull(visibilityCriteriaAttrTypes()), diags
@@ -819,7 +819,7 @@ func visibilityCriteriaObjectFromAPI(ctx context.Context, vc *api_beta.Visibilit
 	return obj, diags
 }
 
-func visibilityExpressionObjectFromAPI(ctx context.Context, expr *api_beta.Expression) (types.Object, diag.Diagnostics) {
+func visibilityExpressionObjectFromAPI(ctx context.Context, expr *segments.Expression) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if expr == nil {
 		return types.ObjectNull(visibilityExpressionAttrTypes()), diags
@@ -841,7 +841,7 @@ func visibilityExpressionObjectFromAPI(ctx context.Context, expr *api_beta.Expre
 	return obj, diags
 }
 
-func visibilityChildrenListFromAPI(ctx context.Context, items []api_beta.Children) (types.List, diag.Diagnostics) {
+func visibilityChildrenListFromAPI(ctx context.Context, items []segments.ExpressionChildrenInner) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: visibilityChildAttrTypes()}
 	if items == nil {
@@ -854,7 +854,7 @@ func visibilityChildrenListFromAPI(ctx context.Context, items []api_beta.Childre
 		diags.Append(d...)
 		childObj, d := types.ObjectValue(visibilityChildAttrTypes(), map[string]attr.Value{
 			"operator":  types.StringPointerValue(items[i].Operator),
-			"attribute": types.StringPointerValue(items[i].Attribute),
+			"attribute": types.StringPointerValue(items[i].Attribute.Get()),
 			"value":     valueObj,
 		})
 		diags.Append(d...)
@@ -866,7 +866,7 @@ func visibilityChildrenListFromAPI(ctx context.Context, items []api_beta.Childre
 	return listVal, diags
 }
 
-func visibilityValueObjectFromAPI(ctx context.Context, value *api_beta.Value) (types.Object, diag.Diagnostics) {
+func visibilityValueObjectFromAPI(ctx context.Context, value *segments.Value) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	_ = ctx
 	if value == nil {
@@ -874,7 +874,7 @@ func visibilityValueObjectFromAPI(ctx context.Context, value *api_beta.Value) (t
 	}
 
 	obj, d := types.ObjectValue(visibilityValueAttrTypes(), map[string]attr.Value{
-		"type":  types.StringPointerValue(value.Type.Get()),
+		"type":  types.StringPointerValue(value.Type),
 		"value": types.StringPointerValue(value.Value),
 	})
 	diags.Append(d...)
@@ -885,19 +885,29 @@ func segmentErrDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-func segmentJSONPatchAdd(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{Op: "add", Path: path, Value: &value}
+// segmentJSONPatchOp is a local RFC 6902 JSON Patch operation. golang-sdk v3's
+// SegmentsAPI.PatchSegmentV1 takes a raw []map[string]interface{} body (there is
+// no generated JsonPatchOperation type in the segments package), so this small
+// struct is marshaled to that shape by segmentPatchRequestBody.
+type segmentJSONPatchOp struct {
+	Op    string      `json:"op"`
+	Path  string      `json:"path"`
+	Value interface{} `json:"value,omitempty"`
 }
 
-func segmentJSONPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{Op: "replace", Path: path, Value: &value}
+func segmentJSONPatchAdd(path string, value interface{}) segmentJSONPatchOp {
+	return segmentJSONPatchOp{Op: "add", Path: path, Value: value}
 }
 
-func segmentJSONPatchRemove(path string) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{Op: "remove", Path: path}
+func segmentJSONPatchReplace(path string, value interface{}) segmentJSONPatchOp {
+	return segmentJSONPatchOp{Op: "replace", Path: path, Value: value}
 }
 
-func segmentPatchRequestBody(ops []api_beta.JsonPatchOperation) []map[string]interface{} {
+func segmentJSONPatchRemove(path string) segmentJSONPatchOp {
+	return segmentJSONPatchOp{Op: "remove", Path: path}
+}
+
+func segmentPatchRequestBody(ops []segmentJSONPatchOp) []map[string]interface{} {
 	body := make([]map[string]interface{}, 0, len(ops))
 	for _, op := range ops {
 		m, err := segmentStructToMap(op)
@@ -924,7 +934,7 @@ func segmentStructToMap(v interface{}) (map[string]interface{}, error) {
 	return m, nil
 }
 
-func timeToStringValue(t *api_beta.SailPointTime) types.String {
+func timeToStringValue(t *segments.SailPointTime) types.String {
 	if t == nil {
 		return types.StringNull()
 	}

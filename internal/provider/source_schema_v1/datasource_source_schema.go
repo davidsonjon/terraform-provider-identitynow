@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/sources"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/source_schema_v1/datasource_source_schema"
 )
@@ -113,8 +113,8 @@ func (d *sourceSchemaDataSource) Read(ctx context.Context, req datasource.ReadRe
 	schemaID := config.SchemaId.ValueString()
 	tflog.Debug(ctx, "Reading Source Schema data source", map[string]interface{}{"source_id": sourceID, "schema_id": schemaID})
 
-	dto, httpResp, err := d.client.Beta.SourcesAPI.
-		GetSourceSchema(ctx, sourceID, schemaID).
+	dto, httpResp, err := d.client.SourcesAPI.
+		GetSourceSchemaV1(ctx, sourceID, schemaID).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Source Schema data source", map[string]interface{}{"source_id": sourceID, "schema_id": schemaID, "error": err.Error()})
@@ -133,7 +133,7 @@ func (d *sourceSchemaDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 // datasourceDtoToModel mirrors dtoToModel in resource_source_schema.go but
 // against the data source's model type.
-func datasourceDtoToModel(ctx context.Context, dto *api_beta.Schema, sourceID string, fallback sourceSchemaDataSourceModel) (sourceSchemaDataSourceModel, diag.Diagnostics) {
+func datasourceDtoToModel(ctx context.Context, dto *sources.Schema, sourceID string, fallback sourceSchemaDataSourceModel) (sourceSchemaDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -172,7 +172,7 @@ func datasourceDtoToModel(ctx context.Context, dto *api_beta.Schema, sourceID st
 // resource_source_schema.go but builds datasource_source_schema.AttributesValue
 // elements (a distinct generated Go type from the resource package's, even
 // though structurally identical) for this data source's "attributes" list.
-func dsAttributesListFromAPI(ctx context.Context, defs []api_beta.AttributeDefinition) (types.List, diag.Diagnostics) {
+func dsAttributesListFromAPI(ctx context.Context, defs []sources.AttributeDefinition) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := datasource_source_schema.AttributesValue{}.Type(ctx)
 	if defs == nil {

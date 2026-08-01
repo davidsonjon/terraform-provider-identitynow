@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
 
 	"terraform-provider-identitynow/internal/provider/identity_profile_v1/resource_identity_profile"
 )
@@ -126,10 +126,10 @@ func TestDtoToModel_RoundTrip(t *testing.T) {
 	fallback := minimalModel()
 
 	id := "idprofile-id"
-	dto := &api_beta.IdentityProfile{
+	dto := &identity_profiles.IdentityProfile{
 		Id:   &id,
-		Name: *api_beta.NewNullableString(strPtr("test-identity-profile")),
-		AuthoritativeSource: api_beta.IdentityProfileAllOfAuthoritativeSource{
+		Name: *identity_profiles.NewNullableString(strPtr("test-identity-profile")),
+		AuthoritativeSource: identity_profiles.IdentityProfileAllOfAuthoritativeSource{
 			Id:   strPtr("src-id"),
 			Name: strPtr("src-name"),
 			Type: strPtr("SOURCE"),
@@ -165,14 +165,14 @@ func TestDtoToModel_IdentityAttributeConfig_FallbackConfigured(t *testing.T) {
 	configured := `{"enabled":true}`
 	fallback.IdentityAttributeConfig = jsontypes.NewNormalizedValue(configured)
 
-	dto := &api_beta.IdentityProfile{
-		Name: *api_beta.NewNullableString(strPtr("test-identity-profile")),
-		AuthoritativeSource: api_beta.IdentityProfileAllOfAuthoritativeSource{
+	dto := &identity_profiles.IdentityProfile{
+		Name: *identity_profiles.NewNullableString(strPtr("test-identity-profile")),
+		AuthoritativeSource: identity_profiles.IdentityProfileAllOfAuthoritativeSource{
 			Id: strPtr("src-id"),
 		},
-		IdentityAttributeConfig: &api_beta.IdentityAttributeConfig{
+		IdentityAttributeConfig: &identity_profiles.IdentityAttributeConfig{
 			Enabled: boolPtr(true),
-			AttributeTransforms: []api_beta.IdentityAttributeTransform{
+			AttributeTransforms: []identity_profiles.IdentityAttributeTransform{
 				{IdentityAttributeName: strPtr("uid")},
 			},
 		},
@@ -198,12 +198,12 @@ func TestDtoToModel_IdentityAttributeConfig_FallbackNull(t *testing.T) {
 	ctx := context.Background()
 	fallback := minimalModel() // IdentityAttributeConfig is null by default
 
-	dto := &api_beta.IdentityProfile{
-		Name: *api_beta.NewNullableString(strPtr("test-identity-profile")),
-		AuthoritativeSource: api_beta.IdentityProfileAllOfAuthoritativeSource{
+	dto := &identity_profiles.IdentityProfile{
+		Name: *identity_profiles.NewNullableString(strPtr("test-identity-profile")),
+		AuthoritativeSource: identity_profiles.IdentityProfileAllOfAuthoritativeSource{
 			Id: strPtr("src-id"),
 		},
-		IdentityAttributeConfig: &api_beta.IdentityAttributeConfig{
+		IdentityAttributeConfig: &identity_profiles.IdentityAttributeConfig{
 			Enabled: boolPtr(true),
 		},
 	}
@@ -230,7 +230,7 @@ func TestStructToMap(t *testing.T) {
 	})
 
 	t.Run("struct input round-trips through JSON", func(t *testing.T) {
-		src := api_beta.IdentityProfileAllOfAuthoritativeSource{Id: strPtr("src-id"), Name: strPtr("src-name"), Type: strPtr("SOURCE")}
+		src := identity_profiles.IdentityProfileAllOfAuthoritativeSource{Id: strPtr("src-id"), Name: strPtr("src-name"), Type: strPtr("SOURCE")}
 
 		m, err := structToMap(src)
 		if err != nil {
@@ -247,7 +247,7 @@ func TestStructToMap(t *testing.T) {
 
 func TestJsonPatchReplace(t *testing.T) {
 	name := "new-name"
-	op := jsonPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&name))
+	op := jsonPatchReplace("/name", identity_profiles.StringAsJsonPatchOperationValue(&name))
 
 	if op.Op != "replace" {
 		t.Errorf("Op = %q, want %q", op.Op, "replace")
@@ -343,7 +343,7 @@ func TestIdentityAttributeConfigFromAPI(t *testing.T) {
 	})
 
 	t.Run("populated cfg returns JSON string", func(t *testing.T) {
-		v, diags := identityAttributeConfigFromAPI(&api_beta.IdentityAttributeConfig{Enabled: boolPtr(true)})
+		v, diags := identityAttributeConfigFromAPI(&identity_profiles.IdentityAttributeConfig{Enabled: boolPtr(true)})
 		if diags.HasError() {
 			t.Fatalf("identityAttributeConfigFromAPI returned diagnostics: %v", diags)
 		}
@@ -358,7 +358,7 @@ func TestTimeToStringValue(t *testing.T) {
 		t.Errorf("timeToStringValue(nil) = %v, want null", v)
 	}
 
-	tm := api_beta.SailPointTime{}
+	tm := identity_profiles.SailPointTime{}
 	if err := tm.UnmarshalJSON([]byte(`"2024-01-02T03:04:05Z"`)); err != nil {
 		t.Fatalf("failed to build test SailPointTime: %v", err)
 	}

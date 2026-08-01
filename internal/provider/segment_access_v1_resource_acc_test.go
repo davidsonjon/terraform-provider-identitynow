@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 )
 
 type testAccSegmentAccessFixture struct {
@@ -128,7 +128,7 @@ func testAccCheckSegmentAccessAssignmentState(resourceName string, want int) res
 func testAccCheckRoleHasSegment(client *sailpoint.APIClient, roleID, segmentID string, want bool) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		return testAccRetry(fmt.Sprintf("role %s segment membership", roleID), func() (bool, error) {
-			role, httpResp, err := client.Beta.RolesAPI.GetRole(context.Background(), roleID).Execute()
+			role, httpResp, err := client.RolesAPI.GetRoleV1(context.Background(), roleID).Execute()
 			if err != nil {
 				return false, fmt.Errorf("getting role %s: %s", roleID, testAccHTTPError(err, httpResp))
 			}
@@ -140,7 +140,7 @@ func testAccCheckRoleHasSegment(client *sailpoint.APIClient, roleID, segmentID s
 func testAccCheckAccessProfileHasSegment(client *sailpoint.APIClient, accessProfileID, segmentID string, want bool) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		return testAccRetry(fmt.Sprintf("access profile %s segment membership", accessProfileID), func() (bool, error) {
-			accessProfile, httpResp, err := client.Beta.AccessProfilesAPI.GetAccessProfile(context.Background(), accessProfileID).Execute()
+			accessProfile, httpResp, err := client.AccessProfilesAPI.GetAccessProfileV1(context.Background(), accessProfileID).Execute()
 			if err != nil {
 				return false, fmt.Errorf("getting access profile %s: %s", accessProfileID, testAccHTTPError(err, httpResp))
 			}
@@ -151,12 +151,12 @@ func testAccCheckAccessProfileHasSegment(client *sailpoint.APIClient, accessProf
 
 func testAccCheckSegmentAccessV1Destroy(client *sailpoint.APIClient, fixture testAccSegmentAccessFixture) error {
 	return testAccRetry("segment access destroy verification", func() (bool, error) {
-		role, httpResp, err := client.Beta.RolesAPI.GetRole(context.Background(), fixture.RoleID).Execute()
+		role, httpResp, err := client.RolesAPI.GetRoleV1(context.Background(), fixture.RoleID).Execute()
 		if err != nil {
 			return false, fmt.Errorf("getting role %s during destroy check: %s", fixture.RoleID, testAccHTTPError(err, httpResp))
 		}
 
-		accessProfile, httpResp, err := client.Beta.AccessProfilesAPI.GetAccessProfile(context.Background(), fixture.AccessProfileID).Execute()
+		accessProfile, httpResp, err := client.AccessProfilesAPI.GetAccessProfileV1(context.Background(), fixture.AccessProfileID).Execute()
 		if err != nil {
 			return false, fmt.Errorf("getting access profile %s during destroy check: %s", fixture.AccessProfileID, testAccHTTPError(err, httpResp))
 		}

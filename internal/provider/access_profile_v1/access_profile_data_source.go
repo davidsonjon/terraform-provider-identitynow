@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_profiles"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/access_profile_v1/datasource_access_profile"
 )
@@ -70,8 +70,8 @@ func (d *accessProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	tflog.Debug(ctx, "Reading Access Profile data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.AccessProfilesAPI.
-		GetAccessProfile(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.AccessProfilesAPI.
+		GetAccessProfileV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Access Profile data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -97,7 +97,7 @@ func (d *accessProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 // Every data source attribute is Computed-only, so - unlike the resource -
 // there is no "practitioner configured it" case to preserve: every block
 // always gets a real read-back from the API response.
-func accessProfileDatasourceDtoToModel(ctx context.Context, dto *api_beta.AccessProfile, fallback datasource_access_profile.AccessProfileModel) (datasource_access_profile.AccessProfileModel, diag.Diagnostics) {
+func accessProfileDatasourceDtoToModel(ctx context.Context, dto *access_profiles.AccessProfile, fallback datasource_access_profile.AccessProfileModel) (datasource_access_profile.AccessProfileModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -121,7 +121,7 @@ func accessProfileDatasourceDtoToModel(ctx context.Context, dto *api_beta.Access
 		model.Requestable = types.BoolPointerValue(dto.Requestable)
 	}
 
-	owner, d := datasource_access_profile.OwnerValue{}.FromApi_betaOwnerReference(ctx, &dto.Owner)
+	owner, d := datasource_access_profile.OwnerValue{}.FromApi_betaOwnerReference(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 

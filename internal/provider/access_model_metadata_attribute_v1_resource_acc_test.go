@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 )
 
 // TestAccAccessModelMetadataAttributeV1Resource is an acceptance test
@@ -119,8 +119,8 @@ func testAccCheckAccessModelMetadataAttributeV1Destroy(s *terraform.State) error
 		}
 
 		key := rs.Primary.Attributes["key"]
-		_, httpResp, err := client.Beta.AccessModelMetadataAPI.
-			GetAccessModelMetadataAttribute(context.Background(), key).
+		_, httpResp, err := client.AccessModelMetadataAPI.
+			GetAccessModelMetadataAttributeV1(context.Background(), key).
 			Execute()
 		if err == nil {
 			return fmt.Errorf("access model metadata attribute %s still exists", key)

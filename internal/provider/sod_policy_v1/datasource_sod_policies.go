@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/sod_policies"
 
 	"terraform-provider-identitynow/internal/provider/sod_policy_v1/datasource_sod_policies"
 )
@@ -109,7 +109,7 @@ func (d *sodPoliciesDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	tflog.Debug(ctx, "Reading SOD Policies data source")
 
-	apiReq := d.client.Beta.SODPoliciesAPI.ListSodPolicies(ctx)
+	apiReq := d.client.SODPoliciesAPI.ListSodPoliciesV1(ctx)
 	if !config.Limit.IsNull() && !config.Limit.IsUnknown() {
 		apiReq = apiReq.Limit(int32(config.Limit.ValueInt64()))
 	}
@@ -173,7 +173,7 @@ func sodPoliciesDataSourceSchema(ctx context.Context) datasourceschema.Schema {
 	return s
 }
 
-func sodPoliciesListItemFromDTO(ctx context.Context, dto *api_beta.SodPolicy) (sodPoliciesListItemModel, diag.Diagnostics) {
+func sodPoliciesListItemFromDTO(ctx context.Context, dto *sod_policies.SodPolicy) (sodPoliciesListItemModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	item := sodPoliciesListItemModel{
 		CompensatingControls:           types.StringNull(),
@@ -266,7 +266,7 @@ func pluralOwnerRefAttrTypes() map[string]attr.Type {
 	}
 }
 
-func pluralOwnerRefObjectFromAPI(owner *api_beta.SodPolicyOwnerRef) (types.Object, diag.Diagnostics) {
+func pluralOwnerRefObjectFromAPI(owner *sod_policies.SodPolicyOwnerRef) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if owner == nil {
 		return types.ObjectNull(pluralOwnerRefAttrTypes()), diags

@@ -9,8 +9,7 @@ import (
 	"net/url"
 	"strings"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 )
 
 // deleteAccessModelMetadataAttribute issues a raw DELETE
@@ -32,11 +31,11 @@ import (
 // operation).
 //
 // This hand-rolls the HTTP call using only the SDK's already-exported
-// configuration surface (github.com/sailpoint-oss/golang-sdk/v2/api_beta's
-// `Configuration.BaseURL`/`ClientId`/`ClientSecret`/`TokenURL`/`Token`/
-// `HTTPClient`, all exported fields) so it stays a legitimate, no-fork
-// extension of the SDK rather than vendoring or forking any generated code.
-// It deliberately mirrors api_beta's own unexported `prepareRequest`/
+// configuration surface (github.com/sailpoint-oss/golang-sdk/v3's root
+// `Configuration.ClientConfiguration.BaseURL`/`ClientId`/`ClientSecret`/
+// `TokenURL`/`Token` plus `Configuration.HTTPClient`, all exported fields) so
+// it stays a legitimate, no-fork extension of the SDK rather than vendoring or
+// forking any generated code. It deliberately mirrors the SDK's own unexported `prepareRequest`/
 // `callAPI`/`getAccessToken` request-shape and auth-token-caching logic
 // (same header names, same client-credentials form-POST shape, same
 // cfg.Token read/write caching pattern) so behavior stays consistent with
@@ -47,15 +46,17 @@ import (
 // `DeleteAccessModelMetadataAttribute` method), this helper should be
 // deleted and replaced with the generated call - check for that on any
 // future `golang-sdk` version bump for this target.
-func deleteAccessModelMetadataAttribute(ctx context.Context, client *sailpoint.APIClient, key string) (*http.Response, error) {
-	cfg := client.Beta.GetConfig()
+func deleteAccessModelMetadataAttribute(ctx context.Context, cfg *sailpoint.Configuration, key string) (*http.Response, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("no SDK configuration available to build DELETE request")
+	}
 
 	token, err := betaBearerToken(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("could not obtain bearer token: %w", err)
 	}
 
-	reqURL := strings.TrimSuffix(cfg.BaseURL, "/") + "/access-model-metadata/attributes/" + url.PathEscape(key)
+	reqURL := strings.TrimSuffix(cfg.ClientConfiguration.BaseURL, "/") + "/access-model-metadata/attributes/" + url.PathEscape(key)
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, reqURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not build DELETE request: %w", err)
@@ -74,20 +75,21 @@ func deleteAccessModelMetadataAttribute(ctx context.Context, client *sailpoint.A
 // resource), and otherwise fetching+caching a fresh one via the standard
 // OAuth2 client-credentials flow - the exact request shape used internally
 // by api_beta's own unexported getAccessToken.
-func betaBearerToken(cfg *api_beta.Configuration) (string, error) {
-	if cfg.Token != "" {
-		return cfg.Token, nil
+func betaBearerToken(cfg *sailpoint.Configuration) (string, error) {
+	cc := &cfg.ClientConfiguration
+	if cc.Token != "" {
+		return cc.Token, nil
 	}
-	if cfg.ClientId == "" || cfg.ClientSecret == "" || cfg.TokenURL == "" {
+	if cc.ClientId == "" || cc.ClientSecret == "" || cc.TokenURL == "" {
 		return "", fmt.Errorf("no cached token and no client credentials available to fetch one")
 	}
 
 	form := url.Values{
 		"grant_type":    {"client_credentials"},
-		"client_id":     {cfg.ClientId},
-		"client_secret": {cfg.ClientSecret},
+		"client_id":     {cc.ClientId},
+		"client_secret": {cc.ClientSecret},
 	}
-	req, err := http.NewRequest(http.MethodPost, cfg.TokenURL, strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(http.MethodPost, cc.TokenURL, strings.NewReader(form.Encode()))
 	if err != nil {
 		return "", err
 	}
@@ -114,6 +116,6 @@ func betaBearerToken(cfg *api_beta.Configuration) (string, error) {
 		return "", fmt.Errorf("token endpoint returned an empty access_token (status %s)", resp.Status)
 	}
 
-	cfg.Token = tok.AccessToken
-	return cfg.Token, nil
+	cc.Token = tok.AccessToken
+	return cc.Token, nil
 }

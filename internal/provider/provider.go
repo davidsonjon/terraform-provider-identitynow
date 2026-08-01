@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -46,6 +46,7 @@ func New() func() provider.Provider {
 
 type identitynowProvider struct {
 	client *sailpoint.APIClient
+	config *sailpoint.Configuration
 }
 
 // GetClient exposes the configured SDK client to resource/data source
@@ -55,6 +56,17 @@ type identitynowProvider struct {
 // imports them to register resources/data sources).
 func (p identitynowProvider) GetClient() *sailpoint.APIClient {
 	return p.client
+}
+
+// GetClientConfig exposes the root SDK Configuration (base URL, client
+// credentials, token URL and HTTP client) to subpackages that need to make a
+// raw HTTP call the generated per-service client does not expose - currently
+// only access_model_metadata_attribute_v1's hand-rolled DELETE (the published
+// spec omits a working DELETE endpoint, so golang-sdk generates no delete
+// method for it). golang-sdk v3's root *sailpoint.APIClient does not expose its
+// Configuration, so the provider stashes and hands it out here.
+func (p identitynowProvider) GetClientConfig() *sailpoint.Configuration {
+	return p.config
 }
 
 type ProviderModel struct {
@@ -140,6 +152,16 @@ func (p *identitynowProvider) Configure(ctx context.Context, req provider.Config
 	}()
 
 	configuration := sailpoint.NewDefaultConfiguration()
+	// golang-sdk v3 added a client-side guard rail: any endpoint that sends
+	// the X-SailPoint-Experimental header now panics unless
+	// Configuration.Experimental is explicitly opted in. Several endpoints
+	// this provider already relies on (e.g. AppsAPI.ListAllSourceAppV1,
+	// SourcesAPI provisioning-policy/schema endpoints) are - and always
+	// were - SailPoint "experimental" APIs; v2 sent the header
+	// unconditionally with no such guard. Opt in globally so existing
+	// resources/data-sources keep working exactly as before the SDK
+	// migration.
+	configuration.Experimental = true
 	httpClient := retryablehttp.NewClient()
 
 	httpClient.RetryMax = 20
@@ -151,10 +173,12 @@ func (p *identitynowProvider) Configure(ctx context.Context, req provider.Config
 	configuration.HTTPClient = httpClient
 	apiClient := sailpoint.NewAPIClient(configuration)
 	p.client = apiClient
+	p.config = configuration
 
 	providerConfig := identitynowProvider{}
 
 	providerConfig.client = apiClient
+	providerConfig.config = configuration
 
 	resp.DataSourceData = providerConfig
 	resp.ResourceData = providerConfig

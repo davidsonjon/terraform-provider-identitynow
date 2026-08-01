@@ -4,10 +4,10 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in resource_governance_group and
-// datasource_governance_group, backed by the golang-sdk v2
-// api_beta.GovernanceGroupsAPIService client (the SDK does not yet publish a
+// datasource_governance_group, backed by the golang-sdk v3
+// governance_groups.GovernanceGroupsAPIService client (the SDK does not yet publish a
 // per-service v1 package; v1 is the stabilization of what was beta). Unlike
-// service_desk_integration_v1/role_v1's *Dto types, api_beta.WorkgroupDto
+// service_desk_integration_v1/role_v1's *Dto types, governance_groups.WorkgroupDto
 // declares a real typed Id field (no AdditionalProperties workaround needed).
 //
 // Known limitations (tracked for follow-up before promoting out of the _v1
@@ -26,7 +26,7 @@
 //     (identitynow_governance_group_connections_v1, read-only - connections
 //     have no write endpoint at all).
 //   - "owner" is the only nested object in this schema and is mapped to
-//     api_beta.WorkgroupDtoOwner via associated_external_type (all fields on
+//     governance_groups.WorkgroupDtoOwner via associated_external_type (all fields on
 //     that SDK struct are plain *string - confirmed via direct source
 //     inspection, no NullableString outliers).
 package governance_group_v1
@@ -44,8 +44,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/governance_groups"
 
 	"terraform-provider-identitynow/internal/provider/governance_group_v1/resource_governance_group"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -120,8 +120,8 @@ func (r *governanceGroupResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.GovernanceGroupsAPI.
-		CreateWorkgroup(ctx).
+	apiResp, httpResp, err := r.client.GovernanceGroupsAPI.
+		CreateWorkgroupV1(ctx).
 		WorkgroupDto(*dto).
 		Execute()
 	if err != nil {
@@ -150,8 +150,8 @@ func (r *governanceGroupResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading Governance Group", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.GovernanceGroupsAPI.
-		GetWorkgroup(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.GovernanceGroupsAPI.
+		GetWorkgroupV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -200,18 +200,18 @@ func (r *governanceGroupResource) Update(ctx context.Context, req resource.Updat
 	// description, only name/description/owner are patchable - a "replace
 	// whole document" patch of exactly those three fields is the simplest
 	// correct approach for a pilot resource.
-	patch := []api_beta.JsonPatchOperation{
-		jsonPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(dto.Name)),
-		jsonPatchReplace("/description", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(dto.Description)),
+	patch := []governance_groups.JsonPatchOperation{
+		jsonPatchReplace("/name", governance_groups.StringAsJsonPatchOperationValue(dto.Name)),
+		jsonPatchReplace("/description", governance_groups.StringAsJsonPatchOperationValue(dto.Description)),
 	}
 	if m, err := structToMap(dto.Owner); err == nil && m != nil {
-		patch = append(patch, jsonPatchReplace("/owner", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+		patch = append(patch, jsonPatchReplace("/owner", governance_groups.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 	}
 
 	tflog.Debug(ctx, "Patching Governance Group", map[string]interface{}{"id": state.Id.ValueString(), "patch_ops": len(patch)})
 
-	apiResp, httpResp, err := r.client.Beta.GovernanceGroupsAPI.
-		PatchWorkgroup(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.GovernanceGroupsAPI.
+		PatchWorkgroupV1(ctx, state.Id.ValueString()).
 		JsonPatchOperation(patch).
 		Execute()
 	if err != nil {
@@ -240,8 +240,8 @@ func (r *governanceGroupResource) Delete(ctx context.Context, req resource.Delet
 
 	tflog.Debug(ctx, "Deleting Governance Group", map[string]interface{}{"id": state.Id.ValueString()})
 
-	httpResp, err := r.client.Beta.GovernanceGroupsAPI.
-		DeleteWorkgroup(ctx, state.Id.ValueString()).
+	httpResp, err := r.client.GovernanceGroupsAPI.
+		DeleteWorkgroupV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -258,10 +258,10 @@ func (r *governanceGroupResource) Delete(ctx context.Context, req resource.Delet
 
 // modelToDto converts the Terraform plan/config model into the SDK create/update
 // DTO shape.
-func modelToDto(ctx context.Context, m resource_governance_group.GovernanceGroupModel) (*api_beta.WorkgroupDto, diag.Diagnostics) {
+func modelToDto(ctx context.Context, m resource_governance_group.GovernanceGroupModel) (*governance_groups.WorkgroupDto, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	var owner *api_beta.WorkgroupDtoOwner
+	var owner *governance_groups.WorkgroupDtoOwner
 	if !m.Owner.IsUnknown() {
 		var d diag.Diagnostics
 		owner, d = m.Owner.ToApi_betaWorkgroupDtoOwner(ctx)
@@ -271,7 +271,7 @@ func modelToDto(ctx context.Context, m resource_governance_group.GovernanceGroup
 		return nil, diags
 	}
 
-	dto := api_beta.NewWorkgroupDtoWithDefaults()
+	dto := governance_groups.NewWorkgroupDtoWithDefaults()
 	name := m.Name.ValueString()
 	dto.Name = &name
 	description := m.Description.ValueString()
@@ -282,7 +282,7 @@ func modelToDto(ctx context.Context, m resource_governance_group.GovernanceGroup
 }
 
 // dtoToModel converts an API response DTO into the Terraform state model.
-func dtoToModel(ctx context.Context, dto *api_beta.WorkgroupDto, fallback resource_governance_group.GovernanceGroupModel) (resource_governance_group.GovernanceGroupModel, diag.Diagnostics) {
+func dtoToModel(ctx context.Context, dto *governance_groups.WorkgroupDto, fallback resource_governance_group.GovernanceGroupModel) (resource_governance_group.GovernanceGroupModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -323,8 +323,8 @@ func errDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-func jsonPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{
+func jsonPatchReplace(path string, value governance_groups.JsonPatchOperationValue) governance_groups.JsonPatchOperation {
+	return governance_groups.JsonPatchOperation{
 		Op:    "replace",
 		Path:  path,
 		Value: &value,
@@ -333,7 +333,7 @@ func jsonPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestI
 
 // structToMap round-trips an SDK model struct through JSON to get a
 // map[string]interface{} suitable for
-// api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue, since
+// governance_groups.MapmapOfStringAnyAsJsonPatchOperationValue, since
 // the JSON Patch value wrapper type doesn't accept typed structs directly
 // (see the sdk-type-reference catalog's JsonPatchOperation entry).
 func structToMap(v interface{}) (map[string]interface{}, error) {

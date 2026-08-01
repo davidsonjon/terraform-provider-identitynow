@@ -19,10 +19,10 @@
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in
 // resource_identity_profile/datasource_identity_profile, backed by the
-// golang-sdk v2 api_beta.IdentityProfilesAPIService client. Update() calls
-// api_beta.IdentityProfilesAPIService.UpdateIdentityProfile, which is PATCH
+// golang-sdk v3 identity_profiles.IdentityProfilesAPIService client. Update() calls
+// identity_profiles.IdentityProfilesAPIService.UpdateIdentityProfile, which is PATCH
 // /identity-profiles/v1/{id} (RFC 6902 JSON Patch) using the exact same
-// api_beta.JsonPatchOperation / UpdateMultiHostSourcesRequestInnerValue
+// identity_profiles.JsonPatchOperation / JsonPatchOperationValue
 // wrapper type as sources_v1 (a shared api_beta model, reused across
 // unrelated JSON-Patch-based endpoints) - the jsonPatchReplace/
 // optionalStringPatch/optionalInt32Patch/structToMap helper pattern is
@@ -81,7 +81,7 @@
 // whose background job this repo doesn't wait on, e.g. sources_v1),
 // DeleteIdentityProfile's 202 response includes a *TaskResultSimplified*
 // whose "id" can be polled via the generic
-// api_beta.TaskManagementAPIService.GetTaskStatus(ctx, id) endpoint for real
+// identity_profiles.TaskManagementAPIService.GetTaskStatus(ctx, id) endpoint for real
 // completion status (TaskStatus.Completed/CompletionStatus) - unlike a
 // bare "fire and forget" 202, actually reflecting delete failure back to
 // Terraform matters here because a failed background bulk-delete job (e.g.
@@ -115,8 +115,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
 
 	"terraform-provider-identitynow/internal/provider/identity_profile_v1/resource_identity_profile"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -217,8 +217,8 @@ func (r *identityProfileResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.IdentityProfilesAPI.
-		CreateIdentityProfile(ctx).
+	apiResp, httpResp, err := r.client.IdentityProfilesAPI.
+		CreateIdentityProfileV1(ctx).
 		IdentityProfile(*dto).
 		Execute()
 	if err != nil {
@@ -247,8 +247,8 @@ func (r *identityProfileResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading Identity Profile", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.IdentityProfilesAPI.
-		GetIdentityProfile(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.IdentityProfilesAPI.
+		GetIdentityProfileV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -323,31 +323,31 @@ func (r *identityProfileResource) Update(ctx context.Context, req resource.Updat
 	// (same simple, unconditional-replace convention as
 	// governance_group_v1/role_v1/sources_v1).
 	name := dto.Name.Get()
-	patch := []api_beta.JsonPatchOperation{
-		jsonPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(name)),
+	patch := []identity_profiles.JsonPatchOperation{
+		jsonPatchReplace("/name", identity_profiles.StringAsJsonPatchOperationValue(name)),
 	}
 	patch = append(patch, optionalStringPatch("/description", dto.Description.Get())...)
 	patch = append(patch, optionalInt64Patch("/priority", dto.Priority)...)
 
 	if m, err := structToMap(dto.Owner.Get()); err == nil && m != nil {
-		patch = append(patch, jsonPatchReplace("/owner", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+		patch = append(patch, jsonPatchReplace("/owner", identity_profiles.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 	}
 
 	if authoritativeSourceChanged {
 		if m, err := structToMap(dto.AuthoritativeSource); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/authoritativeSource", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/authoritativeSource", identity_profiles.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 	if identityAttributeConfigChanged && dto.IdentityAttributeConfig != nil {
 		if m, err := structToMap(dto.IdentityAttributeConfig); err == nil && m != nil {
-			patch = append(patch, jsonPatchReplace("/identityAttributeConfig", api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue(&m)))
+			patch = append(patch, jsonPatchReplace("/identityAttributeConfig", identity_profiles.MapmapOfStringAnyAsJsonPatchOperationValue(&m)))
 		}
 	}
 
 	tflog.Debug(ctx, "Patching Identity Profile", map[string]interface{}{"id": state.Id.ValueString(), "patch_ops": len(patch)})
 
-	apiResp, httpResp, err := r.client.Beta.IdentityProfilesAPI.
-		UpdateIdentityProfile(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.IdentityProfilesAPI.
+		UpdateIdentityProfileV1(ctx, state.Id.ValueString()).
 		JsonPatchOperation(patch).
 		Execute()
 	if err != nil {
@@ -388,8 +388,8 @@ func (r *identityProfileResource) Delete(ctx context.Context, req resource.Delet
 
 	tflog.Debug(ctx, "Deleting Identity Profile", map[string]interface{}{"id": state.Id.ValueString()})
 
-	taskResult, httpResp, err := r.client.Beta.IdentityProfilesAPI.
-		DeleteIdentityProfile(ctx, state.Id.ValueString()).
+	taskResult, httpResp, err := r.client.IdentityProfilesAPI.
+		DeleteIdentityProfileV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -408,7 +408,7 @@ func (r *identityProfileResource) Delete(ctx context.Context, req resource.Delet
 
 	taskId := *taskResult.Id
 	for attempt := 0; attempt < identityProfileDeletePollAttempts; attempt++ {
-		status, _, statusErr := r.client.Beta.TaskManagementAPI.GetTaskStatus(ctx, taskId).Execute()
+		status, _, statusErr := r.client.TaskManagementAPI.GetTaskStatusV1(ctx, taskId).Execute()
 		if statusErr != nil {
 			// The task status endpoint itself 404ing/erroring isn't
 			// necessarily fatal - the delete may have already fully
@@ -440,34 +440,34 @@ func (r *identityProfileResource) Delete(ctx context.Context, req resource.Delet
 // set - server-computed-only fields (id, created, modified, identity_count,
 // has_time_based_attr) are left at their zero value and always re-populated
 // from the live API response by dtoToModel instead.
-func modelToDto(ctx context.Context, m identityProfileResourceModel) (*api_beta.IdentityProfile, diag.Diagnostics) {
+func modelToDto(ctx context.Context, m identityProfileResourceModel) (*identity_profiles.IdentityProfile, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	authoritativeSource, d := m.AuthoritativeSource.ToApi_betaIdentityProfileAllOfAuthoritativeSource(ctx)
+	authoritativeSource, d := m.AuthoritativeSource.ToIdentity_profilesIdentityProfileAllOfAuthoritativeSource(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return nil, diags
 	}
 
-	dto := api_beta.NewIdentityProfileWithDefaults()
-	dto.Name = *api_beta.NewNullableString(m.Name.ValueStringPointer())
+	dto := identity_profiles.NewIdentityProfileWithDefaults()
+	dto.Name = *identity_profiles.NewNullableString(m.Name.ValueStringPointer())
 	if authoritativeSource != nil {
 		dto.AuthoritativeSource = *authoritativeSource
 	}
 
 	if !m.Description.IsNull() && !m.Description.IsUnknown() {
 		v := m.Description.ValueString()
-		dto.Description = *api_beta.NewNullableString(&v)
+		dto.Description = *identity_profiles.NewNullableString(&v)
 	}
 	if !m.Priority.IsNull() && !m.Priority.IsUnknown() {
 		v := m.Priority.ValueInt64()
 		dto.Priority = &v
 	}
 
-	owner, d := m.Owner.ToApi_betaIdentityProfileAllOfOwner(ctx)
+	owner, d := m.Owner.ToIdentity_profilesIdentityProfileAllOfOwner(ctx)
 	diags.Append(d...)
 	if owner != nil {
-		dto.Owner = *api_beta.NewNullableIdentityProfileAllOfOwner(owner)
+		dto.Owner = *identity_profiles.NewNullableIdentityProfileAllOfOwner(owner)
 	}
 
 	cfg, d := identityAttributeConfigToApi(m.IdentityAttributeConfig)
@@ -483,7 +483,7 @@ func modelToDto(ctx context.Context, m identityProfileResourceModel) (*api_beta.
 // "fallback" supplies any attribute this converter doesn't itself populate,
 // matching the established governance_group_v1/role_v1/sources_v1
 // convention of always taking a fallback model.
-func dtoToModel(ctx context.Context, dto *api_beta.IdentityProfile, fallback identityProfileResourceModel) (identityProfileResourceModel, diag.Diagnostics) {
+func dtoToModel(ctx context.Context, dto *identity_profiles.IdentityProfile, fallback identityProfileResourceModel) (identityProfileResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -507,15 +507,15 @@ func dtoToModel(ctx context.Context, dto *api_beta.IdentityProfile, fallback ide
 	model.Created = timeToStringValue(dto.Created)
 	model.Modified = timeToStringValue(dto.Modified)
 
-	authoritativeSource, d := resource_identity_profile.AuthoritativeSourceValue{}.FromApi_betaIdentityProfileAllOfAuthoritativeSource(ctx, &dto.AuthoritativeSource)
+	authoritativeSource, d := resource_identity_profile.AuthoritativeSourceValue{}.FromIdentity_profilesIdentityProfileAllOfAuthoritativeSource(ctx, &dto.AuthoritativeSource)
 	diags.Append(d...)
 	model.AuthoritativeSource = authoritativeSource
 
-	owner, d := resource_identity_profile.OwnerValue{}.FromApi_betaIdentityProfileAllOfOwner(ctx, dto.Owner.Get())
+	owner, d := resource_identity_profile.OwnerValue{}.FromIdentity_profilesIdentityProfileAllOfOwner(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 
-	exceptionRef, d := resource_identity_profile.IdentityExceptionReportReferenceValue{}.FromApi_betaIdentityExceptionReportReference(ctx, dto.IdentityExceptionReportReference.Get())
+	exceptionRef, d := resource_identity_profile.IdentityExceptionReportReferenceValue{}.FromIdentity_profilesIdentityExceptionReportReference(ctx, dto.IdentityExceptionReportReference.Get())
 	diags.Append(d...)
 	model.IdentityExceptionReportReference = exceptionRef
 
@@ -551,38 +551,38 @@ func errDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-func jsonPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{
+func jsonPatchReplace(path string, value identity_profiles.JsonPatchOperationValue) identity_profiles.JsonPatchOperation {
+	return identity_profiles.JsonPatchOperation{
 		Op:    "replace",
 		Path:  path,
 		Value: &value,
 	}
 }
 
-func optionalStringPatch(path string, v *string) []api_beta.JsonPatchOperation {
+func optionalStringPatch(path string, v *string) []identity_profiles.JsonPatchOperation {
 	if v == nil {
 		return nil
 	}
-	return []api_beta.JsonPatchOperation{jsonPatchReplace(path, api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(v))}
+	return []identity_profiles.JsonPatchOperation{jsonPatchReplace(path, identity_profiles.StringAsJsonPatchOperationValue(v))}
 }
 
 // optionalInt64Patch converts an *int64 (IdentityProfile.Priority's Go type)
-// to an api_beta.JsonPatchOperation via
-// Int32AsUpdateMultiHostSourcesRequestInnerValue - the shared
-// UpdateMultiHostSourcesRequestInnerValue wrapper type only has an int32
+// to an identity_profiles.JsonPatchOperation via
+// Int32AsJsonPatchOperationValue - the shared
+// JsonPatchOperationValue wrapper type only has an int32
 // constructor (it originates from sources_v1's PATCH schema, which has no
 // int64 fields); priority values fit comfortably within int32 range.
-func optionalInt64Patch(path string, v *int64) []api_beta.JsonPatchOperation {
+func optionalInt64Patch(path string, v *int64) []identity_profiles.JsonPatchOperation {
 	if v == nil {
 		return nil
 	}
 	v32 := int32(*v)
-	return []api_beta.JsonPatchOperation{jsonPatchReplace(path, api_beta.Int32AsUpdateMultiHostSourcesRequestInnerValue(&v32))}
+	return []identity_profiles.JsonPatchOperation{jsonPatchReplace(path, identity_profiles.Int32AsJsonPatchOperationValue(&v32))}
 }
 
 // structToMap round-trips an SDK model struct through JSON to get a
 // map[string]interface{} suitable for
-// api_beta.MapmapOfStringAnyAsUpdateMultiHostSourcesRequestInnerValue, since
+// identity_profiles.MapmapOfStringAnyAsJsonPatchOperationValue, since
 // the JSON Patch value wrapper type doesn't accept typed structs directly
 // (see sources_v1/resource_source.go's identical helper).
 func structToMap(v interface{}) (map[string]interface{}, error) {
@@ -602,14 +602,14 @@ func structToMap(v interface{}) (map[string]interface{}, error) {
 
 // identityAttributeConfigToApi decodes the practitioner-supplied
 // "identity_attribute_config" JSON string into an
-// *api_beta.IdentityAttributeConfig. A null/unknown/empty jsontypes.Normalized
+// *identity_profiles.IdentityAttributeConfig. A null/unknown/empty jsontypes.Normalized
 // decodes to nil (identityAttributeConfig is Optional, not Required).
-func identityAttributeConfigToApi(v jsontypes.Normalized) (*api_beta.IdentityAttributeConfig, diag.Diagnostics) {
+func identityAttributeConfigToApi(v jsontypes.Normalized) (*identity_profiles.IdentityAttributeConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if v.IsNull() || v.IsUnknown() || v.ValueString() == "" {
 		return nil, diags
 	}
-	var cfg api_beta.IdentityAttributeConfig
+	var cfg identity_profiles.IdentityAttributeConfig
 	if err := json.Unmarshal([]byte(v.ValueString()), &cfg); err != nil {
 		diags.AddError(
 			"Invalid \"identity_attribute_config\" JSON",
@@ -624,7 +624,7 @@ func identityAttributeConfigToApi(v jsontypes.Normalized) (*api_beta.IdentityAtt
 // IdentityAttributeConfig as a jsontypes.Normalized JSON string. A nil value
 // (identityAttributeConfig omitted entirely from the response) becomes a
 // null jsontypes.Normalized rather than "{}".
-func identityAttributeConfigFromAPI(cfg *api_beta.IdentityAttributeConfig) (jsontypes.Normalized, diag.Diagnostics) {
+func identityAttributeConfigFromAPI(cfg *identity_profiles.IdentityAttributeConfig) (jsontypes.Normalized, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if cfg == nil {
 		return jsontypes.NewNormalizedNull(), diags
@@ -640,9 +640,9 @@ func identityAttributeConfigFromAPI(cfg *api_beta.IdentityAttributeConfig) (json
 	return jsontypes.NewNormalizedValue(string(b)), diags
 }
 
-// timeToStringValue formats an *api_beta.SailPointTime as RFC3339, or
+// timeToStringValue formats an *identity_profiles.SailPointTime as RFC3339, or
 // returns a null types.String if nil.
-func timeToStringValue(t *api_beta.SailPointTime) types.String {
+func timeToStringValue(t *identity_profiles.SailPointTime) types.String {
 	if t == nil {
 		return types.StringNull()
 	}

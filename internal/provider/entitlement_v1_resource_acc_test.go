@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 )
 
 // TestAccEntitlementV1Resource exercises the adopt-existing lifecycle of
@@ -116,8 +116,8 @@ func testAccCheckEntitlementV1StillExists(s *terraform.State) error {
 			continue
 		}
 
-		dto, httpResp, err := client.Beta.EntitlementsAPI.
-			GetEntitlement(context.Background(), rs.Primary.ID).
+		dto, httpResp, err := client.EntitlementsAPI.
+			GetEntitlementV1(context.Background(), rs.Primary.ID).
 			Execute()
 		if err != nil {
 			if httpResp != nil && httpResp.StatusCode == 404 {

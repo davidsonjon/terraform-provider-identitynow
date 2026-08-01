@@ -52,8 +52,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/governance_groups"
 )
 
 var (
@@ -187,7 +187,7 @@ func (r *governanceGroupMembersResource) Read(ctx context.Context, req resource.
 	tflog.Debug(ctx, "Reading Governance Group members", map[string]interface{}{"governance_group_id": workgroupID})
 
 	// If the parent governance group itself is gone, its members are gone too.
-	if _, httpResp, err := r.client.Beta.GovernanceGroupsAPI.GetWorkgroup(ctx, workgroupID).Execute(); err != nil {
+	if _, httpResp, err := r.client.GovernanceGroupsAPI.GetWorkgroupV1(ctx, workgroupID).Execute(); err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
 			tflog.Warn(ctx, "Parent Governance Group not found, removing members resource from state", map[string]interface{}{"governance_group_id": workgroupID})
 			resp.State.RemoveResource(ctx)
@@ -300,8 +300,8 @@ func (r *governanceGroupMembersResource) Delete(ctx context.Context, req resourc
 func (r *governanceGroupMembersResource) addMembers(ctx context.Context, workgroupID string, identityIDs []string) (*http.Response, error) {
 	items := bulkMemberItems(identityIDs)
 
-	results, httpResp, err := r.client.Beta.GovernanceGroupsAPI.
-		UpdateWorkgroupMembers(ctx, workgroupID).
+	results, httpResp, err := r.client.GovernanceGroupsAPI.
+		UpdateWorkgroupMembersV1(ctx, workgroupID).
 		BulkWorkgroupMembersRequestInner(items).
 		Execute()
 	if err != nil {
@@ -325,8 +325,8 @@ func (r *governanceGroupMembersResource) addMembers(ctx context.Context, workgro
 func (r *governanceGroupMembersResource) removeMembers(ctx context.Context, workgroupID string, identityIDs []string) (*http.Response, error) {
 	items := bulkMemberItems(identityIDs)
 
-	results, httpResp, err := r.client.Beta.GovernanceGroupsAPI.
-		DeleteWorkgroupMembers(ctx, workgroupID).
+	results, httpResp, err := r.client.GovernanceGroupsAPI.
+		DeleteWorkgroupMembersV1(ctx, workgroupID).
 		BulkWorkgroupMembersRequestInner(items).
 		Execute()
 	if err != nil {
@@ -348,10 +348,10 @@ func (r *governanceGroupMembersResource) removeMembers(ctx context.Context, work
 // bulkMemberItems builds the bulk-add/bulk-delete request body shared by
 // addMembers/removeMembers - both endpoints accept the identical
 // BulkWorkgroupMembersRequestInner shape (type=IDENTITY, id).
-func bulkMemberItems(identityIDs []string) []api_beta.BulkWorkgroupMembersRequestInner {
-	items := make([]api_beta.BulkWorkgroupMembersRequestInner, 0, len(identityIDs))
+func bulkMemberItems(identityIDs []string) []governance_groups.BulkWorkgroupMembersRequestInner {
+	items := make([]governance_groups.BulkWorkgroupMembersRequestInner, 0, len(identityIDs))
 	for _, id := range identityIDs {
-		item := api_beta.NewBulkWorkgroupMembersRequestInnerWithDefaults()
+		item := governance_groups.NewBulkWorkgroupMembersRequestInnerWithDefaults()
 		memberType := "IDENTITY"
 		item.Type = &memberType
 		memberID := id
@@ -370,8 +370,8 @@ func (r *governanceGroupMembersResource) readState(ctx context.Context, workgrou
 	const pageLimit = 50 // GET .../members' documented maximum limit is 50, unlike most other v1 list endpoints (250).
 	var offset int32
 	for {
-		page, httpResp, err := r.client.Beta.GovernanceGroupsAPI.
-			ListWorkgroupMembers(ctx, workgroupID).
+		page, httpResp, err := r.client.GovernanceGroupsAPI.
+			ListWorkgroupMembersV1(ctx, workgroupID).
 			Offset(offset).
 			Limit(pageLimit).
 			Execute()
