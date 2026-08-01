@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_model_metadata"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -531,7 +531,7 @@ func (v ValuesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	}
 }
 
-func (v ValuesValue) ToApi_betaAttributeValueDTO(ctx context.Context) (*api_beta.AttributeValueDTO, diag.Diagnostics) {
+func (v ValuesValue) ToApi_betaAttributeValueDTO(ctx context.Context) (*access_model_metadata.AttributeValueDTO, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -547,14 +547,14 @@ func (v ValuesValue) ToApi_betaAttributeValueDTO(ctx context.Context) (*api_beta
 		return nil, diags
 	}
 
-	return &api_beta.AttributeValueDTO{
+	return &access_model_metadata.AttributeValueDTO{
 		Name:   v.Name.ValueStringPointer(),
 		Status: v.Status.ValueStringPointer(),
 		Value:  v.Value.ValueStringPointer(),
 	}, diags
 }
 
-func (v ValuesValue) FromApi_betaAttributeValueDTO(ctx context.Context, apiObject *api_beta.AttributeValueDTO) (ValuesValue, diag.Diagnostics) {
+func (v ValuesValue) FromApi_betaAttributeValueDTO(ctx context.Context, apiObject *access_model_metadata.AttributeValueDTO) (ValuesValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

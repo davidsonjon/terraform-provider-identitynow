@@ -67,8 +67,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/access_model_metadata"
 
 	"terraform-provider-identitynow/internal/provider/access_model_metadata_attribute_v1/resource_access_model_metadata_attribute"
 	"terraform-provider-identitynow/internal/provider/util"
@@ -78,6 +78,7 @@ import (
 // this package needing to import it (which would create an import cycle).
 type clientProvider interface {
 	GetClient() *sailpoint.APIClient
+	GetClientConfig() *sailpoint.Configuration
 }
 
 var (
@@ -92,6 +93,7 @@ func NewAccessModelMetadataAttributeResource() resource.Resource {
 
 type accessModelMetadataAttributeResource struct {
 	client *sailpoint.APIClient
+	config *sailpoint.Configuration
 }
 
 func (r *accessModelMetadataAttributeResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -127,6 +129,7 @@ func (r *accessModelMetadataAttributeResource) Configure(ctx context.Context, re
 		return
 	}
 	r.client = cp.GetClient()
+	r.config = cp.GetClientConfig()
 }
 
 func (r *accessModelMetadataAttributeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -148,8 +151,8 @@ func (r *accessModelMetadataAttributeResource) Create(ctx context.Context, req r
 		return
 	}
 
-	apiResp, httpResp, err := r.client.Beta.AccessModelMetadataAPI.
-		CreateAccessModelMetadataAttribute(ctx).
+	apiResp, httpResp, err := r.client.AccessModelMetadataAPI.
+		CreateAccessModelMetadataAttributeV1(ctx).
 		AttributeDTO(*dto).
 		Execute()
 	if err != nil {
@@ -178,8 +181,8 @@ func (r *accessModelMetadataAttributeResource) Read(ctx context.Context, req res
 
 	tflog.Debug(ctx, "Reading Access Model Metadata Attribute", map[string]interface{}{"key": state.Key.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.AccessModelMetadataAPI.
-		GetAccessModelMetadataAttribute(ctx, state.Key.ValueString()).
+	apiResp, httpResp, err := r.client.AccessModelMetadataAPI.
+		GetAccessModelMetadataAttributeV1(ctx, state.Key.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -229,24 +232,24 @@ func (r *accessModelMetadataAttributeResource) Update(ctx context.Context, req r
 		return
 	}
 
-	patch := []api_beta.JsonPatchOperation{
-		ammJSONPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(dto.Name)),
-		ammJSONPatchReplace("/multiselect", api_beta.BoolAsUpdateMultiHostSourcesRequestInnerValue(dto.Multiselect)),
+	patch := []access_model_metadata.JsonPatchOperation{
+		ammJSONPatchReplace("/name", access_model_metadata.StringAsJsonPatchOperationValue(dto.Name)),
+		ammJSONPatchReplace("/multiselect", access_model_metadata.BoolAsJsonPatchOperationValue(dto.Multiselect)),
 	}
 	if dto.Description != nil {
-		patch = append(patch, ammJSONPatchReplace("/description", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(dto.Description)))
+		patch = append(patch, ammJSONPatchReplace("/description", access_model_metadata.StringAsJsonPatchOperationValue(dto.Description)))
 	}
 	if dto.Values != nil {
 		if arr, err := ammSliceToArrayInner(dto.Values); err == nil {
-			patch = append(patch, ammJSONPatchReplace("/values", api_beta.ArrayOfArrayInnerAsUpdateMultiHostSourcesRequestInnerValue(&arr)))
+			patch = append(patch, ammJSONPatchReplace("/values", access_model_metadata.ArrayOfArrayInnerAsJsonPatchOperationValue(&arr)))
 		} else {
 			resp.Diagnostics.AddError("Error encoding \"values\" for update", err.Error())
 			return
 		}
 	}
 
-	apiResp, httpResp, err := r.client.Beta.AccessModelMetadataAPI.
-		UpdateAccessModelMetadataAttribute(ctx, state.Key.ValueString()).
+	apiResp, httpResp, err := r.client.AccessModelMetadataAPI.
+		UpdateAccessModelMetadataAttributeV1(ctx, state.Key.ValueString()).
 		JsonPatchOperation(patch).
 		Execute()
 	if err != nil {
@@ -284,7 +287,7 @@ func (r *accessModelMetadataAttributeResource) Delete(ctx context.Context, req r
 
 	tflog.Debug(ctx, "Deleting Access Model Metadata Attribute", map[string]interface{}{"key": state.Key.ValueString()})
 
-	httpResp, err := deleteAccessModelMetadataAttribute(ctx, r.client, state.Key.ValueString())
+	httpResp, err := deleteAccessModelMetadataAttribute(ctx, r.config, state.Key.ValueString())
 	if err != nil {
 		tflog.Error(ctx, "Error deleting Access Model Metadata Attribute", map[string]interface{}{"key": state.Key.ValueString(), "error": err.Error()})
 		resp.Diagnostics.AddError("Error deleting Access Model Metadata Attribute", err.Error())
@@ -304,12 +307,12 @@ func (r *accessModelMetadataAttributeResource) Delete(ctx context.Context, req r
 	tflog.Info(ctx, "Deleted Access Model Metadata Attribute", map[string]interface{}{"key": state.Key.ValueString()})
 }
 
-// ammModelToDto converts the resource's plan model into an api_beta.AttributeDTO
+// ammModelToDto converts the resource's plan model into an access_model_metadata.AttributeDTO
 // suitable for both Create and (partially) Update.
-func ammModelToDto(ctx context.Context, m resource_access_model_metadata_attribute.AccessModelMetadataAttributeModel) (*api_beta.AttributeDTO, diag.Diagnostics) {
+func ammModelToDto(ctx context.Context, m resource_access_model_metadata_attribute.AccessModelMetadataAttributeModel) (*access_model_metadata.AttributeDTO, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	dto := api_beta.NewAttributeDTOWithDefaults()
+	dto := access_model_metadata.NewAttributeDTOWithDefaults()
 	dto.Key = m.Key.ValueStringPointer()
 	dto.Name = m.Name.ValueStringPointer()
 	dto.Multiselect = m.Multiselect.ValueBoolPointer()
@@ -332,7 +335,7 @@ func ammModelToDto(ctx context.Context, m resource_access_model_metadata_attribu
 	if !m.Values.IsNull() && !m.Values.IsUnknown() {
 		var items []resource_access_model_metadata_attribute.ValuesValue
 		diags.Append(m.Values.ElementsAs(ctx, &items, false)...)
-		values := make([]api_beta.AttributeValueDTO, 0, len(items))
+		values := make([]access_model_metadata.AttributeValueDTO, 0, len(items))
 		for _, item := range items {
 			v, d := item.ToApi_betaAttributeValueDTO(ctx)
 			diags.Append(d...)
@@ -347,7 +350,7 @@ func ammModelToDto(ctx context.Context, m resource_access_model_metadata_attribu
 }
 
 // ammDtoToModel converts an API response DTO into the resource's state model.
-func ammDtoToModel(ctx context.Context, dto *api_beta.AttributeDTO, fallback resource_access_model_metadata_attribute.AccessModelMetadataAttributeModel) (resource_access_model_metadata_attribute.AccessModelMetadataAttributeModel, diag.Diagnostics) {
+func ammDtoToModel(ctx context.Context, dto *access_model_metadata.AttributeDTO, fallback resource_access_model_metadata_attribute.AccessModelMetadataAttributeModel) (resource_access_model_metadata_attribute.AccessModelMetadataAttributeModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -381,23 +384,23 @@ func ammDtoToModel(ctx context.Context, dto *api_beta.AttributeDTO, fallback res
 
 // ammJSONPatchReplace builds a "replace" RFC 6902 JSON Patch operation - a
 // small helper mirroring role_v1's roleJSONPatchReplace for the same shared
-// api_beta.UpdateMultiHostSourcesRequestInnerValue oneOf wrapper type used
+// access_model_metadata.JsonPatchOperationValue oneOf wrapper type used
 // across the SDK's JSON Patch endpoints (not specific to any one resource
 // despite the type's role-flavored name).
-func ammJSONPatchReplace(path string, value api_beta.UpdateMultiHostSourcesRequestInnerValue) api_beta.JsonPatchOperation {
-	return api_beta.JsonPatchOperation{
+func ammJSONPatchReplace(path string, value access_model_metadata.JsonPatchOperationValue) access_model_metadata.JsonPatchOperation {
+	return access_model_metadata.JsonPatchOperation{
 		Op:    "replace",
 		Path:  path,
 		Value: &value,
 	}
 }
 
-// ammSliceToArrayInner round-trips a slice of api_beta.AttributeValueDTO
-// structs into []api_beta.ArrayInner (each wrapping a map[string]interface{})
+// ammSliceToArrayInner round-trips a slice of access_model_metadata.AttributeValueDTO
+// structs into []access_model_metadata.ArrayInner (each wrapping a map[string]interface{})
 // for use in a JSON Patch "replace" operation's array value - mirrors role_v1's
 // roleSliceToArrayInner for the same purpose.
-func ammSliceToArrayInner(v []api_beta.AttributeValueDTO) ([]api_beta.ArrayInner, error) {
-	arr := make([]api_beta.ArrayInner, 0, len(v))
+func ammSliceToArrayInner(v []access_model_metadata.AttributeValueDTO) ([]access_model_metadata.ArrayInner, error) {
+	arr := make([]access_model_metadata.ArrayInner, 0, len(v))
 	for i := range v {
 		m := map[string]interface{}{}
 		if v[i].Value != nil {
@@ -409,7 +412,7 @@ func ammSliceToArrayInner(v []api_beta.AttributeValueDTO) ([]api_beta.ArrayInner
 		if v[i].Status != nil {
 			m["status"] = *v[i].Status
 		}
-		arr = append(arr, api_beta.ArrayInner{MapmapOfStringAny: &m})
+		arr = append(arr, access_model_metadata.ArrayInner{MapmapOfStringAny: &m})
 	}
 	return arr, nil
 }
