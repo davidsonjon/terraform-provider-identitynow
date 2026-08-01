@@ -152,6 +152,16 @@ func (p *identitynowProvider) Configure(ctx context.Context, req provider.Config
 	}()
 
 	configuration := sailpoint.NewDefaultConfiguration()
+	// golang-sdk v3 added a client-side guard rail: any endpoint that sends
+	// the X-SailPoint-Experimental header now panics unless
+	// Configuration.Experimental is explicitly opted in. Several endpoints
+	// this provider already relies on (e.g. AppsAPI.ListAllSourceAppV1,
+	// SourcesAPI provisioning-policy/schema endpoints) are - and always
+	// were - SailPoint "experimental" APIs; v2 sent the header
+	// unconditionally with no such guard. Opt in globally so existing
+	// resources/data-sources keep working exactly as before the SDK
+	// migration.
+	configuration.Experimental = true
 	httpClient := retryablehttp.NewClient()
 
 	httpClient.RetryMax = 20
