@@ -181,14 +181,22 @@ documentation page for known limitations before relying on it.
 - [`identitynow_workflow_v1` (data source)](data-sources/workflow_v1.md)
 - [`identitynow_workflows_v1` (data source)](data-sources/workflows_v1.md)
 
-## Pilot Status and Known Limitations
+## Development Status and Known Limitations
 
-Every target above is a `_v1` pilot: generated schema/model types come from
+This is an actively developed, community-maintained provider (not an
+official SailPoint product) - see [`davidsonjon/identitynow` on the
+Terraform Registry](https://registry.terraform.io/providers/davidsonjon/identitynow).
+For every target above, generated schema/model types come from
 `tfplugingen-framework` against SailPoint's per-service `v1` OpenAPI specs,
-but Create/Read/Update/Delete logic is hand-written against the
-`golang-sdk`'s `api_beta` package (SailPoint has not yet published dedicated
-per-service `v1` Go SDK packages for every target). See each resource/data
-source's own "Known Limitations & Live Testing Notes" section for specifics
-uncovered by running `terraform apply`/`terraform plan` and acceptance tests
-against a real sandbox tenant - these notes exist because a clean
-`terraform plan` alone does not guarantee correct `apply`-time behavior.
+while Create/Read/Update/Delete logic is hand-written against
+[`golang-sdk/v3`](https://github.com/sailpoint-oss/golang-sdk)'s per-service
+Go packages (e.g. `roles`, `sources`, `workflows` - one package per
+SailPoint service, matching the OpenAPI spec's per-service `v1`
+boundaries). Every target has been exercised with `terraform apply`/`plan`/
+`destroy` and acceptance tests against a real sandbox tenant, not just
+validated for spec shape at compile time - see each resource/data source's
+own "Known Limitations & Live Testing Notes" section for specifics
+uncovered along the way, since a clean `terraform plan` alone does not
+guarantee correct `apply`-time behavior. As with any community provider,
+validate behavior against your own tenant and use case before relying on
+it in production.

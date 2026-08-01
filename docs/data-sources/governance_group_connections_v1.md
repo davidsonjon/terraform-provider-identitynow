@@ -51,7 +51,8 @@ Read-Only:
 ## Known Limitations & Live Testing Notes
 
 See the [`identitynow_governance_group_v1` resource documentation](../resources/governance_group_v1.md#known-limitations--live-testing-notes)
-for background on the pilot status shared by all Governance Group targets.
+for background shared by all Governance Group targets (SDK client used,
+live-testing notes).
 
 Connections returned here are read-only reflections of the *referencing*
 object's own configuration (e.g. a role naming this governance group as an

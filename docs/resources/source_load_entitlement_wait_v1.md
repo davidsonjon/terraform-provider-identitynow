@@ -92,9 +92,9 @@ by the `triggers` map, not by drift against any upstream GET.
 - **Live testing uncovered and fixed a vendored SDK bug**: the generated
   `ApiImportEntitlementsRequest` always sets `Content-Type:
   multipart/form-data`, but `client.prepareRequest` in
-  `golang-sdk/v2`'s `api_beta/client.go` only builds a correctly
-  boundary'd multipart body when `len(formFiles) > 0`, due to an
-  operator-precedence bug in its condition
+  `golang-sdk/v3`'s `sources.SourcesAPIService.ImportEntitlementsV1` client
+  only builds a correctly boundary'd multipart body when
+  `len(formFiles) > 0`, due to an operator-precedence bug in its condition
   (`(hasMultipartPrefix && len(formParams) > 0) || len(formFiles) > 0`).
   With no file supplied (the normal case for any non-delimited-file
   source), the request is sent with a `multipart/form-data` header but no
