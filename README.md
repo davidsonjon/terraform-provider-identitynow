@@ -6,13 +6,14 @@ top of the official [`golang-sdk`](https://github.com/sailpoint-oss/golang-sdk).
 
 ## Scope
 
-- **Resources** (18): `access_model_metadata_attribute_v1`, `access_profile_v1`,
+- **Resources** (19): `access_model_metadata_attribute_v1`, `access_profile_v1`,
   `application_access_association_v1`, `application_v1`, `connector_rule_v1`,
   `entitlement_request_config_v1`, `entitlement_v1`,
   `governance_group_members_v1`, `governance_group_v1`,
   `identity_profile_v1`, `role_v1`, `segment_access_v1`, `segment_v1`,
-  `service_desk_integration_v1`, `source_load_entitlement_wait_v1`,
-  `source_v1`, `transform_v1`, `workflow_v1`.
+  `service_desk_integration_v1`, `sod_policy_v1`,
+  `source_load_entitlement_wait_v1`, `source_v1`, `transform_v1`,
+  `workflow_v1`.
 - **Data sources** (26): singular + plural pairs for most of the above
   (`identitynow_<x>_v1` / `identitynow_<x>s_v1`), plus read-only sources such
   as `identity_v1`/`identities_v1` and `governance_group_connections_v1`.
@@ -31,21 +32,12 @@ and access-governance discussions), the following API surfaces are not yet
 modeled here but are reasonable candidates for future pilots, roughly in
 priority order:
 
-1. **SOD (Separation of Duties) Policies** - already referenced read-only via
-   `governance_group_connections_v1`'s `SOD_POLICY` connection type, but
-   there's no way to manage a policy itself yet.
-2. **Source provisioning policies / schemas** (`/source-provisioning-policies`,
-   the schema half of `/sources/{id}/schemas`) - a natural extension of the
-   existing `source_v1` resource; the forum's API-migration thread noted this
-   endpoint's docs/versioning were themselves incomplete, so this needs some
-   upstream-spec verification before starting codegen.
-3. **Certification Campaigns** - frequently discussed access-review workflow;
-   likely a bigger lift (campaign generation/rules/reports) suited to its own
-   multi-resource pipeline similar to Governance Groups.
-4. **Access Request configuration** (approval workflows, request access
-   config beyond `entitlement_request_config_v1`) - complements the existing
-   pilot but covers request-time approval routing, not just entitlement
-   request eligibility.
+1. **SOD Policy schedule / evaluate / violation-report sub-endpoints** -
+   `sod_policy_v1` (implemented) covers core CRUD only; the async
+   `GET`/`PUT /sod-policies/v1/{id}/schedule` and the
+   evaluate/violation-report/violation-report-status endpoints model a
+   request/status-poll workflow rather than declarative CRUD state, and
+   would be better suited to a purpose-built future resource/data source.
 
 This list reflects forum activity as of this review and isn't a committed
 roadmap - see the repo's issues for concrete, tracked feature requests.

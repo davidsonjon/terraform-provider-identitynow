@@ -1,0 +1,43 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Separation of Duties (SOD) Policies"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+Each entry in `sod_policies` is populated by the same conversion code as
+the singular [`identitynow_sod_policy_v1` data source](../data-sources/sod_policy_v1.md) -
+see its "Known Limitations & Live Testing Notes" section for the full list
+of limitations shared by both.
+
+`GET /sod-policies/v1` supports server-side `filters` and `sorters` query
+parameters (the standard [V3 API collection parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters)
+syntax), unlike `identitynow_segments_v1`'s equivalent list endpoint. The
+API's own `count` query parameter (an `X-Total-Count` header toggle) is
+intentionally dropped from this schema entirely - `count` is a reserved
+root attribute/block name in Terraform, matching
+`identitynow_governance_groups_v1`/`identitynow_segments_v1`'s equivalent
+precedent.
+
+**Be aware this data source performs a live API call at `terraform plan`
+time whenever its arguments are fully known** (i.e. not derived from
+another resource's unknown output) - harmless in normal use, but means a
+`main.tf` exercising this data source is not appropriate if you're trying
+to keep a `plan` check fully credential-free.

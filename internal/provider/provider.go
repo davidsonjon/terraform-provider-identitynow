@@ -27,6 +27,7 @@ import (
 	"terraform-provider-identitynow/internal/provider/segment_access_v1"
 	"terraform-provider-identitynow/internal/provider/segment_v1"
 	"terraform-provider-identitynow/internal/provider/service_desk_integration_v1"
+	"terraform-provider-identitynow/internal/provider/sod_policy_v1"
 	"terraform-provider-identitynow/internal/provider/source_load_entitlement_wait_v1"
 	"terraform-provider-identitynow/internal/provider/sources_v1"
 	"terraform-provider-identitynow/internal/provider/transform_v1"
@@ -184,6 +185,8 @@ func (p *identitynowProvider) DataSources(ctx context.Context) []func() datasour
 		segment_v1.NewSegmentsDataSource,
 		role_v1.NewRolesDataSource,
 		service_desk_integration_v1.NewServiceDeskIntegrationDataSource,
+		sod_policy_v1.NewSodPolicyDataSource,
+		sod_policy_v1.NewSodPoliciesDataSource,
 		sources_v1.NewSourceDataSource,
 		sources_v1.NewSourcesDataSource,
 		transform_v1.NewTransformDataSource,
@@ -208,6 +211,7 @@ func (p *identitynowProvider) Resources(ctx context.Context) []func() resource.R
 		segment_access_v1.NewSegmentAccessResource,
 		segment_v1.NewSegmentResource,
 		service_desk_integration_v1.NewServiceDeskIntegrationResource,
+		sod_policy_v1.NewSodPolicyResource,
 		source_load_entitlement_wait_v1.NewSourceLoadEntitlementWaitResource,
 		sources_v1.NewSourceResource,
 		transform_v1.NewTransformResource,

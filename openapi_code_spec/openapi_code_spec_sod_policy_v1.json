@@ -1,0 +1,561 @@
+{
+  "datasources": [
+    {
+      "name": "sod_policies",
+      "schema": {
+        "attributes": [
+          {
+            "name": "limit",
+            "int64": {
+              "computed_optional_required": "computed_optional",
+              "description": "Max number of results to return.\nSee [V3 API Standard Collection Parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters) for more information.",
+              "validators": [
+                {
+                  "custom": {
+                    "imports": [
+                      {
+                        "path": "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+                      }
+                    ],
+                    "schema_definition": "int64validator.Between(0, 250)"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "offset",
+            "int64": {
+              "computed_optional_required": "computed_optional",
+              "description": "Offset into the full result set. Usually specified with *limit* to paginate through the results.\nSee [V3 API Standard Collection Parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters) for more information.",
+              "validators": [
+                {
+                  "custom": {
+                    "imports": [
+                      {
+                        "path": "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+                      }
+                    ],
+                    "schema_definition": "int64validator.AtLeast(0)"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "filters",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Filter results using the standard syntax described in [V3 API Standard Collection Parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters#filtering-results)\n\nFiltering is supported for the following fields and operators:\n\n**id**: *eq, in*\n\n**name**: *eq, in*\n\n**state**: *eq, in*"
+            }
+          },
+          {
+            "name": "sorters",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Sort results using the standard syntax described in [V3 API Standard Collection Parameters](https://developer.sailpoint.com/idn/api/standard-collection-parameters#sorting-results)\n\nSorting is supported for the following fields: **id, name, created, modified, description**"
+            }
+          },
+          {
+            "name": "sod_policies",
+            "set_nested": {
+              "computed_optional_required": "computed",
+              "nested_object": {
+                "attributes": [
+                  {
+                    "name": "compensating_controls",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Optional compensating controls(Mitigating Controls)"
+                    }
+                  },
+                  {
+                    "name": "correction_advice",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Optional correction advice"
+                    }
+                  },
+                  {
+                    "name": "created",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The time when this SOD policy is created."
+                    }
+                  },
+                  {
+                    "name": "creator_id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Policy's creator ID"
+                    }
+                  },
+                  {
+                    "name": "description",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Optional description of the SOD policy"
+                    }
+                  },
+                  {
+                    "name": "external_policy_reference",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Optional External Policy Reference"
+                    }
+                  },
+                  {
+                    "name": "id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Policy id"
+                    }
+                  },
+                  {
+                    "name": "modified",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "The time when this SOD policy is modified."
+                    }
+                  },
+                  {
+                    "name": "modifier_id",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Policy's modifier ID"
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Policy Business Name"
+                    }
+                  },
+                  {
+                    "name": "owner_ref",
+                    "single_nested": {
+                      "computed_optional_required": "computed",
+                      "attributes": [
+                        {
+                          "name": "id",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Owner's ID."
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Owner's name."
+                          }
+                        },
+                        {
+                          "name": "type",
+                          "string": {
+                            "computed_optional_required": "computed",
+                            "description": "Owner type."
+                          }
+                        }
+                      ],
+                      "description": "The owner of the SOD policy."
+                    }
+                  },
+                  {
+                    "name": "policy_query",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "Search query of the SOD policy"
+                    }
+                  },
+                  {
+                    "name": "scheduled",
+                    "bool": {
+                      "computed_optional_required": "computed",
+                      "description": "defines whether a policy has been scheduled or not"
+                    }
+                  },
+                  {
+                    "name": "state",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "whether the policy is enforced or not"
+                    }
+                  },
+                  {
+                    "name": "tags",
+                    "list": {
+                      "computed_optional_required": "computed",
+                      "element_type": {
+                        "string": {}
+                      },
+                      "description": "tags for this policy object"
+                    }
+                  },
+                  {
+                    "name": "type",
+                    "string": {
+                      "computed_optional_required": "computed",
+                      "description": "whether a policy is query based or conflicting access based"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "sod_policy",
+      "schema": {
+        "attributes": [
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The ID of the SOD Policy to retrieve."
+            }
+          },
+          {
+            "name": "compensating_controls",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Optional compensating controls(Mitigating Controls)"
+            }
+          },
+          {
+            "name": "correction_advice",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Optional correction advice"
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The time when this SOD policy is created."
+            }
+          },
+          {
+            "name": "creator_id",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Policy's creator ID"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Optional description of the SOD policy"
+            }
+          },
+          {
+            "name": "external_policy_reference",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Optional External Policy Reference"
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "The time when this SOD policy is modified."
+            }
+          },
+          {
+            "name": "modifier_id",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Policy's modifier ID"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Policy Business Name"
+            }
+          },
+          {
+            "name": "owner_ref",
+            "single_nested": {
+              "computed_optional_required": "computed",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner's name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed",
+                    "description": "Owner type."
+                  }
+                }
+              ],
+              "description": "The owner of the SOD policy.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.SodPolicyOwnerRef"
+              }
+            }
+          },
+          {
+            "name": "policy_query",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "Search query of the SOD policy"
+            }
+          },
+          {
+            "name": "scheduled",
+            "bool": {
+              "computed_optional_required": "computed",
+              "description": "defines whether a policy has been scheduled or not"
+            }
+          },
+          {
+            "name": "state",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "whether the policy is enforced or not"
+            }
+          },
+          {
+            "name": "tags",
+            "list": {
+              "computed_optional_required": "computed",
+              "element_type": {
+                "string": {}
+              },
+              "description": "tags for this policy object"
+            }
+          },
+          {
+            "name": "type",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "whether a policy is query based or conflicting access based"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "sod_policy",
+      "schema": {
+        "attributes": [
+          {
+            "name": "compensating_controls",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Optional compensating controls(Mitigating Controls)"
+            }
+          },
+          {
+            "name": "correction_advice",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Optional correction advice"
+            }
+          },
+          {
+            "name": "created",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The time when this SOD policy is created."
+            }
+          },
+          {
+            "name": "creator_id",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Policy's creator ID"
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Optional description of the SOD policy"
+            }
+          },
+          {
+            "name": "external_policy_reference",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Optional External Policy Reference"
+            }
+          },
+          {
+            "name": "id",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Policy id"
+            }
+          },
+          {
+            "name": "modified",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "The time when this SOD policy is modified."
+            }
+          },
+          {
+            "name": "modifier_id",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Policy's modifier ID"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Policy Business Name"
+            }
+          },
+          {
+            "name": "owner_ref",
+            "single_nested": {
+              "computed_optional_required": "computed_optional",
+              "attributes": [
+                {
+                  "name": "id",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's ID."
+                  }
+                },
+                {
+                  "name": "name",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner's name."
+                  }
+                },
+                {
+                  "name": "type",
+                  "string": {
+                    "computed_optional_required": "computed_optional",
+                    "description": "Owner type.",
+                    "validators": [
+                      {
+                        "custom": {
+                          "imports": [
+                            {
+                              "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                            }
+                          ],
+                          "schema_definition": "stringvalidator.OneOf(\n\"IDENTITY\",\n\"GOVERNANCE_GROUP\",\n)"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "description": "The owner of the SOD policy.",
+              "associated_external_type": {
+                "import": {
+                  "path": "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+                },
+                "type": "*api_beta.SodPolicyOwnerRef"
+              }
+            }
+          },
+          {
+            "name": "policy_query",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "Search query of the SOD policy"
+            }
+          },
+          {
+            "name": "scheduled",
+            "bool": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": false
+              },
+              "description": "defines whether a policy has been scheduled or not"
+            }
+          },
+          {
+            "name": "state",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "whether the policy is enforced or not",
+              "validators": [
+                {
+                  "custom": {
+                    "imports": [
+                      {
+                        "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                      }
+                    ],
+                    "schema_definition": "stringvalidator.OneOf(\n\"ENFORCED\",\n\"NOT_ENFORCED\",\n)"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "tags",
+            "list": {
+              "computed_optional_required": "computed_optional",
+              "element_type": {
+                "string": {}
+              },
+              "description": "tags for this policy object"
+            }
+          },
+          {
+            "name": "type",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "default": {
+                "static": "GENERAL"
+              },
+              "description": "whether a policy is query based or conflicting access based",
+              "validators": [
+                {
+                  "custom": {
+                    "imports": [
+                      {
+                        "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                      }
+                    ],
+                    "schema_definition": "stringvalidator.OneOf(\n\"GENERAL\",\n\"CONFLICTING_ACCESS_BASED\",\n)"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

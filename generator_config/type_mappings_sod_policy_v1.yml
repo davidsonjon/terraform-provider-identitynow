@@ -1,0 +1,55 @@
+# Durable type-linking config for the sod_policy_v1 target.
+#
+# Applied non-interactively via:
+#   python3 scripts/apply_codespec_type_mappings.py --target sod_policy_v1
+#
+# `owner_ref` is a genuine 1:1 structural match to the SDK's
+# api_beta.SodPolicyOwnerRef type (all-scalar children: type/id/name, all
+# plain *string, no NullableString outliers) - mapped for both the
+# `sod_policy` resource and the singular `sod_policy` data source. NOT
+# mapped for the plural `sod_policies` data source: its `owner_ref` lives
+# nested inside the `sod_policies` list_nested collection (dotted path
+# `sod_policies.owner_ref`, not `owner_ref`), so this mapping's `path` simply
+# doesn't match there - mirroring segment_v1's `owner`/`segments.owner`
+# precedent (see type_mappings_segment_v1.yml). The plural data source's
+# owner_ref is hand-converted directly via the generated `OwnerRefValue`
+# struct's own fields in datasource_sod_policies.go.
+#
+# `conflicting_access_criteria` (and everything under it, including its
+# `left_criteria`/`right_criteria.criteria_list` leaf elements, which would
+# otherwise have been a clean 1:1 match to the SDK's innermost leaf type
+# api_beta.AccessCriteriaCriteriaListInner - all-scalar type/id/name, all
+# plain *string) is deliberately NOT generated/mapped at all here - see
+# generator_config_sod_policy_v1.yml's `schema.ignores` comment for why (a
+# genuine tfplugingen-framework same-attribute-name-at-different-tree-
+# positions collision on `criteriaList`, reused identically by both
+# `leftCriteria` and `rightCriteria` - not fixable via type mapping, since
+# the collision is in the schema-native Type/Value struct generation itself,
+# not in the associated_external_type conversion methods). It's hand-written
+# directly in resource_sod_policy.go / datasource_sod_policy.go /
+# datasource_sod_policies.go, using api_beta.SodPolicyConflictingAccessCriteria
+# / api_beta.AccessCriteria / api_beta.AccessCriteriaCriteriaListInner
+# directly in the hand-written conversion code (just never wired through
+# `associated_external_type`).
+#
+# `violation_owner_assignment_config` (and its nested `owner_ref`) is
+# likewise NOT generated/mapped: its nested `ownerRef` collides on the same
+# generated `OwnerRefType`/`OwnerRefValue` names as the top-level `ownerRef`
+# field (same failure class as above, just one tree level apart instead of
+# siblings). Separately, per the SDK type-shape reference catalog's
+# `AdditionalOwnerRef` entry, the SDK's `ViolationOwnerAssignmentConfig`/
+# `ViolationOwnerAssignmentConfigOwnerRef` types have `NullableString`
+# fields (AssignmentRule, and ownerRef.Type respectively) that are
+# incompatible with tfplugingen-framework's generated To/From converter
+# template anyway, so this field would have needed hand-conversion
+# regardless of the naming collision. Hand-written directly using
+# api_beta.ViolationOwnerAssignmentConfig / ...OwnerRef in the conversion
+# code.
+external_type_mappings:
+  - path: "owner_ref"
+    scope: both
+    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+    type: "*api_beta.SodPolicyOwnerRef"
+
+# No symbol collisions were encountered for this mapped type.
+symbol_renames: []

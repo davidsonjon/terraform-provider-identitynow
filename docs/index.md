@@ -146,6 +146,12 @@ documentation page for known limitations before relying on it.
 - [`identitynow_segment_v1` (data source)](data-sources/segment_v1.md)
 - [`identitynow_segments_v1` (data source)](data-sources/segments_v1.md)
 
+### Separation of Duties (SOD) Policies
+
+- [`identitynow_sod_policy_v1` (resource)](resources/sod_policy_v1.md)
+- [`identitynow_sod_policy_v1` (data source)](data-sources/sod_policy_v1.md)
+- [`identitynow_sod_policies_v1` (data source)](data-sources/sod_policies_v1.md)
+
 ### Service Desk Integrations
 
 - [`identitynow_service_desk_integration_v1` (resource)](resources/service_desk_integration_v1.md)
