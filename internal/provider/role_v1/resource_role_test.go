@@ -75,11 +75,11 @@ func TestRoleModelToDto(t *testing.T) {
 	if !dto.Description.IsSet() || dto.Description.Get() == nil || *dto.Description.Get() != "a test role" {
 		t.Errorf("Description = %v, want %q", dto.Description, "a test role")
 	}
-	if dto.Owner.Id == nil || *dto.Owner.Id != ownerId {
-		t.Errorf("Owner.Id = %v, want %q", dto.Owner.Id, ownerId)
+	if dto.Owner.Get().Id == nil || *dto.Owner.Get().Id != ownerId {
+		t.Errorf("Owner.Id = %v, want %q", dto.Owner.Get().Id, ownerId)
 	}
-	if dto.Owner.Type == nil || *dto.Owner.Type != ownerType {
-		t.Errorf("Owner.Type = %v, want %q", dto.Owner.Type, ownerType)
+	if dto.Owner.Get().Type == nil || *dto.Owner.Get().Type != ownerType {
+		t.Errorf("Owner.Type = %v, want %q", dto.Owner.Get().Type, ownerType)
 	}
 	if dto.Enabled == nil || !*dto.Enabled {
 		t.Errorf("Enabled = %v, want true", dto.Enabled)
@@ -103,10 +103,10 @@ func TestRoleDtoToModel_RoundTrip(t *testing.T) {
 	dto := &roles.Role{
 		Id:   &roleId,
 		Name: "test-role",
-		Owner: roles.OwnerReference{
+		Owner: *roles.NewNullableOwnerReference(&roles.OwnerReference{
 			Id:   &ownerId,
 			Type: &ownerType,
-		},
+		}),
 		Description: *roles.NewNullableString(&description),
 		Enabled:     &enabled,
 		Requestable: &requestable,

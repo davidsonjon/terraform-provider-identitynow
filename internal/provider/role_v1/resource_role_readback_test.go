@@ -39,10 +39,10 @@ func TestRoleDtoToModel_ReadBackWhenUnconfigured(t *testing.T) {
 	dto := &roles.Role{
 		Id:   &roleId,
 		Name: "test-role",
-		Owner: roles.OwnerReference{
+		Owner: *roles.NewNullableOwnerReference(&roles.OwnerReference{
 			Id:   func() *string { s := "owner-id"; return &s }(),
 			Type: func() *string { s := "IDENTITY"; return &s }(),
-		},
+		}),
 		AccessModelMetadata: &roles.AttributeDTOList{
 			Attributes: []roles.AttributeDTO{
 				{
@@ -181,10 +181,10 @@ func TestRoleDtoToModel_PassThroughWhenConfigured(t *testing.T) {
 	dto := &roles.Role{
 		Id:   &roleId,
 		Name: "test-role",
-		Owner: roles.OwnerReference{
+		Owner: *roles.NewNullableOwnerReference(&roles.OwnerReference{
 			Id:   func() *string { s := "owner-id"; return &s }(),
 			Type: func() *string { s := "IDENTITY"; return &s }(),
-		},
+		}),
 		RevocationRequestConfig: &roles.RevocabilityForRole{
 			CommentsRequired: *roles.NewNullableBool(&apiCommentsRequired),
 			ApprovalSchemes: []roles.ApprovalSchemeForRole{

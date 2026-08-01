@@ -151,7 +151,7 @@ func TestEntitlementRequestConfigDtoToModel(t *testing.T) {
 		access.SetDenialCommentRequired(true)
 		access.SetReauthorizationRequired(true)
 		access.SetRequireEndDate(true)
-		duration := entitlements.NewPendingApprovalMaxPermittedAccessDuration()
+		duration := entitlements.NewEntitlementAccessRequestConfigMaxPermittedAccessDuration()
 		duration.SetValue(30)
 		duration.SetTimeUnit("DAYS")
 		access.SetMaxPermittedAccessDuration(*duration)

@@ -99,7 +99,7 @@ func TestSegmentResourceModelToDTO(t *testing.T) {
 	if owner == nil || owner.Id == nil || *owner.Id != "owner-id" {
 		t.Errorf("Owner = %+v, want Id = %q", owner, "owner-id")
 	}
-	vc := dto.VisibilityCriteria.Get()
+	vc := dto.VisibilityCriteria
 	if vc == nil || vc.Expression == nil {
 		t.Fatalf("VisibilityCriteria = %v, want a populated expression", vc)
 	}
@@ -138,16 +138,16 @@ func TestSegmentResourceDTOToModel_RoundTrip(t *testing.T) {
 			Id:   &ownerID,
 			Type: &ownerType,
 		}),
-		VisibilityCriteria: *segments.NewNullableVisibilityCriteria(&segments.VisibilityCriteria{
+		VisibilityCriteria: &segments.SegmentVisibilityCriteria{
 			Expression: &segments.Expression{
 				Operator:  &operator,
 				Attribute: *segments.NewNullableString(&attribute),
 				Value: *segments.NewNullableValue(&segments.Value{
-					Type:  *segments.NewNullableString(&valueType),
+					Type:  &valueType,
 					Value: &value,
 				}),
 			},
-		}),
+		},
 	}
 
 	model, diags := segmentResourceDTOToModel(ctx, dto, types.StringNull())
@@ -220,7 +220,7 @@ func TestSegmentPatchOps_ScalarChanges(t *testing.T) {
 		t.Fatalf("len(ops) = %d, want 2: %+v", len(ops), ops)
 	}
 
-	byPath := map[string]segments.JsonPatchOperation{}
+	byPath := map[string]segmentJSONPatchOp{}
 	for _, op := range ops {
 		byPath[op.Path] = op
 	}
@@ -328,8 +328,8 @@ func TestSegmentVisibilityCriteriaPatchOps(t *testing.T) {
 
 func TestSegmentPatchRequestBody(t *testing.T) {
 	name := "new-name"
-	ops := []segments.JsonPatchOperation{
-		segmentJSONPatchReplace("/name", segments.StringAsUpdateMultiHostSourcesRequestInnerValue(&name)),
+	ops := []segmentJSONPatchOp{
+		segmentJSONPatchReplace("/name", name),
 	}
 
 	body := segmentPatchRequestBody(ops)

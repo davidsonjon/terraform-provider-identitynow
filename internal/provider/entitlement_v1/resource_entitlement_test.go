@@ -118,7 +118,7 @@ func TestEntitlementResourceDtoToModel(t *testing.T) {
 
 		created := entitlements.SailPointTime{Time: time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC)}
 		modified := entitlements.SailPointTime{Time: time.Date(2026, time.February, 3, 4, 5, 6, 0, time.UTC)}
-		dto := entitlements.NewEntitlement()
+		dto := entitlements.NewEntitlementV2()
 		dto.SetId("entitlement-id")
 		dto.SetName("Finance Access")
 		dto.SetAttribute("memberOf")
@@ -131,22 +131,19 @@ func TestEntitlementResourceDtoToModel(t *testing.T) {
 		dto.SetModified(modified)
 		dto.SetSegments([]string{"segment-a", "segment-b"})
 		dto.SetAttributes(map[string]interface{}{"enabled": true, "rank": float64(7)})
-		dto.SetDirectPermissions([]entitlements.PermissionDto{{Rights: []string{"read", "write"}, Target: strPtr("accounts")}})
-		dto.SetOwner(entitlements.EntitlementOwner{Id: strPtr("owner-id"), Name: strPtr("Owner Name"), Type: strPtr("IDENTITY")})
+		dto.SetDirectPermissions([]entitlements.PermissionDTO{{Rights: []string{"read", "write"}, Target: strPtr("accounts")}})
+		dto.SetOwner(entitlements.EntitlementV2Owner{Id: strPtr("owner-id"), Name: strPtr("Owner Name"), Type: strPtr("IDENTITY")})
 
-		source := entitlements.NewEntitlementSource()
+		source := entitlements.NewEntitlementV2Source()
 		source.SetId("source-id")
 		source.SetName("HR Source")
 		source.SetType("SOURCE")
 		dto.SetSource(*source)
 
-		manual := entitlements.NewEntitlementManuallyUpdatedFields()
-		manual.SetDISPLAY_NAME(true)
-		manual.SetDESCRIPTION(false)
-		dto.SetManuallyUpdatedFields(*manual)
+		dto.SetManuallyUpdatedFields(map[string]interface{}{"DISPLAY_NAME": true, "DESCRIPTION": false})
 
-		metadata := entitlements.NewEntitlementAccessModelMetadata()
-		metadata.SetAttributes([]entitlements.AttributeDTO{{
+		metadata := entitlements.NewEntitlementV2AccessModelMetadata()
+		metadata.SetAttributes([]entitlements.AccessModelMetadata{{
 			Key:         strPtr("environment"),
 			Name:        strPtr("Environment"),
 			Multiselect: boolPtr(true),
@@ -154,23 +151,21 @@ func TestEntitlementResourceDtoToModel(t *testing.T) {
 			Type:        strPtr("custom"),
 			ObjectTypes: []string{"entitlement"},
 			Description: strPtr("Environment classification"),
-			Values: []entitlements.AttributeValueDTO{{
+			Values: []entitlements.AccessModelMetadataValuesInner{{
 				Name:   strPtr("Production"),
 				Status: strPtr("ACTIVE"),
 				Value:  strPtr("prod"),
 			}},
 		}})
 		dto.SetAccessModelMetadata(*metadata)
-		dto.AdditionalProperties = map[string]interface{}{
-			"privilegeLevel": map[string]interface{}{
-				"direct":    "HIGH",
-				"effective": "HIGH",
-				"inherited": "NONE",
-				"setBy":     "governance",
-				"setByType": "SYSTEM",
-			},
-			"tags": []string{"tag-1", "tag-2"},
-		}
+		dto.SetTags([]string{"tag-1", "tag-2"})
+		dto.SetPrivilegeLevel(entitlements.EntitlementV2PrivilegeLevel{
+			Direct:    strPtr("HIGH"),
+			Effective: strPtr("HIGH"),
+			Inherited: *entitlements.NewNullableString(strPtr("NONE")),
+			SetBy:     strPtr("governance"),
+			SetByType: *entitlements.NewNullableString(strPtr("SYSTEM")),
+		})
 
 		model, diags := entitlementResourceDtoToModel(ctx, dto, fallback)
 		if diags.HasError() {
@@ -304,7 +299,7 @@ func TestEntitlementResourceDtoToModel(t *testing.T) {
 	})
 
 	t.Run("nil nested values map to nulls", func(t *testing.T) {
-		model, diags := entitlementResourceDtoToModel(ctx, &entitlements.Entitlement{}, minimalEntitlementModel())
+		model, diags := entitlementResourceDtoToModel(ctx, &entitlements.EntitlementV2{}, minimalEntitlementModel())
 		if diags.HasError() {
 			t.Fatalf("entitlementResourceDtoToModel returned diagnostics: %v", diags)
 		}
@@ -592,9 +587,9 @@ func TestEntitlementManuallyUpdatedFieldsFromAPI(t *testing.T) {
 	})
 
 	t.Run("populated dto returns expected booleans", func(t *testing.T) {
-		v, diags := entitlementManuallyUpdatedFieldsFromAPI(&entitlements.EntitlementManuallyUpdatedFields{
-			DISPLAY_NAME: boolPtr(true),
-			DESCRIPTION:  boolPtr(false),
+		v, diags := entitlementManuallyUpdatedFieldsFromAPI(map[string]interface{}{
+			"DISPLAY_NAME": true,
+			"DESCRIPTION":  false,
 		})
 		if diags.HasError() {
 			t.Fatalf("entitlementManuallyUpdatedFieldsFromAPI returned diagnostics: %v", diags)
@@ -645,7 +640,7 @@ func TestEntitlementResourceOwnerFromAPI(t *testing.T) {
 	})
 
 	t.Run("populated dto maps fields", func(t *testing.T) {
-		v, diags := entitlementResourceOwnerFromAPI(ctx, &entitlements.EntitlementOwner{
+		v, diags := entitlementResourceOwnerFromAPI(ctx, &entitlements.EntitlementV2Owner{
 			Id:   strPtr("owner-id"),
 			Name: strPtr("Owner Name"),
 			Type: strPtr("IDENTITY"),
@@ -679,7 +674,7 @@ func TestEntitlementResourceSourceFromAPI(t *testing.T) {
 	})
 
 	t.Run("populated dto maps fields", func(t *testing.T) {
-		source := entitlements.NewEntitlementSource()
+		source := entitlements.NewEntitlementV2Source()
 		source.SetId("source-id")
 		source.SetName("HR Source")
 		source.SetType("SOURCE")

@@ -10,7 +10,11 @@ import (
 	"net/url"
 	"regexp"
 
-	beta "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	// golang-sdk v3 has no shared/common package; ErrorResponseDto is
+	// generated identically into every per-service package. We import it from
+	// the sources package as an arbitrary but stable choice for this shared
+	// error-parsing helper (the JSON shape is the same across all packages).
+	sperr "github.com/sailpoint-oss/golang-sdk/v3/sources"
 )
 
 var (
@@ -85,7 +89,7 @@ func baseRetryPolicy(resp *http.Response, err error) (bool, error) {
 	return false, nil
 }
 
-func SailpointErrorFromHTTPBody(resp *http.Response) (*beta.ErrorResponseDto, bool) {
+func SailpointErrorFromHTTPBody(resp *http.Response) (*sperr.ErrorResponseDto, bool) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, false
@@ -93,7 +97,7 @@ func SailpointErrorFromHTTPBody(resp *http.Response) (*beta.ErrorResponseDto, bo
 	// response := string(body)
 	resp.Body = io.NopCloser(bytes.NewBuffer(body))
 
-	spError := beta.NewErrorResponseDto()
+	spError := sperr.NewErrorResponseDto()
 
 	err = spError.UnmarshalJSON(body)
 	if err != nil {

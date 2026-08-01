@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/entitlements"
 )
 
 const testAccEntitlementRequestConfigEntitlementID = "00124ded10e14880b767a9c0130730b8"
@@ -175,8 +175,8 @@ func testAccCheckEntitlementRequestConfigLive(
 ) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		return testAccRetry("entitlement request config live state", func() (bool, error) {
-			dto, httpResp, err := client.Beta.EntitlementsAPI.
-				GetEntitlementRequestConfig(context.Background(), testAccEntitlementRequestConfigEntitlementID).
+			dto, httpResp, err := client.EntitlementsAPI.
+				GetEntitlementRequestConfigV1(context.Background(), testAccEntitlementRequestConfigEntitlementID).
 				Execute()
 			if err != nil {
 				return false, fmt.Errorf("getting entitlement request config: %s", testAccHTTPError(err, httpResp))
@@ -209,7 +209,7 @@ func testAccCheckEntitlementRequestConfigLive(
 	}
 }
 
-func testAccApprovalSchemesMatch(got []api_beta.EntitlementApprovalScheme, want []testAccEntitlementRequestConfigApprover) bool {
+func testAccApprovalSchemesMatch(got []entitlements.EntitlementApprovalScheme, want []testAccEntitlementRequestConfigApprover) bool {
 	if len(got) != len(want) {
 		return false
 	}

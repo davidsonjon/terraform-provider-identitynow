@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 )
 
 // TestAccTransformV1Resource is an acceptance test exercising the full CRUD
@@ -103,8 +103,8 @@ func testAccCheckTransformV1Destroy(s *terraform.State) error {
 			continue
 		}
 
-		_, httpResp, err := client.Beta.TransformsAPI.
-			GetTransform(context.Background(), rs.Primary.ID).
+		_, httpResp, err := client.TransformsAPI.
+			GetTransformV1(context.Background(), rs.Primary.ID).
 			Execute()
 		if err == nil {
 			return fmt.Errorf("transform %s still exists", rs.Primary.ID)
