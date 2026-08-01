@@ -5,7 +5,7 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in resource_transform and
-// datasource_transform, backed by the golang-sdk v2 transforms.TransformsAPI
+// datasource_transform, backed by the golang-sdk v3 transforms.TransformsAPI
 // client (the SDK does not yet publish a per-service v1 package; v1 is the
 // stabilization of what was beta).
 //

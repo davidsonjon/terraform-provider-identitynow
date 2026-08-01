@@ -10,7 +10,7 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in resource_access_profile and
-// datasource_access_profile, backed by the golang-sdk v2
+// datasource_access_profile, backed by the golang-sdk v3
 // access_profiles.AccessProfilesAPIService client (the SDK does not yet publish a
 // per-service v1 package; v1 is the stabilization of what was beta).
 //

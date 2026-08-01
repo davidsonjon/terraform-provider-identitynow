@@ -6,7 +6,7 @@
 //
 // These hand-written wrappers implement resource.Resource /
 // datasource.DataSource around the generated schema/model types in
-// resource_application and datasource_application, backed by the golang-sdk v2
+// resource_application and datasource_application, backed by the golang-sdk v3
 // apps.AppsAPI client (the SDK does not yet publish a per-service v1
 // package; v1 is the stabilization of what was beta).
 //

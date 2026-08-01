@@ -4,7 +4,7 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in resource_service_desk_integration and
-// datasource_service_desk_integration, backed by the golang-sdk v2
+// datasource_service_desk_integration, backed by the golang-sdk v3
 // service_desk_integration.ServiceDeskIntegrationAPI client (the SDK does not yet publish a
 // per-service v1 package; v1 is the stabilization of what was beta).
 //

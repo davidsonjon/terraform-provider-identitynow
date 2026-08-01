@@ -21,20 +21,21 @@
 //
 // v2's by-id shape is the objectively better fit for a normal Terraform
 // resource (a stable, single-attribute identifier, matching every other
-// _v1 pilot in this repo) and was the task's stated preference - but
-// github.com/sailpoint-oss/golang-sdk/v2@v2.7.106 (sources.SourcesAPIService)
-// has NO generated bindings at all for the v2 endpoints (confirmed via
-// `grep -n "ProvisioningPolic" api_sources.go`: only
-// Create/Get/Put/Update/Delete/ListProvisioningPolicies, all v1); v2 also
-// requires a mandatory `X-SailPoint-Experimental: true` header the SDK has no
-// generated support for attaching. Since this pipeline's hand-written CRUD is
-// built against the published golang-sdk client (see the IdentityNow agent's
-// Non-Goals: never invent SDK behavior), v1 is used instead - the resource's
-// Terraform-facing "id" is a synthesized `sourceId/usageType` composite (see
-// idFromParts/idToParts below), analogous to segment_access_v1's/
-// application_access_association_v1's composite-key patterns. Revisit this
-// decision (and migrate to a real by-id resource) once/if the SDK publishes
-// v2 bindings.
+// _v1 pilot in this repo) and was the task's stated preference - and while
+// the last golang-sdk v2 release (v2.7.106, sources.SourcesAPIService) had
+// NO generated bindings at all for the v2 endpoints (only
+// Create/Get/Put/Update/Delete/ListProvisioningPolicies, all v1), the
+// golang-sdk v3 migration changes this: v3's sources.SourcesAPIService DOES
+// now publish CreateProvisioningPolicyV2/GetProvisioningPolicyV2/
+// PutProvisioningPolicyV2/DeleteProvisioningPolicyV2 (each still requiring the
+// mandatory `X-SailPoint-Experimental: true` header, now attachable via the
+// generated request builder's XSailPointExperimental setter). This resource is
+// currently still implemented against the v1 endpoints (the resource's
+// Terraform-facing "id" is a synthesized `sourceId/usageType` composite - see
+// idFromParts/idToParts below - analogous to segment_access_v1's/
+// application_access_association_v1's composite-key patterns); migrating it to
+// the now-available by-id v2 bindings is a tracked follow-up that needs live
+// tenant verification before it can be adopted.
 //
 // "fields" dynamic-shape decision
 // --------------------------------

@@ -5,7 +5,7 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in resource_source/datasource_source,
-// backed by the golang-sdk v2 sources.SourcesAPIService client (the SDK does
+// backed by the golang-sdk v3 sources.SourcesAPIService client (the SDK does
 // not yet publish a per-service v1 package; v1 is the stabilization of what
 // was beta). Update() calls sources.SourcesAPIService.UpdateSource, which is
 // PATCH /sources/v1/{id} (RFC 6902 JSON Patch) - deliberately NOT

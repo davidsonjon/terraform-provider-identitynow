@@ -19,7 +19,7 @@
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model types in
 // resource_identity_profile/datasource_identity_profile, backed by the
-// golang-sdk v2 identity_profiles.IdentityProfilesAPIService client. Update() calls
+// golang-sdk v3 identity_profiles.IdentityProfilesAPIService client. Update() calls
 // identity_profiles.IdentityProfilesAPIService.UpdateIdentityProfile, which is PATCH
 // /identity-profiles/v1/{id} (RFC 6902 JSON Patch) using the exact same
 // identity_profiles.JsonPatchOperation / JsonPatchOperationValue

@@ -13,17 +13,24 @@ import (
 	"github.com/sailpoint-oss/golang-sdk/v3/service_desk_integration"
 )
 
-// This file works around a confirmed upstream defect in
-// github.com/sailpoint-oss/golang-sdk/v2 (present in the pinned v2.5.1 and
-// still present in the latest available release, v2.7.106, as of 2026-07-24 -
-// see the identitynow-terraform-provider-developer knowledge file for the
-// full repro): service_desk_integration.ProvisioningConfigManagedResourceRefsInner.Type/Id/Name
-// are declared as map[string]interface{} instead of string, even though the
-// real API always returns them as strings. Any Service Desk Integration with
-// a non-empty provisioningConfig.managedResourceRefs therefore fails to
-// unmarshal inside the SDK's own Execute() call (a 200 HTTP response still
-// surfaces as a non-nil Go error), breaking Read/Import/Create/Update for any
-// such object.
+// This file works around a confirmed upstream defect that was present in
+// github.com/sailpoint-oss/golang-sdk/v2 (in the pinned v2.5.1 and still
+// present in the last v2 release, v2.7.106, as of 2026-07-24 - see the
+// identitynow-terraform-provider-developer knowledge file for the full repro):
+// the managedResourceRefs inner type's Type/Id/Name were declared as
+// map[string]interface{} instead of string, even though the real API always
+// returns them as strings. Any Service Desk Integration with a non-empty
+// provisioningConfig.managedResourceRefs therefore failed to unmarshal inside
+// the SDK's own Execute() call (a 200 HTTP response still surfaced as a
+// non-nil Go error), breaking Read/Import/Create/Update for any such object.
+//
+// NOTE (golang-sdk v3 migration, 2026): v3 FIXES this upstream - the type is
+// now service_desk_integration.ServiceDeskSource with Type/Id/Name declared as
+// *string. This fallback is therefore now a dead code path on v3 (the SDK's
+// own Execute() unmarshals managedResourceRefs cleanly and the bug-detection
+// below never fires). It is retained as harmless defensive code; it can be
+// removed as a follow-up cleanup once verified against a live tenant. See the
+// SDK issues log (issue #1, marked Resolved-in-v3).
 //
 // This project's hand-written CRUD code never reads
 // provisioningConfig.managedResourceRefs (see the package doc comment - it is

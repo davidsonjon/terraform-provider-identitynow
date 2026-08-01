@@ -4,7 +4,7 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model/value types in resource_segment,
-// datasource_segment, and datasource_segments, backed by the golang-sdk v2
+// datasource_segment, and datasource_segments, backed by the golang-sdk v3
 // segments.SegmentsAPI client (the SDK does not yet publish a per-service v1
 // package; v1 is the stabilization of what was beta).
 //
