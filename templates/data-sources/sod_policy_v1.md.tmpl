@@ -1,0 +1,36 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Separation of Duties (SOD) Policies"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+See the [`identitynow_sod_policy_v1` resource documentation](../resources/sod_policy_v1.md#known-limitations--live-testing-notes)
+for the full list of limitations shared by both the resource and this data
+source (both are backed by the same underlying
+`conflicting_access_criteria`/`violation_owner_assignment_config`
+model/conversion code).
+
+Unlike `identitynow_segment_v1`, this data source only supports lookup by
+`id` - the `sod-policies` v1 API has no exact-name-match `GET`, so no
+`name` argument is exposed here. Use the plural
+[`identitynow_sod_policies_v1` data source](sod_policies_v1.md) with a
+server-side `filters` expression (e.g. `name eq "..."`) if you need to
+resolve a policy by name.

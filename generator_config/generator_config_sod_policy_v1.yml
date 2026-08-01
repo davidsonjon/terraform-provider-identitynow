@@ -1,0 +1,73 @@
+provider:
+  name: identitynow
+resources:
+  sod_policy:
+    create:
+      path: /sod-policies/v1
+      method: POST
+    read:
+      path: /sod-policies/v1/{id}
+      method: GET
+    update:
+      path: /sod-policies/v1/{id}
+      method: PUT
+    delete:
+      path: /sod-policies/v1/{id}
+      method: DELETE
+    schema:
+      ignores:
+        # `conflictingAccessCriteria.{leftCriteria,rightCriteria}` both
+        # contain a nested list named `criteriaList` - tfplugingen-framework
+        # keys generated Go types purely by attribute *name*, not full path,
+        # so it emits a duplicate `CriteriaListType`/`CriteriaListValue`/etc.
+        # declaration and fails to build ("CriteriaListType redeclared in
+        # this block"). This is the same failure class as segment_v1's
+        # visibilityCriteria `value`/`children` collision (see
+        # generator_config_segment_v1.yml) - two genuinely different tree
+        # positions (left vs. right criteria) reusing the identical leaf
+        # attribute name `criteriaList`, with no schema-driven way to avoid
+        # it via generation alone. Ignored here and hand-written directly in
+        # resource_sod_policy.go / datasource_sod_policy.go /
+        # datasource_sod_policies.go instead, preserving the exact
+        # `conflictingAccessCriteria`/`leftCriteria`/`rightCriteria`/
+        # `criteriaList` attribute names from the spec.
+        - conflictingAccessCriteria
+        # `violationOwnerAssignmentConfig.ownerRef` collides on the same
+        # generated `OwnerRefType`/`OwnerRefValue` names as the top-level
+        # `ownerRef` field (same failure class as above, just one level
+        # apart instead of siblings). Separately, per the SDK type-shape
+        # reference catalog's `AdditionalOwnerRef` entry, the SDK's
+        # `ViolationOwnerAssignmentConfig`/`ViolationOwnerAssignmentConfigOwnerRef`
+        # types have `NullableString` fields (AssignmentRule, and
+        # ownerRef.Type) that are incompatible with
+        # tfplugingen-framework's generated To/From converter template
+        # anyway, so this field would have needed hand-conversion
+        # regardless of the naming collision. Ignored here and hand-written
+        # directly.
+        - violationOwnerAssignmentConfig
+
+data_sources:
+  sod_policy:
+    read:
+      path: /sod-policies/v1/{id}
+      method: GET
+    schema:
+      ignores:
+        - conflictingAccessCriteria
+        - violationOwnerAssignmentConfig
+  sod_policies:
+    read:
+      path: /sod-policies/v1
+      method: GET
+    schema:
+      ignores:
+        - conflictingAccessCriteria
+        - violationOwnerAssignmentConfig
+        # `count` is a reserved root attribute/block name in Terraform (the
+        # `count` meta-argument) - a schema with a root-level `count`
+        # attribute fails validation ("count is a reserved root
+        # attribute/block name"). Mirrors governance_group_v1's
+        # `governance_groups`/segment_v1's `segments` plural data sources,
+        # which drop this same query param from their schema entirely for
+        # the same reason.
+        - count

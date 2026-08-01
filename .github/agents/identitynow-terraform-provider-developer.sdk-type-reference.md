@@ -125,3 +125,31 @@ after any SDK version bump before trusting a stale entry for a new target.
 - **Shape**: `Type *string`, `Id *string`, `Name *string` - a plain task-reference DTO returned by `DELETE /sources/v1/{id}`'s `202 Accepted` response, referencing the async account-removal task IdentityNow queues before the source itself is deleted.
 - **Notes**: Not polled to completion by `sources_v1`'s `Delete()` - fire-and-forget, matching every other `_v1` pilot's Delete() convention.
 - **Used by targets**: `sources_v1` (return value discarded).
+
+### SodPolicy
+- **File**: `api_beta/model_sod_policy.go`
+- **Confirmed against**: v2.7.106 (2026-08-01)
+- **Shape**: `Id *string`, `Name *string`, `Created *SailPointTime`, `Modified *SailPointTime`, `Description NullableString`, `OwnerRef *SodPolicyOwnerRef`, `ExternalPolicyReference NullableString`, `PolicyQuery *string`, `CreatorId *string`, `ModifierId NullableString`, `State *string`, `Tags []string`, `ConflictingAccessCriteria *SodPolicyConflictingAccessCriteria`, `CompensatingControls NullableString`, `CorrectionAdvice NullableString`, `Scheduled *bool`, `Type *string`, `ViolationOwnerAssignmentConfig *ViolationOwnerAssignmentConfig`, plus `AdditionalProperties map[string]interface{}`.
+- **Notes**: Mixed pointer/Nullable pattern typical of this SDK. `OwnerRef`/`ConflictingAccessCriteria`/`ViolationOwnerAssignmentConfig` are all plain (non-Nullable) struct pointers, so `.IsSet()`/`.Get()` handling is only needed for the `NullableString` scalar fields.
+- **Used by targets**: `sod_policy_v1` (top-level resource/data-source model).
+
+### SodPolicyOwnerRef
+- **File**: `api_beta/model_sod_policy_owner_ref.go`
+- **Confirmed against**: v2.7.106 (2026-08-01)
+- **Shape**: `Type *string` (enum: `IDENTITY`, `GOVERNANCE_GROUP`), `Id *string`, `Name *string` - all plain pointers, plus `AdditionalProperties map[string]interface{}`.
+- **Notes**: A leaf ref-like type, safe to `associated_external_type` map directly (no NullableString/required-field traps) - this is exactly what `sod_policy_v1` does for the top-level `owner_ref` field. **However, the identical field name `owner_ref` is reused inside `ViolationOwnerAssignmentConfig` at a different tree depth**, which independently collides with this type's generated `OwnerRefType`/`OwnerRefValue` Go helper names regardless of the mapping - see the `ViolationOwnerAssignmentConfigOwnerRef` entry below and the 2026-08-01 knowledge entry for the full collision writeup.
+- **Used by targets**: `sod_policy_v1` (top-level `owner_ref` only - generated + mapped).
+
+### SodPolicyConflictingAccessCriteria / AccessCriteria / AccessCriteriaCriteriaListInner
+- **Files**: `api_beta/model_sod_policy_conflicting_access_criteria.go`, `model_access_criteria.go`, `model_access_criteria_criteria_list_inner.go`
+- **Confirmed against**: v2.7.106 (2026-08-01)
+- **Shape**: `SodPolicyConflictingAccessCriteria{LeftCriteria *AccessCriteria, RightCriteria *AccessCriteria}`; `AccessCriteria{Name *string, CriteriaList []AccessCriteriaCriteriaListInner}`; `AccessCriteriaCriteriaListInner{Type *string (enum: ENTITLEMENT only), Id *string, Name *string}` - all plain pointers throughout, no NullableString anywhere in this tree.
+- **Notes**: Despite being a fully SDK-mapping-friendly tree (no NullableString/required-field traps), this whole field is `schema.ignores`'d and hand-written anyway - the blocker is purely the Go symbol collision (`LeftCriteria.CriteriaList`/`RightCriteria.CriteriaList` both generate a `CriteriaListType`/`CriteriaListValue` from the shared leaf name `criteriaList`), not a type-shape incompatibility. Worth remembering: a "collision-safe" type shape does NOT imply codegen will succeed - always check for sibling-branch leaf-name reuse independently of a type's own Nullable/required shape.
+- **Used by targets**: `sod_policy_v1` (`conflicting_access_criteria.{left_criteria,right_criteria}` - hand-written, not mapped).
+
+### ViolationOwnerAssignmentConfig / ViolationOwnerAssignmentConfigOwnerRef
+- **Files**: `api_beta/model_violation_owner_assignment_config.go`, `model_violation_owner_assignment_config_owner_ref.go`
+- **Confirmed against**: v2.7.106 (2026-08-01)
+- **Shape**: `ViolationOwnerAssignmentConfig{AssignmentRule NullableString (enum: MANAGER, STATIC), OwnerRef *ViolationOwnerAssignmentConfigOwnerRef}`; `ViolationOwnerAssignmentConfigOwnerRef{Type NullableString (enum: IDENTITY, GOVERNANCE_GROUP, MANAGER), Id *string, Name *string}`.
+- **Notes**: A genuinely separate Go type from `SodPolicyOwnerRef` despite near-identical shape/purpose (note the extra `MANAGER` enum value here) - do not conflate the two when reading/writing conversion code. Two independent reasons this whole field is `schema.ignores`'d/hand-written rather than generated+mapped: (1) `AssignmentRule`/`OwnerRef.Type` are both `NullableString`, breaking the generated To/From converter template's pointer-only assumption; (2) the nested `owner_ref` field name collides with the top-level `SodPolicyOwnerRef`'s generated `OwnerRefType`/`OwnerRefValue` Go helper names (attribute-name-only keying, not full-path keying - see `terraform-provider-developer.agent.md`'s stage 3 pitfall catalog).
+- **Used by targets**: `sod_policy_v1` (`violation_owner_assignment_config` - hand-written, not mapped).
