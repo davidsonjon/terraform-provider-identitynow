@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/entitlements"
 
 	"terraform-provider-identitynow/internal/provider/entitlement_v1/resource_entitlement"
 )
@@ -74,7 +74,7 @@ type entitlementPatchExpectation struct {
 	hasValue bool
 }
 
-func assertEntitlementPatchOps(t *testing.T, ops []api_beta.JsonPatchOperation, want []entitlementPatchExpectation) {
+func assertEntitlementPatchOps(t *testing.T, ops []entitlements.JsonPatchOperation, want []entitlementPatchExpectation) {
 	t.Helper()
 	if len(ops) != len(want) {
 		t.Fatalf("len(ops) = %d, want %d, ops = %+v", len(ops), len(want), ops)
@@ -116,9 +116,9 @@ func TestEntitlementResourceDtoToModel(t *testing.T) {
 	t.Run("populated dto", func(t *testing.T) {
 		fallback := minimalEntitlementModel()
 
-		created := api_beta.SailPointTime{Time: time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC)}
-		modified := api_beta.SailPointTime{Time: time.Date(2026, time.February, 3, 4, 5, 6, 0, time.UTC)}
-		dto := api_beta.NewEntitlement()
+		created := entitlements.SailPointTime{Time: time.Date(2026, time.January, 2, 3, 4, 5, 0, time.UTC)}
+		modified := entitlements.SailPointTime{Time: time.Date(2026, time.February, 3, 4, 5, 6, 0, time.UTC)}
+		dto := entitlements.NewEntitlement()
 		dto.SetId("entitlement-id")
 		dto.SetName("Finance Access")
 		dto.SetAttribute("memberOf")
@@ -131,22 +131,22 @@ func TestEntitlementResourceDtoToModel(t *testing.T) {
 		dto.SetModified(modified)
 		dto.SetSegments([]string{"segment-a", "segment-b"})
 		dto.SetAttributes(map[string]interface{}{"enabled": true, "rank": float64(7)})
-		dto.SetDirectPermissions([]api_beta.PermissionDto{{Rights: []string{"read", "write"}, Target: strPtr("accounts")}})
-		dto.SetOwner(api_beta.EntitlementOwner{Id: strPtr("owner-id"), Name: strPtr("Owner Name"), Type: strPtr("IDENTITY")})
+		dto.SetDirectPermissions([]entitlements.PermissionDto{{Rights: []string{"read", "write"}, Target: strPtr("accounts")}})
+		dto.SetOwner(entitlements.EntitlementOwner{Id: strPtr("owner-id"), Name: strPtr("Owner Name"), Type: strPtr("IDENTITY")})
 
-		source := api_beta.NewEntitlementSource()
+		source := entitlements.NewEntitlementSource()
 		source.SetId("source-id")
 		source.SetName("HR Source")
 		source.SetType("SOURCE")
 		dto.SetSource(*source)
 
-		manual := api_beta.NewEntitlementManuallyUpdatedFields()
+		manual := entitlements.NewEntitlementManuallyUpdatedFields()
 		manual.SetDISPLAY_NAME(true)
 		manual.SetDESCRIPTION(false)
 		dto.SetManuallyUpdatedFields(*manual)
 
-		metadata := api_beta.NewEntitlementAccessModelMetadata()
-		metadata.SetAttributes([]api_beta.AttributeDTO{{
+		metadata := entitlements.NewEntitlementAccessModelMetadata()
+		metadata.SetAttributes([]entitlements.AttributeDTO{{
 			Key:         strPtr("environment"),
 			Name:        strPtr("Environment"),
 			Multiselect: boolPtr(true),
@@ -154,7 +154,7 @@ func TestEntitlementResourceDtoToModel(t *testing.T) {
 			Type:        strPtr("custom"),
 			ObjectTypes: []string{"entitlement"},
 			Description: strPtr("Environment classification"),
-			Values: []api_beta.AttributeValueDTO{{
+			Values: []entitlements.AttributeValueDTO{{
 				Name:   strPtr("Production"),
 				Status: strPtr("ACTIVE"),
 				Value:  strPtr("prod"),
@@ -304,7 +304,7 @@ func TestEntitlementResourceDtoToModel(t *testing.T) {
 	})
 
 	t.Run("nil nested values map to nulls", func(t *testing.T) {
-		model, diags := entitlementResourceDtoToModel(ctx, &api_beta.Entitlement{}, minimalEntitlementModel())
+		model, diags := entitlementResourceDtoToModel(ctx, &entitlements.Entitlement{}, minimalEntitlementModel())
 		if diags.HasError() {
 			t.Fatalf("entitlementResourceDtoToModel returned diagnostics: %v", diags)
 		}
@@ -592,7 +592,7 @@ func TestEntitlementManuallyUpdatedFieldsFromAPI(t *testing.T) {
 	})
 
 	t.Run("populated dto returns expected booleans", func(t *testing.T) {
-		v, diags := entitlementManuallyUpdatedFieldsFromAPI(&api_beta.EntitlementManuallyUpdatedFields{
+		v, diags := entitlementManuallyUpdatedFieldsFromAPI(&entitlements.EntitlementManuallyUpdatedFields{
 			DISPLAY_NAME: boolPtr(true),
 			DESCRIPTION:  boolPtr(false),
 		})
@@ -645,7 +645,7 @@ func TestEntitlementResourceOwnerFromAPI(t *testing.T) {
 	})
 
 	t.Run("populated dto maps fields", func(t *testing.T) {
-		v, diags := entitlementResourceOwnerFromAPI(ctx, &api_beta.EntitlementOwner{
+		v, diags := entitlementResourceOwnerFromAPI(ctx, &entitlements.EntitlementOwner{
 			Id:   strPtr("owner-id"),
 			Name: strPtr("Owner Name"),
 			Type: strPtr("IDENTITY"),
@@ -679,7 +679,7 @@ func TestEntitlementResourceSourceFromAPI(t *testing.T) {
 	})
 
 	t.Run("populated dto maps fields", func(t *testing.T) {
-		source := api_beta.NewEntitlementSource()
+		source := entitlements.NewEntitlementSource()
 		source.SetId("source-id")
 		source.SetName("HR Source")
 		source.SetType("SOURCE")

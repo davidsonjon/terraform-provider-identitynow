@@ -35,7 +35,7 @@ import (
 //     receive this modifier). However, THIS package's dtoToModel currently
 //     hard-codes `model.Created = types.StringPointerValue(nil)` and
 //     `model.Modified = types.StringPointerValue(nil)` unconditionally -
-//     api_beta.ServiceDeskIntegrationDto has no typed Created/Modified
+//     service_desk_integration.ServiceDeskIntegrationDto has no typed Created/Modified
 //     fields at all, so neither is actually read back from the API today
 //     (a separate, pre-existing gap - not fixed here, out of scope for this
 //     plan-modifier pass). Since "modified" is therefore always a constant

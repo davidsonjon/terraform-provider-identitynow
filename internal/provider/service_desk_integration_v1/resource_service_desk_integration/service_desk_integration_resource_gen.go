@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/service_desk_integration"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -3228,7 +3228,7 @@ func (v PlanInitializerScriptValue) AttributeTypes(ctx context.Context) map[stri
 	}
 }
 
-func (v BeforeProvisioningRuleValue) ToApi_betaBeforeProvisioningRuleDto(ctx context.Context) (*api_beta.BeforeProvisioningRuleDto, diag.Diagnostics) {
+func (v BeforeProvisioningRuleValue) ToApi_betaBeforeProvisioningRuleDto(ctx context.Context) (*service_desk_integration.BeforeProvisioningRuleDto, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -3244,14 +3244,14 @@ func (v BeforeProvisioningRuleValue) ToApi_betaBeforeProvisioningRuleDto(ctx con
 		return nil, diags
 	}
 
-	return &api_beta.BeforeProvisioningRuleDto{
+	return &service_desk_integration.BeforeProvisioningRuleDto{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.BeforeProvisioningRuleType.ValueStringPointer(),
 	}, diags
 }
 
-func (v BeforeProvisioningRuleValue) FromApi_betaBeforeProvisioningRuleDto(ctx context.Context, apiObject *api_beta.BeforeProvisioningRuleDto) (BeforeProvisioningRuleValue, diag.Diagnostics) {
+func (v BeforeProvisioningRuleValue) FromApi_betaBeforeProvisioningRuleDto(ctx context.Context, apiObject *service_desk_integration.BeforeProvisioningRuleDto) (BeforeProvisioningRuleValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -3266,7 +3266,7 @@ func (v BeforeProvisioningRuleValue) FromApi_betaBeforeProvisioningRuleDto(ctx c
 	}, diags
 }
 
-func (v ClusterRefValue) ToApi_betaSourceClusterDto(ctx context.Context) (*api_beta.SourceClusterDto, diag.Diagnostics) {
+func (v ClusterRefValue) ToApi_betaSourceClusterDto(ctx context.Context) (*service_desk_integration.SourceClusterDto, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -3282,14 +3282,14 @@ func (v ClusterRefValue) ToApi_betaSourceClusterDto(ctx context.Context) (*api_b
 		return nil, diags
 	}
 
-	return &api_beta.SourceClusterDto{
+	return &service_desk_integration.SourceClusterDto{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.ClusterRefType.ValueStringPointer(),
 	}, diags
 }
 
-func (v ClusterRefValue) FromApi_betaSourceClusterDto(ctx context.Context, apiObject *api_beta.SourceClusterDto) (ClusterRefValue, diag.Diagnostics) {
+func (v ClusterRefValue) FromApi_betaSourceClusterDto(ctx context.Context, apiObject *service_desk_integration.SourceClusterDto) (ClusterRefValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -3304,7 +3304,7 @@ func (v ClusterRefValue) FromApi_betaSourceClusterDto(ctx context.Context, apiOb
 	}, diags
 }
 
-func (v OwnerRefValue) ToApi_betaOwnerDto(ctx context.Context) (*api_beta.OwnerDto, diag.Diagnostics) {
+func (v OwnerRefValue) ToApi_betaOwnerDto(ctx context.Context) (*service_desk_integration.OwnerDto, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -3320,14 +3320,14 @@ func (v OwnerRefValue) ToApi_betaOwnerDto(ctx context.Context) (*api_beta.OwnerD
 		return nil, diags
 	}
 
-	return &api_beta.OwnerDto{
+	return &service_desk_integration.OwnerDto{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.OwnerRefType.ValueStringPointer(),
 	}, diags
 }
 
-func (v OwnerRefValue) FromApi_betaOwnerDto(ctx context.Context, apiObject *api_beta.OwnerDto) (OwnerRefValue, diag.Diagnostics) {
+func (v OwnerRefValue) FromApi_betaOwnerDto(ctx context.Context, apiObject *service_desk_integration.OwnerDto) (OwnerRefValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

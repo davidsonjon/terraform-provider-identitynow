@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/service_desk_integration"
 
 	"terraform-provider-identitynow/internal/provider/service_desk_integration_v1/resource_service_desk_integration"
 )
@@ -70,11 +70,11 @@ func TestDtoToModel_RoundTrip(t *testing.T) {
 	fallback := minimalModel()
 
 	ownerId := "owner-id"
-	dto := &api_beta.ServiceDeskIntegrationDto{
+	dto := &service_desk_integration.ServiceDeskIntegrationDto{
 		Name:        "test-sdi",
 		Description: "a test integration",
 		Type:        "WEBHOOK",
-		OwnerRef: &api_beta.OwnerDto{
+		OwnerRef: &service_desk_integration.OwnerDto{
 			Id: &ownerId,
 		},
 		Attributes: map[string]interface{}{},
@@ -102,24 +102,24 @@ func TestDtoToModel_RoundTrip(t *testing.T) {
 func TestDtoID(t *testing.T) {
 	tests := []struct {
 		name string
-		dto  *api_beta.ServiceDeskIntegrationDto
+		dto  *service_desk_integration.ServiceDeskIntegrationDto
 		want string
 	}{
 		{"nil dto", nil, ""},
-		{"nil AdditionalProperties", &api_beta.ServiceDeskIntegrationDto{}, ""},
+		{"nil AdditionalProperties", &service_desk_integration.ServiceDeskIntegrationDto{}, ""},
 		{
 			"id present as string",
-			&api_beta.ServiceDeskIntegrationDto{AdditionalProperties: map[string]interface{}{"id": "abc123"}},
+			&service_desk_integration.ServiceDeskIntegrationDto{AdditionalProperties: map[string]interface{}{"id": "abc123"}},
 			"abc123",
 		},
 		{
 			"id present but wrong type",
-			&api_beta.ServiceDeskIntegrationDto{AdditionalProperties: map[string]interface{}{"id": 42}},
+			&service_desk_integration.ServiceDeskIntegrationDto{AdditionalProperties: map[string]interface{}{"id": 42}},
 			"",
 		},
 		{
 			"id absent",
-			&api_beta.ServiceDeskIntegrationDto{AdditionalProperties: map[string]interface{}{"other": "value"}},
+			&service_desk_integration.ServiceDeskIntegrationDto{AdditionalProperties: map[string]interface{}{"other": "value"}},
 			"",
 		},
 	}
@@ -146,7 +146,7 @@ func TestStructToMap(t *testing.T) {
 	t.Run("struct input round-trips through JSON", func(t *testing.T) {
 		id := "owner-id"
 		name := "owner-name"
-		owner := &api_beta.OwnerDto{Id: &id, Name: &name}
+		owner := &service_desk_integration.OwnerDto{Id: &id, Name: &name}
 
 		m, err := structToMap(owner)
 		if err != nil {
@@ -163,7 +163,7 @@ func TestStructToMap(t *testing.T) {
 
 func TestJsonPatchReplace(t *testing.T) {
 	name := "new-name"
-	op := jsonPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&name))
+	op := jsonPatchReplace("/name", service_desk_integration.StringAsJsonPatchOperationValue(&name))
 
 	if op.Op != "replace" {
 		t.Errorf("Op = %q, want %q", op.Op, "replace")
