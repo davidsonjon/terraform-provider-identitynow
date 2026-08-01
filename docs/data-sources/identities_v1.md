@@ -116,8 +116,8 @@ Read-Only:
 
 Each entry in `identities` is populated from the same underlying API model as
 [`identitynow_identity_v1`](../data-sources/identity_v1.md), but this plural
-pilot intentionally omits the singular data source's hand-written `attributes`
-JSON blob to keep the nested item schema simple.
+data source intentionally omits the singular data source's hand-written
+`attributes` JSON blob to keep the nested item schema simple.
 
 The API supports a `count` query parameter, but it is intentionally omitted
 from this Terraform schema because `count` is a reserved root attribute/block
@@ -125,5 +125,5 @@ name in Terraform. Filter client-side with a Terraform `for` expression if you
 need reshaping beyond the server-side `filters`/`sorters`/pagination support.
 
 The singular data source's not-implemented `use_caller_identity` fallback note
-also applies here by extension: this pilot exposes only the documented v1 list
-query parameters and does not attempt caller-introspection behavior.
+also applies here by extension: this data source exposes only the documented
+v1 list query parameters and does not attempt caller-introspection behavior.
