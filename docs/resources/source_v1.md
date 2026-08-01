@@ -285,6 +285,12 @@ hand-written against the `golang-sdk`'s `api_beta.SourcesAPIService` client.
   load-uncorrelated-accounts, synchronize-attributes, load-entitlements),
   attribute sync config, entitlement request config, and approval config.
   Managing any of these requires a future, separate resource/data source.
+  **Provisioning policies and schemas are no longer deferred**: they are now
+  covered by the sibling `identitynow_source_provisioning_policy_v1` /
+  `identitynow_source_provisioning_policies_v1` and
+  `identitynow_source_schema_v1` / `identitynow_source_schemas_v1`
+  resources/data sources (both reference an existing source via
+  `source_id`, the same convention used here).
 - **Only `PATCH /sources/v1/{id}` (JSON Patch) is used for updates** - the
   full-replace `PUT /sources/v1/{id}` variant is not used. Per the API's own
   documentation, `id`, `type`, `authoritative`, `created`, `modified`,
@@ -314,9 +320,11 @@ hand-written against the `golang-sdk`'s `api_beta.SourcesAPIService` client.
   "inconsistent result" apply error) - only an unconfigured/imported source
   gets its `connector_attributes` populated from the live API response.
 - **`schemas` and `password_policies` are Computed-only, read-back
-  reflections of state managed elsewhere** (the deferred sub-resource
-  endpoints listed above) - they are never written by this resource's
-  Create/Update and will not drift-correct if changed out of band.
+  reflections of state managed elsewhere** (`schemas` is now actively
+  managed via `identitynow_source_schema_v1`; `password_policies` remains
+  deferred per the sub-resource list above) - neither is ever written by
+  this resource's own Create/Update and neither will drift-correct here if
+  changed out of band.
 - **`cluster` is populated via a hand-written conversion, not a generated
   type-mapped converter.** The SDK's `MultiHostIntegrationsCluster` struct
   has non-pointer, always-required `Id`/`Name`/`Type` fields (unlike every

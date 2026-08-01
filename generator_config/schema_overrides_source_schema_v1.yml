@@ -1,0 +1,32 @@
+required_overrides:
+  # sourceId is a path parameter but tfplugingen-openapi merges it with the
+  # (nonexistent, since the Schema DTO doesn't declare it) request-body
+  # property of the same name and infers computed_optional. It is the
+  # resource's required parent-object reference (analogous to
+  # source_provisioning_policy_v1's source_id) - always required and
+  # immutable (a schema cannot be moved to a different source).
+  - path: "source_id"
+    scope: resource
+    required: true
+
+  # The upstream Schema DTO declares no `required` array at all, but a
+  # schema with no "name" is not meaningful (createSourceSchemaV1's own
+  # description implies name is how a schema is referenced/displayed, and
+  # every real example in the spec sets it) - force Required so an
+  # incomplete config fails at plan time rather than a live 400.
+  - path: "name"
+    scope: resource
+    required: true
+
+computed_only_overrides:
+  # Both "id" (the Schema DTO's own id property) and "schema_id" (synthesized
+  # from the {schemaId} path parameter, redundant with "id" - the API always
+  # keeps them equal) are server-generated on create; letting practitioners
+  # set them on the resource would be meaningless (any configured value would
+  # be silently overwritten by whatever the server assigns) - force both to
+  # Computed-only on the resource. The data source keeps "schema_id" as its
+  # Required lookup key (only the resource is affected here).
+  - path: "id"
+    scope: resource
+  - path: "schema_id"
+    scope: resource

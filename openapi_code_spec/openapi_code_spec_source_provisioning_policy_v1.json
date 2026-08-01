@@ -1,0 +1,104 @@
+{
+  "datasources": [
+    {
+      "name": "source_provisioning_policy",
+      "schema": {
+        "attributes": [
+          {
+            "name": "source_id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The Source ID."
+            }
+          },
+          {
+            "name": "usage_type",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The type of provisioning policy usage. \nIn IdentityNow, a source can support various provisioning operations. For example, when a joiner is added to a source, this may trigger both CREATE and UPDATE provisioning operations.  Each usage type is considered a provisioning policy.  A source can have any number of these provisioning policies defined. \nThese are the common usage types: \nCREATE - This usage type relates to 'Create Account Profile', the provisioning template for the account to be created. For example, this would be used for a joiner on a source.  \nUPDATE - This usage type relates to 'Update Account Profile', the provisioning template for the 'Update' connector operations. For example, this would be used for an attribute sync on a source.\nENABLE - This usage type relates to 'Enable Account Profile', the provisioning template for the account to be enabled. For example, this could be used for a joiner on a source once the joiner's account is created. \nDISABLE - This usage type relates to 'Disable Account Profile', the provisioning template for the account to be disabled. For example, this could be used when a leaver is removed temporarily from a source. \nYou can use these four usage types for all your provisioning policy needs.",
+              "validators": [
+                {
+                  "custom": {
+                    "imports": [
+                      {
+                        "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                      }
+                    ],
+                    "schema_definition": "stringvalidator.OneOf(\n\"CREATE\",\n\"UPDATE\",\n\"ENABLE\",\n\"DISABLE\",\n\"DELETE\",\n\"ASSIGN\",\n\"UNASSIGN\",\n\"CREATE_GROUP\",\n\"UPDATE_GROUP\",\n\"DELETE_GROUP\",\n\"REGISTER\",\n\"CREATE_IDENTITY\",\n\"UPDATE_IDENTITY\",\n\"EDIT_GROUP\",\n\"UNLOCK\",\n\"CHANGE_PASSWORD\",\n\"CREATE_MACHINE_ACCOUNT\",\n)"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "the description of the provisioning policy"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "computed",
+              "description": "the provisioning policy name"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "provider": {
+    "name": "identitynow"
+  },
+  "resources": [
+    {
+      "name": "source_provisioning_policy",
+      "schema": {
+        "attributes": [
+          {
+            "name": "description",
+            "string": {
+              "computed_optional_required": "computed_optional",
+              "description": "the description of the provisioning policy"
+            }
+          },
+          {
+            "name": "name",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "the provisioning policy name"
+            }
+          },
+          {
+            "name": "usage_type",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The type of provisioning policy usage. \nIn IdentityNow, a source can support various provisioning operations. For example, when a joiner is added to a source, this may trigger both CREATE and UPDATE provisioning operations.  Each usage type is considered a provisioning policy.  A source can have any number of these provisioning policies defined. \nThese are the common usage types: \nCREATE - This usage type relates to 'Create Account Profile', the provisioning template for the account to be created. For example, this would be used for a joiner on a source.  \nUPDATE - This usage type relates to 'Update Account Profile', the provisioning template for the 'Update' connector operations. For example, this would be used for an attribute sync on a source.\nENABLE - This usage type relates to 'Enable Account Profile', the provisioning template for the account to be enabled. For example, this could be used for a joiner on a source once the joiner's account is created. \nDISABLE - This usage type relates to 'Disable Account Profile', the provisioning template for the account to be disabled. For example, this could be used when a leaver is removed temporarily from a source.\nCREATE_MACHINE_ACCOUNT - This usage type can be used to create the provisioning template for a source subtype which will be used in creating a machine account.\nYou can use these usage types for all your provisioning policy needs. ",
+              "validators": [
+                {
+                  "custom": {
+                    "imports": [
+                      {
+                        "path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+                      }
+                    ],
+                    "schema_definition": "stringvalidator.OneOf(\n\"CREATE\",\n\"UPDATE\",\n\"ENABLE\",\n\"DISABLE\",\n\"DELETE\",\n\"ASSIGN\",\n\"UNASSIGN\",\n\"CREATE_GROUP\",\n\"UPDATE_GROUP\",\n\"DELETE_GROUP\",\n\"REGISTER\",\n\"CREATE_IDENTITY\",\n\"UPDATE_IDENTITY\",\n\"EDIT_GROUP\",\n\"UNLOCK\",\n\"CHANGE_PASSWORD\",\n\"CREATE_MACHINE_ACCOUNT\",\n)"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "source_id",
+            "string": {
+              "computed_optional_required": "required",
+              "description": "The Source ID."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "version": "0.1"
+}

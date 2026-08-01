@@ -1,0 +1,30 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.RenderedProviderName}}"
+subcategory: "Sources"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ if .HasExamples -}}
+## Example Usage
+
+{{- range .ExampleFiles }}
+
+{{ tffile . }}
+{{- end }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Known Limitations & Live Testing Notes
+
+See `identitynow_source_provisioning_policy_v1` (the resource)'s "Known
+Limitations & Live Testing Notes" section for the full v1-vs-v2 rationale,
+composite-id behavior, and `fields` JSON-string modeling - this data
+source shares the same underlying schema and limitations. Phase B (live
+testing against a real sandbox tenant) is pending for the same reason
+noted there.

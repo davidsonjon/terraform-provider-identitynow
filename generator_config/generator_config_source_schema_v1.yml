@@ -1,0 +1,51 @@
+provider:
+  name: identitynow
+resources:
+  source_schema:
+    create:
+      path: /sources/v1/{sourceId}/schemas
+      method: POST
+    read:
+      path: /sources/v1/{sourceId}/schemas/{schemaId}
+      method: GET
+    update:
+      # updateSourceSchemaV1 - RFC 6902 JSON Patch (as opposed to
+      # putSourceSchemaV1, the full-replace PUT variant) - same JSON-Patch
+      # update-helper pattern already used by source_v1/role_v1/
+      # service_desk_integration_v1/source_provisioning_policy_v1.
+      path: /sources/v1/{sourceId}/schemas/{schemaId}
+      method: PATCH
+    delete:
+      path: /sources/v1/{sourceId}/schemas/{schemaId}
+      method: DELETE
+    schema:
+      ignores:
+        # "configuration" is a free-form `type: object` bag ("Holds any extra
+        # configuration data that the schema may require.") with no fixed set
+        # of keys - the same "arbitrary JSON blob" shape as transform_v1's
+        # "attributes"/source_v1's "connectorAttributes". Hand-added as a
+        # jsontypes.Normalized JSON-string CustomType.
+        - configuration
+
+data_sources:
+  source_schema:
+    read:
+      path: /sources/v1/{sourceId}/schemas/{schemaId}
+      method: GET
+    schema:
+      ignores:
+        - configuration
+  # A plural "list" data source (identitynow_source_schemas_v1) is
+  # hand-written directly against GET /sources/v1/{sourceId}/schemas
+  # (api_beta.SourcesAPIService.GetSourceSchemas), reusing the singular data
+  # source's generated schema/model types, mirroring
+  # role_v1/datasource_roles.go's pattern - not generated via this config.
+
+# NOTE: This target deliberately does NOT cover
+# sources-v1-by-id-schemas-accounts.yaml / sources-v1-by-id-schemas-entitlements.yaml
+# (the CSV account/entitlement schema-template download/upload endpoints).
+# Those are `text/csv` and `multipart/form-data` file-transfer operations
+# scoped to Delimited File sources only, not structured JSON CRUD - a poor
+# fit for a Terraform resource/data source's declarative model, and entirely
+# out of scope for tfplugingen-openapi/-framework. See the pipeline task
+# summary for the full rationale.
