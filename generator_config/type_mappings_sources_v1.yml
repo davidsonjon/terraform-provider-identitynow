@@ -54,39 +54,39 @@
 external_type_mappings:
   - path: "owner"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.SourceOwner"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/sources"
+    type: "*sources.SourceOwner"
   - path: "account_correlation_config"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.MultiHostSourcesAccountCorrelationConfig"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/sources"
+    type: "*sources.SourceAccountCorrelationConfig"
   - path: "account_correlation_rule"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.MultiHostSourcesAccountCorrelationRule"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/sources"
+    type: "*sources.SourceAccountCorrelationRule"
   - path: "manager_correlation_mapping"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.ManagerCorrelationMapping"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/sources"
+    type: "*sources.SourceManagerCorrelationMapping"
   - path: "manager_correlation_rule"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.MultiHostSourcesManagerCorrelationRule"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/sources"
+    type: "*sources.SourceManagerCorrelationRule"
   - path: "before_provisioning_rule"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.MultiHostSourcesBeforeProvisioningRule"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/sources"
+    type: "*sources.SourceBeforeProvisioningRule"
   - path: "management_workgroup"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.MultiHostIntegrationsManagementWorkgroup"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/sources"
+    type: "*sources.SourceManagementWorkgroup"
   - path: "schemas"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.MultiHostSourcesSchemasInner"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/sources"
+    type: "*sources.SourceSchemasInner"
   - path: "password_policies"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.MultiHostSourcesPasswordPoliciesInner"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/sources"
+    type: "*sources.SourcePasswordPoliciesInner"
 
 symbol_renames: []

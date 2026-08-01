@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/sources"
 
 	"terraform-provider-identitynow/internal/provider/sources_v1/resource_source"
 )
@@ -106,7 +106,7 @@ func TestDtoToModel_RoundTrip(t *testing.T) {
 	fallback := minimalModel()
 
 	id := "src-id"
-	dto := &api_beta.Source{
+	dto := &sources.Source{
 		Id:        &id,
 		Name:      "test-source",
 		Connector: "jdbc",
@@ -141,7 +141,7 @@ func TestDtoToModel_ConnectorAttributes_FallbackConfigured(t *testing.T) {
 	configured := `{"host":"db.example.com"}`
 	fallback.ConnectorAttributes = jsontypes.NewNormalizedValue(configured)
 
-	dto := &api_beta.Source{
+	dto := &sources.Source{
 		Name:      "test-source",
 		Connector: "jdbc",
 		ConnectorAttributes: map[string]interface{}{
@@ -171,7 +171,7 @@ func TestDtoToModel_ConnectorAttributes_FallbackNull(t *testing.T) {
 	ctx := context.Background()
 	fallback := minimalModel() // ConnectorAttributes is null by default
 
-	dto := &api_beta.Source{
+	dto := &sources.Source{
 		Name:      "test-source",
 		Connector: "jdbc",
 		ConnectorAttributes: map[string]interface{}{
@@ -204,7 +204,7 @@ func TestStructToMap(t *testing.T) {
 	})
 
 	t.Run("struct input round-trips through JSON", func(t *testing.T) {
-		cluster := &api_beta.MultiHostIntegrationsCluster{Id: "cluster-id", Name: "cluster-name", Type: "CLUSTER"}
+		cluster := &sources.SourceCluster{Id: "cluster-id", Name: "cluster-name", Type: "CLUSTER"}
 
 		m, err := structToMap(cluster)
 		if err != nil {
@@ -221,7 +221,7 @@ func TestStructToMap(t *testing.T) {
 
 func TestJsonPatchReplace(t *testing.T) {
 	name := "new-name"
-	op := jsonPatchReplace("/name", api_beta.StringAsUpdateMultiHostSourcesRequestInnerValue(&name))
+	op := jsonPatchReplace("/name", sources.StringAsJsonPatchOperationValue(&name))
 
 	if op.Op != "replace" {
 		t.Errorf("Op = %q, want %q", op.Op, "replace")
@@ -396,7 +396,7 @@ func TestClusterFromAPI(t *testing.T) {
 	})
 
 	t.Run("populated cluster maps fields", func(t *testing.T) {
-		cluster := &api_beta.MultiHostIntegrationsCluster{Id: "cluster-id", Name: "cluster-name", Type: "CLUSTER"}
+		cluster := &sources.SourceCluster{Id: "cluster-id", Name: "cluster-name", Type: "CLUSTER"}
 		v, diags := clusterFromAPI(ctx, cluster)
 		if diags.HasError() {
 			t.Fatalf("clusterFromAPI returned diagnostics: %v", diags)
@@ -418,7 +418,7 @@ func TestTimeToStringValue(t *testing.T) {
 		t.Errorf("timeToStringValue(nil) = %v, want null", v)
 	}
 
-	tm := api_beta.SailPointTime{}
+	tm := sources.SailPointTime{}
 	if err := tm.UnmarshalJSON([]byte(`"2024-01-02T03:04:05Z"`)); err != nil {
 		t.Fatalf("failed to build test SailPointTime: %v", err)
 	}

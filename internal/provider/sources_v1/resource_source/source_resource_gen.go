@@ -9,11 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/sources"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -138,9 +139,11 @@ func SourceResourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Rule that runs on the CCG and allows for customization of provisioning plans before the API calls the connector. ",
 			},
 			"category": schema.StringAttribute{
+				Optional:            true,
 				Computed:            true,
 				Description:         "Source category (e.g. null, CredentialProvider).",
 				MarkdownDescription: "Source category (e.g. null, CredentialProvider).",
+				Default:             stringdefault.StaticString(""),
 			},
 			"cluster": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
@@ -247,6 +250,7 @@ func SourceResourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "When this is true, it indicates that the source is healthy.",
 				MarkdownDescription: "When this is true, it indicates that the source is healthy.",
+				Default:             booldefault.StaticBool(false),
 			},
 			"id": schema.StringAttribute{
 				Optional:            true,
@@ -4828,7 +4832,7 @@ func (v SchemasValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	}
 }
 
-func (v AccountCorrelationConfigValue) ToApi_betaMultiHostSourcesAccountCorrelationConfig(ctx context.Context) (*api_beta.MultiHostSourcesAccountCorrelationConfig, diag.Diagnostics) {
+func (v AccountCorrelationConfigValue) ToSourcesSourceAccountCorrelationConfig(ctx context.Context) (*sources.SourceAccountCorrelationConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -4844,14 +4848,14 @@ func (v AccountCorrelationConfigValue) ToApi_betaMultiHostSourcesAccountCorrelat
 		return nil, diags
 	}
 
-	return &api_beta.MultiHostSourcesAccountCorrelationConfig{
+	return &sources.SourceAccountCorrelationConfig{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.AccountCorrelationConfigType.ValueStringPointer(),
 	}, diags
 }
 
-func (v AccountCorrelationConfigValue) FromApi_betaMultiHostSourcesAccountCorrelationConfig(ctx context.Context, apiObject *api_beta.MultiHostSourcesAccountCorrelationConfig) (AccountCorrelationConfigValue, diag.Diagnostics) {
+func (v AccountCorrelationConfigValue) FromSourcesSourceAccountCorrelationConfig(ctx context.Context, apiObject *sources.SourceAccountCorrelationConfig) (AccountCorrelationConfigValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -4866,7 +4870,7 @@ func (v AccountCorrelationConfigValue) FromApi_betaMultiHostSourcesAccountCorrel
 	}, diags
 }
 
-func (v AccountCorrelationRuleValue) ToApi_betaMultiHostSourcesAccountCorrelationRule(ctx context.Context) (*api_beta.MultiHostSourcesAccountCorrelationRule, diag.Diagnostics) {
+func (v AccountCorrelationRuleValue) ToSourcesSourceAccountCorrelationRule(ctx context.Context) (*sources.SourceAccountCorrelationRule, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -4882,14 +4886,14 @@ func (v AccountCorrelationRuleValue) ToApi_betaMultiHostSourcesAccountCorrelatio
 		return nil, diags
 	}
 
-	return &api_beta.MultiHostSourcesAccountCorrelationRule{
+	return &sources.SourceAccountCorrelationRule{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.AccountCorrelationRuleType.ValueStringPointer(),
 	}, diags
 }
 
-func (v AccountCorrelationRuleValue) FromApi_betaMultiHostSourcesAccountCorrelationRule(ctx context.Context, apiObject *api_beta.MultiHostSourcesAccountCorrelationRule) (AccountCorrelationRuleValue, diag.Diagnostics) {
+func (v AccountCorrelationRuleValue) FromSourcesSourceAccountCorrelationRule(ctx context.Context, apiObject *sources.SourceAccountCorrelationRule) (AccountCorrelationRuleValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -4904,7 +4908,7 @@ func (v AccountCorrelationRuleValue) FromApi_betaMultiHostSourcesAccountCorrelat
 	}, diags
 }
 
-func (v BeforeProvisioningRuleValue) ToApi_betaMultiHostSourcesBeforeProvisioningRule(ctx context.Context) (*api_beta.MultiHostSourcesBeforeProvisioningRule, diag.Diagnostics) {
+func (v BeforeProvisioningRuleValue) ToSourcesSourceBeforeProvisioningRule(ctx context.Context) (*sources.SourceBeforeProvisioningRule, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -4920,14 +4924,14 @@ func (v BeforeProvisioningRuleValue) ToApi_betaMultiHostSourcesBeforeProvisionin
 		return nil, diags
 	}
 
-	return &api_beta.MultiHostSourcesBeforeProvisioningRule{
+	return &sources.SourceBeforeProvisioningRule{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.BeforeProvisioningRuleType.ValueStringPointer(),
 	}, diags
 }
 
-func (v BeforeProvisioningRuleValue) FromApi_betaMultiHostSourcesBeforeProvisioningRule(ctx context.Context, apiObject *api_beta.MultiHostSourcesBeforeProvisioningRule) (BeforeProvisioningRuleValue, diag.Diagnostics) {
+func (v BeforeProvisioningRuleValue) FromSourcesSourceBeforeProvisioningRule(ctx context.Context, apiObject *sources.SourceBeforeProvisioningRule) (BeforeProvisioningRuleValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -4942,7 +4946,7 @@ func (v BeforeProvisioningRuleValue) FromApi_betaMultiHostSourcesBeforeProvision
 	}, diags
 }
 
-func (v ManagementWorkgroupValue) ToApi_betaMultiHostIntegrationsManagementWorkgroup(ctx context.Context) (*api_beta.MultiHostIntegrationsManagementWorkgroup, diag.Diagnostics) {
+func (v ManagementWorkgroupValue) ToSourcesSourceManagementWorkgroup(ctx context.Context) (*sources.SourceManagementWorkgroup, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -4958,14 +4962,14 @@ func (v ManagementWorkgroupValue) ToApi_betaMultiHostIntegrationsManagementWorkg
 		return nil, diags
 	}
 
-	return &api_beta.MultiHostIntegrationsManagementWorkgroup{
+	return &sources.SourceManagementWorkgroup{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.ManagementWorkgroupType.ValueStringPointer(),
 	}, diags
 }
 
-func (v ManagementWorkgroupValue) FromApi_betaMultiHostIntegrationsManagementWorkgroup(ctx context.Context, apiObject *api_beta.MultiHostIntegrationsManagementWorkgroup) (ManagementWorkgroupValue, diag.Diagnostics) {
+func (v ManagementWorkgroupValue) FromSourcesSourceManagementWorkgroup(ctx context.Context, apiObject *sources.SourceManagementWorkgroup) (ManagementWorkgroupValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -4980,7 +4984,7 @@ func (v ManagementWorkgroupValue) FromApi_betaMultiHostIntegrationsManagementWor
 	}, diags
 }
 
-func (v ManagerCorrelationMappingValue) ToApi_betaManagerCorrelationMapping(ctx context.Context) (*api_beta.ManagerCorrelationMapping, diag.Diagnostics) {
+func (v ManagerCorrelationMappingValue) ToSourcesSourceManagerCorrelationMapping(ctx context.Context) (*sources.SourceManagerCorrelationMapping, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -4996,13 +5000,13 @@ func (v ManagerCorrelationMappingValue) ToApi_betaManagerCorrelationMapping(ctx 
 		return nil, diags
 	}
 
-	return &api_beta.ManagerCorrelationMapping{
+	return &sources.SourceManagerCorrelationMapping{
 		AccountAttributeName:  v.AccountAttributeName.ValueStringPointer(),
 		IdentityAttributeName: v.IdentityAttributeName.ValueStringPointer(),
 	}, diags
 }
 
-func (v ManagerCorrelationMappingValue) FromApi_betaManagerCorrelationMapping(ctx context.Context, apiObject *api_beta.ManagerCorrelationMapping) (ManagerCorrelationMappingValue, diag.Diagnostics) {
+func (v ManagerCorrelationMappingValue) FromSourcesSourceManagerCorrelationMapping(ctx context.Context, apiObject *sources.SourceManagerCorrelationMapping) (ManagerCorrelationMappingValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -5016,7 +5020,7 @@ func (v ManagerCorrelationMappingValue) FromApi_betaManagerCorrelationMapping(ct
 	}, diags
 }
 
-func (v ManagerCorrelationRuleValue) ToApi_betaMultiHostSourcesManagerCorrelationRule(ctx context.Context) (*api_beta.MultiHostSourcesManagerCorrelationRule, diag.Diagnostics) {
+func (v ManagerCorrelationRuleValue) ToSourcesSourceManagerCorrelationRule(ctx context.Context) (*sources.SourceManagerCorrelationRule, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -5032,14 +5036,14 @@ func (v ManagerCorrelationRuleValue) ToApi_betaMultiHostSourcesManagerCorrelatio
 		return nil, diags
 	}
 
-	return &api_beta.MultiHostSourcesManagerCorrelationRule{
+	return &sources.SourceManagerCorrelationRule{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.ManagerCorrelationRuleType.ValueStringPointer(),
 	}, diags
 }
 
-func (v ManagerCorrelationRuleValue) FromApi_betaMultiHostSourcesManagerCorrelationRule(ctx context.Context, apiObject *api_beta.MultiHostSourcesManagerCorrelationRule) (ManagerCorrelationRuleValue, diag.Diagnostics) {
+func (v ManagerCorrelationRuleValue) FromSourcesSourceManagerCorrelationRule(ctx context.Context, apiObject *sources.SourceManagerCorrelationRule) (ManagerCorrelationRuleValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -5054,7 +5058,7 @@ func (v ManagerCorrelationRuleValue) FromApi_betaMultiHostSourcesManagerCorrelat
 	}, diags
 }
 
-func (v OwnerValue) ToApi_betaSourceOwner(ctx context.Context) (*api_beta.SourceOwner, diag.Diagnostics) {
+func (v OwnerValue) ToSourcesSourceOwner(ctx context.Context) (*sources.SourceOwner, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -5070,14 +5074,14 @@ func (v OwnerValue) ToApi_betaSourceOwner(ctx context.Context) (*api_beta.Source
 		return nil, diags
 	}
 
-	return &api_beta.SourceOwner{
+	return &sources.SourceOwner{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.OwnerType.ValueStringPointer(),
 	}, diags
 }
 
-func (v OwnerValue) FromApi_betaSourceOwner(ctx context.Context, apiObject *api_beta.SourceOwner) (OwnerValue, diag.Diagnostics) {
+func (v OwnerValue) FromSourcesSourceOwner(ctx context.Context, apiObject *sources.SourceOwner) (OwnerValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -5092,7 +5096,7 @@ func (v OwnerValue) FromApi_betaSourceOwner(ctx context.Context, apiObject *api_
 	}, diags
 }
 
-func (v PasswordPoliciesValue) ToApi_betaMultiHostSourcesPasswordPoliciesInner(ctx context.Context) (*api_beta.MultiHostSourcesPasswordPoliciesInner, diag.Diagnostics) {
+func (v PasswordPoliciesValue) ToSourcesSourcePasswordPoliciesInner(ctx context.Context) (*sources.SourcePasswordPoliciesInner, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -5108,14 +5112,14 @@ func (v PasswordPoliciesValue) ToApi_betaMultiHostSourcesPasswordPoliciesInner(c
 		return nil, diags
 	}
 
-	return &api_beta.MultiHostSourcesPasswordPoliciesInner{
+	return &sources.SourcePasswordPoliciesInner{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.PasswordPoliciesType.ValueStringPointer(),
 	}, diags
 }
 
-func (v PasswordPoliciesValue) FromApi_betaMultiHostSourcesPasswordPoliciesInner(ctx context.Context, apiObject *api_beta.MultiHostSourcesPasswordPoliciesInner) (PasswordPoliciesValue, diag.Diagnostics) {
+func (v PasswordPoliciesValue) FromSourcesSourcePasswordPoliciesInner(ctx context.Context, apiObject *sources.SourcePasswordPoliciesInner) (PasswordPoliciesValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -5130,7 +5134,7 @@ func (v PasswordPoliciesValue) FromApi_betaMultiHostSourcesPasswordPoliciesInner
 	}, diags
 }
 
-func (v SchemasValue) ToApi_betaMultiHostSourcesSchemasInner(ctx context.Context) (*api_beta.MultiHostSourcesSchemasInner, diag.Diagnostics) {
+func (v SchemasValue) ToSourcesSourceSchemasInner(ctx context.Context) (*sources.SourceSchemasInner, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -5146,14 +5150,14 @@ func (v SchemasValue) ToApi_betaMultiHostSourcesSchemasInner(ctx context.Context
 		return nil, diags
 	}
 
-	return &api_beta.MultiHostSourcesSchemasInner{
+	return &sources.SourceSchemasInner{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.SchemasType.ValueStringPointer(),
 	}, diags
 }
 
-func (v SchemasValue) FromApi_betaMultiHostSourcesSchemasInner(ctx context.Context, apiObject *api_beta.MultiHostSourcesSchemasInner) (SchemasValue, diag.Diagnostics) {
+func (v SchemasValue) FromSourcesSourceSchemasInner(ctx context.Context, apiObject *sources.SourceSchemasInner) (SchemasValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

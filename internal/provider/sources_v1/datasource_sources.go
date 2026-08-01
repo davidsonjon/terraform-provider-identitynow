@@ -2,7 +2,7 @@
 // identitynow_source_v1 data source in datasource_source.go, mirroring
 // role_v1's datasource_roles.go / access_profile_v1's datasource_access_profiles.go
 // / governance_group_v1's datasource_governance_groups.go pattern. It queries
-// GET /sources/v1 (api_beta.SourcesAPI.ListSources) instead of
+// GET /sources/v1 (sources.SourcesAPI.ListSourcesV1) instead of
 // GET /sources/v1/{id}, and returns every matching Source using the exact
 // same nested object shape as identitynow_source_v1 (reusing
 // datasource_source's generated schema/model/value types plus this package's
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/sources_v1/datasource_source"
 )
@@ -165,7 +165,7 @@ func (d *sourcesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	tflog.Debug(ctx, "Reading Sources data source", map[string]interface{}{"filters": config.Filters.ValueString()})
 
-	apiReq := d.client.Beta.SourcesAPI.ListSources(ctx)
+	apiReq := d.client.SourcesAPI.ListSourcesV1(ctx)
 
 	if !config.Filters.IsNull() && !config.Filters.IsUnknown() {
 		apiReq = apiReq.Filters(config.Filters.ValueString())
