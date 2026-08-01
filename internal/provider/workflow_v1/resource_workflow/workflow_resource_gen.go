@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	"github.com/sailpoint-oss/golang-sdk/v3/workflows"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -1470,7 +1470,7 @@ func (v OwnerValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	}
 }
 
-func (v CreatorValue) ToApi_betaWorkflowAllOfCreator(ctx context.Context) (*api_beta.WorkflowAllOfCreator, diag.Diagnostics) {
+func (v CreatorValue) ToApi_betaWorkflowAllOfCreator(ctx context.Context) (*workflows.WorkflowAllOfCreator, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -1486,14 +1486,14 @@ func (v CreatorValue) ToApi_betaWorkflowAllOfCreator(ctx context.Context) (*api_
 		return nil, diags
 	}
 
-	return &api_beta.WorkflowAllOfCreator{
+	return &workflows.WorkflowAllOfCreator{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.CreatorType.ValueStringPointer(),
 	}, diags
 }
 
-func (v CreatorValue) FromApi_betaWorkflowAllOfCreator(ctx context.Context, apiObject *api_beta.WorkflowAllOfCreator) (CreatorValue, diag.Diagnostics) {
+func (v CreatorValue) FromApi_betaWorkflowAllOfCreator(ctx context.Context, apiObject *workflows.WorkflowAllOfCreator) (CreatorValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -1508,7 +1508,7 @@ func (v CreatorValue) FromApi_betaWorkflowAllOfCreator(ctx context.Context, apiO
 	}, diags
 }
 
-func (v ModifiedByValue) ToApi_betaWorkflowModifiedBy(ctx context.Context) (*api_beta.WorkflowModifiedBy, diag.Diagnostics) {
+func (v ModifiedByValue) ToApi_betaWorkflowModifiedBy(ctx context.Context) (*workflows.WorkflowModifiedBy, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -1524,14 +1524,14 @@ func (v ModifiedByValue) ToApi_betaWorkflowModifiedBy(ctx context.Context) (*api
 		return nil, diags
 	}
 
-	return &api_beta.WorkflowModifiedBy{
+	return &workflows.WorkflowModifiedBy{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.ModifiedByType.ValueStringPointer(),
 	}, diags
 }
 
-func (v ModifiedByValue) FromApi_betaWorkflowModifiedBy(ctx context.Context, apiObject *api_beta.WorkflowModifiedBy) (ModifiedByValue, diag.Diagnostics) {
+func (v ModifiedByValue) FromApi_betaWorkflowModifiedBy(ctx context.Context, apiObject *workflows.WorkflowModifiedBy) (ModifiedByValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
@@ -1546,7 +1546,7 @@ func (v ModifiedByValue) FromApi_betaWorkflowModifiedBy(ctx context.Context, api
 	}, diags
 }
 
-func (v OwnerValue) ToApi_betaWorkflowBodyOwner(ctx context.Context) (*api_beta.WorkflowBodyOwner, diag.Diagnostics) {
+func (v OwnerValue) ToApi_betaWorkflowBodyOwner(ctx context.Context) (*workflows.WorkflowBodyOwner, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v.IsNull() {
@@ -1562,14 +1562,14 @@ func (v OwnerValue) ToApi_betaWorkflowBodyOwner(ctx context.Context) (*api_beta.
 		return nil, diags
 	}
 
-	return &api_beta.WorkflowBodyOwner{
+	return &workflows.WorkflowBodyOwner{
 		Id:   v.Id.ValueStringPointer(),
 		Name: v.Name.ValueStringPointer(),
 		Type: v.OwnerType.ValueStringPointer(),
 	}, diags
 }
 
-func (v OwnerValue) FromApi_betaWorkflowBodyOwner(ctx context.Context, apiObject *api_beta.WorkflowBodyOwner) (OwnerValue, diag.Diagnostics) {
+func (v OwnerValue) FromApi_betaWorkflowBodyOwner(ctx context.Context, apiObject *workflows.WorkflowBodyOwner) (OwnerValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {

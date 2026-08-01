@@ -2,7 +2,7 @@
 // identitynow_workflow_v1 data source in datasource_workflow.go, mirroring
 // governance_group_v1's datasource_governance_groups.go / role_v1's
 // datasource_roles.go pattern. It queries GET /workflows/v1
-// (api_beta.WorkflowsAPI.ListWorkflows) instead of GET /workflows/v1/{id},
+// (workflows.WorkflowsAPI.ListWorkflowsV1) instead of GET /workflows/v1/{id},
 // and returns every matching Workflow using the exact same nested object
 // shape as identitynow_workflow_v1 (reusing datasource_workflow's generated
 // schema/model/value types, the hand-added "definition"/"trigger" fields,
@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"terraform-provider-identitynow/internal/provider/workflow_v1/datasource_workflow"
 )
@@ -156,18 +156,34 @@ func (d *workflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, "Reading Workflows data source", map[string]interface{}{"filters": config.Filters.ValueString()})
 
-	apiReq := d.client.Beta.WorkflowsAPI.ListWorkflows(ctx)
+	apiReq := d.client.WorkflowsAPI.ListWorkflowsV1(ctx)
 
-	if !config.Filters.IsNull() && !config.Filters.IsUnknown() {
-		apiReq = apiReq.Filters(config.Filters.ValueString())
-	}
-	if !config.Sorters.IsNull() && !config.Sorters.IsUnknown() {
-		apiReq = apiReq.Sorters(config.Sorters.ValueString())
-	}
-	if !config.Offset.IsNull() && !config.Offset.IsUnknown() {
-		apiReq = apiReq.Offset(int32(config.Offset.ValueInt64()))
+	// golang-sdk v3's GET /workflows/v1 (ListWorkflowsV1) request builder
+	// exposes no server-side query parameters at all - unlike golang-sdk v2,
+	// which offered Filters/Sorters/Offset/Limit builder methods (the workflows
+	// list endpoint itself does not document these params; the v2 SDK exposed
+	// them regardless). Filters/sorters/offset are therefore not supported and
+	// are surfaced as a warning if set; limit is applied client-side by
+	// truncating the full result set below.
+	if (!config.Filters.IsNull() && !config.Filters.IsUnknown()) ||
+		(!config.Sorters.IsNull() && !config.Sorters.IsUnknown()) ||
+		(!config.Offset.IsNull() && !config.Offset.IsUnknown()) {
+		resp.Diagnostics.AddWarning(
+			"Server-side filtering not supported for workflows",
+			"golang-sdk v3's GET /workflows/v1 endpoint does not accept filters, sorters or offset "+
+				"query parameters, so these arguments are ignored. All workflows are returned; use "+
+				"limit to cap the number of rows.",
+		)
 	}
 
+	dtos, httpResp, err := apiReq.Execute()
+	if err != nil {
+		tflog.Error(ctx, "Error reading Workflows data source", map[string]interface{}{"error": err.Error()})
+		resp.Diagnostics.AddError("Error listing Workflows", errDetail(err, httpResp))
+		return
+	}
+
+	// Apply limit client-side (the endpoint has no limit query parameter in v3).
 	if !config.Limit.IsNull() && !config.Limit.IsUnknown() {
 		requestedLimit := config.Limit.ValueInt64()
 		if requestedLimit > workflowsListMaxLimit {
@@ -176,17 +192,11 @@ func (d *workflowsDataSource) Read(ctx context.Context, req datasource.ReadReque
 				fmt.Sprintf("The requested limit (%d) exceeds GET /workflows/v1's documented maximum of %d. Using %d instead.",
 					requestedLimit, workflowsListMaxLimit, workflowsListMaxLimit),
 			)
-			apiReq = apiReq.Limit(workflowsListMaxLimit)
-		} else {
-			apiReq = apiReq.Limit(int32(requestedLimit))
+			requestedLimit = workflowsListMaxLimit
 		}
-	}
-
-	dtos, httpResp, err := apiReq.Execute()
-	if err != nil {
-		tflog.Error(ctx, "Error reading Workflows data source", map[string]interface{}{"error": err.Error()})
-		resp.Diagnostics.AddError("Error listing Workflows", errDetail(err, httpResp))
-		return
+		if requestedLimit >= 0 && int64(len(dtos)) > requestedLimit {
+			dtos = dtos[:requestedLimit]
+		}
 	}
 
 	rowType := workflowRowElemType(ctx)

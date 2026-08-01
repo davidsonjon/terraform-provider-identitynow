@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/workflows"
 
 	"terraform-provider-identitynow/internal/provider/workflow_v1/datasource_workflow"
 )
@@ -94,8 +94,8 @@ func (d *workflowDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	tflog.Debug(ctx, "Reading Workflow data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.WorkflowsAPI.
-		GetWorkflow(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.WorkflowsAPI.
+		GetWorkflowV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Workflow data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -116,7 +116,7 @@ func (d *workflowDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 // datasourceDtoToModel mirrors workflowDtoToModel in resource_workflow.go
 // but against the data source's (Go-distinct) generated value types.
-func datasourceDtoToModel(ctx context.Context, dto *api_beta.Workflow) (workflowDataSourceModel, diag.Diagnostics) {
+func datasourceDtoToModel(ctx context.Context, dto *workflows.Workflow) (workflowDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := workflowDataSourceModel{
 		Creator:    datasource_workflow.NewCreatorValueNull(),

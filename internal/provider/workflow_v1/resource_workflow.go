@@ -5,7 +5,7 @@
 //
 // These hand-written wrappers implement resource.Resource / datasource.DataSource
 // around the generated schema/model/value types in resource_workflow,
-// datasource_workflow, backed by the golang-sdk v2 api_beta.WorkflowsAPI
+// datasource_workflow, backed by the golang-sdk v2 workflows.WorkflowsAPI
 // client (the SDK does not yet publish a per-service v1 package; v1 is the
 // stabilization of what was beta).
 //
@@ -79,8 +79,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/workflows"
 
 	"terraform-provider-identitynow/internal/provider/util"
 	"terraform-provider-identitynow/internal/provider/workflow_v1/resource_workflow"
@@ -226,10 +226,11 @@ func (r *workflowResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	if owner == nil {
-		owner = api_beta.NewWorkflowBodyOwner()
+		owner = workflows.NewWorkflowBodyOwner()
 	}
 
-	createReq := api_beta.NewCreateWorkflowRequest(plan.Name.ValueString(), *owner)
+	createReq := workflows.NewCreateWorkflowV1Request(plan.Name.ValueString())
+	createReq.Owner = owner
 
 	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
 		createReq.Description = plan.Description.ValueStringPointer()
@@ -252,9 +253,9 @@ func (r *workflowResource) Create(ctx context.Context, req resource.CreateReques
 	}
 	createReq.Trigger = trg
 
-	apiResp, httpResp, err := r.client.Beta.WorkflowsAPI.
-		CreateWorkflow(ctx).
-		CreateWorkflowRequest(*createReq).
+	apiResp, httpResp, err := r.client.WorkflowsAPI.
+		CreateWorkflowV1(ctx).
+		CreateWorkflowV1Request(*createReq).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error creating Workflow", map[string]interface{}{"name": plan.Name.ValueString(), "error": err.Error()})
@@ -282,8 +283,8 @@ func (r *workflowResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading Workflow", map[string]interface{}{"id": state.Id.ValueString()})
 
-	apiResp, httpResp, err := r.client.Beta.WorkflowsAPI.
-		GetWorkflow(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.WorkflowsAPI.
+		GetWorkflowV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -327,7 +328,7 @@ func (r *workflowResource) Update(ctx context.Context, req resource.UpdateReques
 	// (where name/type are actually immutable), every field a workflow
 	// exposes is mutable via PUT. See the package doc for why PATCH/JSON
 	// Patch was not used instead.
-	body := api_beta.NewWorkflowBody()
+	body := workflows.NewWorkflowBody()
 	body.Name = plan.Name.ValueStringPointer()
 
 	owner, diags := plan.Owner.ToApi_betaWorkflowBodyOwner(ctx)
@@ -358,8 +359,8 @@ func (r *workflowResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	body.Trigger = trg
 
-	apiResp, httpResp, err := r.client.Beta.WorkflowsAPI.
-		PutWorkflow(ctx, state.Id.ValueString()).
+	apiResp, httpResp, err := r.client.WorkflowsAPI.
+		PutWorkflowV1(ctx, state.Id.ValueString()).
 		WorkflowBody(*body).
 		Execute()
 	if err != nil {
@@ -388,8 +389,8 @@ func (r *workflowResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	tflog.Debug(ctx, "Deleting Workflow", map[string]interface{}{"id": state.Id.ValueString()})
 
-	httpResp, err := r.client.Beta.WorkflowsAPI.
-		DeleteWorkflow(ctx, state.Id.ValueString()).
+	httpResp, err := r.client.WorkflowsAPI.
+		DeleteWorkflowV1(ctx, state.Id.ValueString()).
 		Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == 404 {
@@ -407,9 +408,9 @@ func (r *workflowResource) Delete(ctx context.Context, req resource.DeleteReques
 	tflog.Info(ctx, "Deleted Workflow", map[string]interface{}{"id": state.Id.ValueString()})
 }
 
-// workflowDtoToModel converts an api_beta.Workflow API response into the
+// workflowDtoToModel converts an workflows.Workflow API response into the
 // resource's state model.
-func workflowDtoToModel(ctx context.Context, dto *api_beta.Workflow) (workflowResourceModel, diag.Diagnostics) {
+func workflowDtoToModel(ctx context.Context, dto *workflows.Workflow) (workflowResourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := workflowResourceModel{
 		Creator:    resource_workflow.NewCreatorValueNull(),
@@ -472,15 +473,15 @@ func workflowDtoToModel(ctx context.Context, dto *api_beta.Workflow) (workflowRe
 }
 
 // definitionToAPI decodes the practitioner-supplied "definition" JSON string
-// into an *api_beta.WorkflowDefinition. A null/unknown/empty value returns
+// into an *workflows.WorkflowDefinition. A null/unknown/empty value returns
 // nil (definition genuinely omitted - valid for a workflow with no steps
 // configured yet).
-func definitionToAPI(v jsontypes.Normalized) (*api_beta.WorkflowDefinition, diag.Diagnostics) {
+func definitionToAPI(v jsontypes.Normalized) (*workflows.WorkflowDefinition, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if v.IsNull() || v.IsUnknown() || v.ValueString() == "" {
 		return nil, diags
 	}
-	var def api_beta.WorkflowDefinition
+	var def workflows.WorkflowDefinition
 	if err := json.Unmarshal([]byte(v.ValueString()), &def); err != nil {
 		diags.AddError(
 			"Invalid \"definition\" JSON",
@@ -491,9 +492,9 @@ func definitionToAPI(v jsontypes.Normalized) (*api_beta.WorkflowDefinition, diag
 	return &def, diags
 }
 
-// definitionFromAPI re-encodes an API-returned *api_beta.WorkflowDefinition
+// definitionFromAPI re-encodes an API-returned *workflows.WorkflowDefinition
 // as a jsontypes.Normalized JSON string.
-func definitionFromAPI(def *api_beta.WorkflowDefinition) (jsontypes.Normalized, diag.Diagnostics) {
+func definitionFromAPI(def *workflows.WorkflowDefinition) (jsontypes.Normalized, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if def == nil {
 		return jsontypes.NewNormalizedNull(), diags
@@ -510,9 +511,9 @@ func definitionFromAPI(def *api_beta.WorkflowDefinition) (jsontypes.Normalized, 
 }
 
 // triggerObjectToAPI converts the hand-written "trigger" types.Object
-// (schema-native, see the package doc) into an *api_beta.WorkflowTrigger. A
+// (schema-native, see the package doc) into an *workflows.WorkflowTrigger. A
 // null/unknown object returns nil (no trigger configured).
-func triggerObjectToAPI(ctx context.Context, obj types.Object) (*api_beta.WorkflowTrigger, diag.Diagnostics) {
+func triggerObjectToAPI(ctx context.Context, obj types.Object) (*workflows.WorkflowTrigger, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if obj.IsNull() || obj.IsUnknown() {
 		return nil, diags
@@ -537,9 +538,9 @@ func triggerObjectToAPI(ctx context.Context, obj types.Object) (*api_beta.Workfl
 		attrs = map[string]interface{}{}
 	}
 
-	trg := api_beta.NewWorkflowTrigger(m.Type.ValueString(), attrs)
+	trg := workflows.NewWorkflowTrigger(m.Type.ValueString(), attrs)
 	if !m.DisplayName.IsNull() && !m.DisplayName.IsUnknown() {
-		trg.DisplayName = *api_beta.NewNullableString(m.DisplayName.ValueStringPointer())
+		trg.DisplayName = *workflows.NewNullableString(m.DisplayName.ValueStringPointer())
 	}
 	return trg, diags
 }
@@ -562,9 +563,9 @@ func stripNullMapValues(m map[string]interface{}) map[string]interface{} {
 	return out
 }
 
-// triggerAPIToObject converts an API-returned *api_beta.WorkflowTrigger into
+// triggerAPIToObject converts an API-returned *workflows.WorkflowTrigger into
 // the hand-written "trigger" types.Object.
-func triggerAPIToObject(ctx context.Context, trg *api_beta.WorkflowTrigger) (types.Object, diag.Diagnostics) {
+func triggerAPIToObject(ctx context.Context, trg *workflows.WorkflowTrigger) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if trg == nil {
 		return types.ObjectNull(triggerAttrTypes()), diags
@@ -649,12 +650,12 @@ func errDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }
 
-// timeToStringValue converts an *api_beta.SailPointTime (a thin wrapper
+// timeToStringValue converts an *workflows.SailPointTime (a thin wrapper
 // around time.Time) to an RFC3339 types.String, or types.StringNull() if
 // nil - matching the existing pattern used by sources_v1/access_profile_v1
 // for their own Created/Modified fields (see the SDK type-shape reference
 // catalog's WorkgroupDto entry).
-func timeToStringValue(t *api_beta.SailPointTime) types.String {
+func timeToStringValue(t *workflows.SailPointTime) types.String {
 	if t == nil {
 		return types.StringNull()
 	}
