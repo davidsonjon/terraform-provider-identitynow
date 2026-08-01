@@ -11,8 +11,8 @@ external_type_mappings:
   # rejected `cluster` case).
   - path: "owner"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.IdentityProfileAllOfOwner"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
+    type: "*identity_profiles.IdentityProfileAllOfOwner"
 
   # authoritativeSource itself is a Required (non-Nullable-wrapped) field on
   # api_beta.IdentityProfile (`AuthoritativeSource
@@ -26,13 +26,13 @@ external_type_mappings:
   # this mapping is safe.
   - path: "authoritative_source"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.IdentityProfileAllOfAuthoritativeSource"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
+    type: "*identity_profiles.IdentityProfileAllOfAuthoritativeSource"
 
   - path: "identity_exception_report_reference"
     scope: both
-    import_path: "github.com/sailpoint-oss/golang-sdk/v2/api_beta"
-    type: "*api_beta.IdentityExceptionReportReference"
+    import_path: "github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
+    type: "*identity_profiles.IdentityExceptionReportReference"
 
 symbol_renames: []
   # No collisions found: owner/authoritative_source/identity_exception_report_reference

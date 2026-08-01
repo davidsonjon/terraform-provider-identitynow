@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sailpoint "github.com/sailpoint-oss/golang-sdk/v2"
-	"github.com/sailpoint-oss/golang-sdk/v2/api_beta"
+	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
+	"github.com/sailpoint-oss/golang-sdk/v3/identity_profiles"
 
 	"terraform-provider-identitynow/internal/provider/identity_profile_v1/datasource_identity_profile"
 )
@@ -91,8 +91,8 @@ func (d *identityProfileDataSource) Read(ctx context.Context, req datasource.Rea
 
 	tflog.Debug(ctx, "Reading Identity Profile data source", map[string]interface{}{"id": config.Id.ValueString()})
 
-	dto, httpResp, err := d.client.Beta.IdentityProfilesAPI.
-		GetIdentityProfile(ctx, config.Id.ValueString()).
+	dto, httpResp, err := d.client.IdentityProfilesAPI.
+		GetIdentityProfileV1(ctx, config.Id.ValueString()).
 		Execute()
 	if err != nil {
 		tflog.Error(ctx, "Error reading Identity Profile data source", map[string]interface{}{"id": config.Id.ValueString(), "error": err.Error()})
@@ -115,7 +115,7 @@ func (d *identityProfileDataSource) Read(ctx context.Context, req datasource.Rea
 // against the data source's generated model/value types (a separate Go
 // package emitted by tfplugingen-framework, so the types are not identical
 // even though they're structurally the same).
-func datasourceDtoToModel(ctx context.Context, dto *api_beta.IdentityProfile, fallback identityProfileDataSourceModel) (identityProfileDataSourceModel, diag.Diagnostics) {
+func datasourceDtoToModel(ctx context.Context, dto *identity_profiles.IdentityProfile, fallback identityProfileDataSourceModel) (identityProfileDataSourceModel, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	model := fallback
 
@@ -139,15 +139,15 @@ func datasourceDtoToModel(ctx context.Context, dto *api_beta.IdentityProfile, fa
 	model.Created = timeToStringValue(dto.Created)
 	model.Modified = timeToStringValue(dto.Modified)
 
-	authoritativeSource, d := datasource_identity_profile.AuthoritativeSourceValue{}.FromApi_betaIdentityProfileAllOfAuthoritativeSource(ctx, &dto.AuthoritativeSource)
+	authoritativeSource, d := datasource_identity_profile.AuthoritativeSourceValue{}.FromIdentity_profilesIdentityProfileAllOfAuthoritativeSource(ctx, &dto.AuthoritativeSource)
 	diags.Append(d...)
 	model.AuthoritativeSource = authoritativeSource
 
-	owner, d := datasource_identity_profile.OwnerValue{}.FromApi_betaIdentityProfileAllOfOwner(ctx, dto.Owner.Get())
+	owner, d := datasource_identity_profile.OwnerValue{}.FromIdentity_profilesIdentityProfileAllOfOwner(ctx, dto.Owner.Get())
 	diags.Append(d...)
 	model.Owner = owner
 
-	exceptionRef, d := datasource_identity_profile.IdentityExceptionReportReferenceValue{}.FromApi_betaIdentityExceptionReportReference(ctx, dto.IdentityExceptionReportReference.Get())
+	exceptionRef, d := datasource_identity_profile.IdentityExceptionReportReferenceValue{}.FromIdentity_profilesIdentityExceptionReportReference(ctx, dto.IdentityExceptionReportReference.Get())
 	diags.Append(d...)
 	model.IdentityExceptionReportReference = exceptionRef
 
