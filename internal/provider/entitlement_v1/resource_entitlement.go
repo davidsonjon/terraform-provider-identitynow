@@ -873,34 +873,6 @@ func entitlementTagsFromAPI(ctx context.Context, tags []string) (types.List, dia
 	return listVal, diags
 }
 
-func additionalPropertiesObject(additional map[string]interface{}, key string) (map[string]interface{}, bool, error) {
-	raw, ok := additional[key]
-	if !ok || raw == nil {
-		return nil, false, nil
-	}
-	b, err := json.Marshal(raw)
-	if err != nil {
-		return nil, false, err
-	}
-	var out map[string]interface{}
-	if err := json.Unmarshal(b, &out); err != nil {
-		return nil, false, err
-	}
-	return out, true, nil
-}
-
-func stringAttrValue(m map[string]interface{}, key string) types.String {
-	v, ok := m[key]
-	if !ok || v == nil {
-		return types.StringNull()
-	}
-	s, ok := v.(string)
-	if !ok {
-		return types.StringNull()
-	}
-	return types.StringValue(s)
-}
-
 func entitlementErrDetail(err error, httpResp *http.Response) string {
 	return util.SailpointErrorDetail(err, httpResp)
 }

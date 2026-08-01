@@ -43,15 +43,15 @@ import (
 // Service Desk Integration, with a correctly-typed provisioningConfig (see
 // rawProvisioningConfig) in place of service_desk_integration.ProvisioningConfig.
 type rawServiceDeskIntegrationDto struct {
-	Name                   string                              `json:"name"`
-	Description            string                              `json:"description"`
-	Type                   string                              `json:"type"`
+	Name                   string                                              `json:"name"`
+	Description            string                                              `json:"description"`
+	Type                   string                                              `json:"type"`
 	OwnerRef               *service_desk_integration.OwnerDto                  `json:"ownerRef,omitempty"`
 	ClusterRef             *service_desk_integration.SourceClusterDto          `json:"clusterRef,omitempty"`
-	Cluster                *string                             `json:"cluster,omitempty"`
-	ManagedSources         []string                            `json:"managedSources,omitempty"`
-	ProvisioningConfig     *rawProvisioningConfig              `json:"provisioningConfig,omitempty"`
-	Attributes             map[string]interface{}              `json:"attributes"`
+	Cluster                *string                                             `json:"cluster,omitempty"`
+	ManagedSources         []string                                            `json:"managedSources,omitempty"`
+	ProvisioningConfig     *rawProvisioningConfig                              `json:"provisioningConfig,omitempty"`
+	Attributes             map[string]interface{}                              `json:"attributes"`
 	BeforeProvisioningRule *service_desk_integration.BeforeProvisioningRuleDto `json:"beforeProvisioningRule,omitempty"`
 }
 
@@ -59,10 +59,10 @@ type rawServiceDeskIntegrationDto struct {
 // omits managedResourceRefs (the field this project's code never reads, and
 // the field whose element type is mistyped upstream - see file doc comment).
 type rawProvisioningConfig struct {
-	UniversalManager              *bool                                             `json:"universalManager,omitempty"`
+	UniversalManager              *bool                                                             `json:"universalManager,omitempty"`
 	PlanInitializerScript         *service_desk_integration.ProvisioningConfigPlanInitializerScript `json:"planInitializerScript,omitempty"`
-	NoProvisioningRequests        *bool                                             `json:"noProvisioningRequests,omitempty"`
-	ProvisioningRequestExpiration *int32                                            `json:"provisioningRequestExpiration,omitempty"`
+	NoProvisioningRequests        *bool                                                             `json:"noProvisioningRequests,omitempty"`
+	ProvisioningRequestExpiration *int32                                                            `json:"provisioningRequestExpiration,omitempty"`
 }
 
 // knownServiceDeskIntegrationJSONFields lists every field explicitly modeled

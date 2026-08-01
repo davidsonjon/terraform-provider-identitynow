@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -139,11 +138,9 @@ func SourceResourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Rule that runs on the CCG and allows for customization of provisioning plans before the API calls the connector. ",
 			},
 			"category": schema.StringAttribute{
-				Optional:            true,
 				Computed:            true,
 				Description:         "Source category (e.g. null, CredentialProvider).",
 				MarkdownDescription: "Source category (e.g. null, CredentialProvider).",
-				Default:             stringdefault.StaticString(""),
 			},
 			"cluster": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
@@ -250,7 +247,6 @@ func SourceResourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "When this is true, it indicates that the source is healthy.",
 				MarkdownDescription: "When this is true, it indicates that the source is healthy.",
-				Default:             booldefault.StaticBool(false),
 			},
 			"id": schema.StringAttribute{
 				Optional:            true,

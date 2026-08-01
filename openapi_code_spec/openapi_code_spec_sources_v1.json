@@ -667,10 +667,7 @@
           {
             "name": "category",
             "string": {
-              "computed_optional_required": "computed_optional",
-              "default": {
-                "static": ""
-              },
+              "computed_optional_required": "computed",
               "description": "Source category (e.g. null, CredentialProvider)."
             }
           },
@@ -803,9 +800,6 @@
             "name": "healthy",
             "bool": {
               "computed_optional_required": "computed_optional",
-              "default": {
-                "static": false
-              },
               "description": "When this is true, it indicates that the source is healthy."
             }
           },
