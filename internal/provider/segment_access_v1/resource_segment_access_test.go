@@ -117,27 +117,53 @@ func TestSegmentAccessDesiredSegments(t *testing.T) {
 }
 
 func TestSegmentAccessSegmentsPatch(t *testing.T) {
-	ops := segmentAccessSegmentsPatch([]string{"seg-a", "seg-b"})
-	if len(ops) != 1 {
-		t.Fatalf("len(ops) = %d, want 1", len(ops))
-	}
-	if ops[0].Op != "replace" {
-		t.Fatalf("Op = %q, want %q", ops[0].Op, "replace")
-	}
-	if ops[0].Path != "/segments" {
-		t.Fatalf("Path = %q, want %q", ops[0].Path, "/segments")
-	}
-	if ops[0].Value == nil || ops[0].Value.ArrayOfArrayInner == nil {
-		t.Fatal("Value.ArrayOfArrayInner is nil, want populated")
-	}
-
-	arr := *ops[0].Value.ArrayOfArrayInner
-	if len(arr) != 2 {
-		t.Fatalf("len(arr) = %d, want 2", len(arr))
-	}
-	for i, want := range []string{"seg-a", "seg-b"} {
-		if arr[i].String == nil || *arr[i].String != want {
-			t.Fatalf("arr[%d] = %v, want %q", i, arr[i].String, want)
+	t.Run("role", func(t *testing.T) {
+		ops := segmentAccessRoleSegmentsPatch([]string{"seg-a", "seg-b"})
+		if len(ops) != 1 {
+			t.Fatalf("len(ops) = %d, want 1", len(ops))
 		}
-	}
+		if ops[0].Op != "replace" {
+			t.Fatalf("Op = %q, want %q", ops[0].Op, "replace")
+		}
+		if ops[0].Path != "/segments" {
+			t.Fatalf("Path = %q, want %q", ops[0].Path, "/segments")
+		}
+		if ops[0].Value == nil || ops[0].Value.ArrayOfArrayInner == nil {
+			t.Fatal("Value.ArrayOfArrayInner is nil, want populated")
+		}
+		arr := *ops[0].Value.ArrayOfArrayInner
+		if len(arr) != 2 {
+			t.Fatalf("len(arr) = %d, want 2", len(arr))
+		}
+		for i, want := range []string{"seg-a", "seg-b"} {
+			if arr[i].String == nil || *arr[i].String != want {
+				t.Fatalf("arr[%d] = %v, want %q", i, arr[i].String, want)
+			}
+		}
+	})
+
+	t.Run("access_profile", func(t *testing.T) {
+		ops := segmentAccessAccessProfileSegmentsPatch([]string{"seg-a", "seg-b"})
+		if len(ops) != 1 {
+			t.Fatalf("len(ops) = %d, want 1", len(ops))
+		}
+		if ops[0].Op != "replace" {
+			t.Fatalf("Op = %q, want %q", ops[0].Op, "replace")
+		}
+		if ops[0].Path != "/segments" {
+			t.Fatalf("Path = %q, want %q", ops[0].Path, "/segments")
+		}
+		if ops[0].Value == nil || ops[0].Value.ArrayOfArrayInner == nil {
+			t.Fatal("Value.ArrayOfArrayInner is nil, want populated")
+		}
+		arr := *ops[0].Value.ArrayOfArrayInner
+		if len(arr) != 2 {
+			t.Fatalf("len(arr) = %d, want 2", len(arr))
+		}
+		for i, want := range []string{"seg-a", "seg-b"} {
+			if arr[i].String == nil || *arr[i].String != want {
+				t.Fatalf("arr[%d] = %v, want %q", i, arr[i].String, want)
+			}
+		}
+	})
 }
