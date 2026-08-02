@@ -1,5 +1,10 @@
 # tfplugingen-openapi Type Reviewer Knowledge
 
+> Entries dated before 2026-08-02 cite `golang-sdk/v2` `api_beta` types (historical). The
+> provider migrated to `golang-sdk/v3` per-service packages on 2026-08-02 — see
+> [sdk-type-reference.md](identitynow-terraform-provider-developer.sdk-type-reference.md)
+> for current v3 shapes when applying a new mapping.
+
 ## Entry Template
 For a type-mapping review entry (specific target reviewed):
 - Date: YYYY-MM-DD
@@ -40,7 +45,7 @@ Use whichever template fits the entry - do not force a review pass into the Targ
 - Mapping: none added.
 - Evidence: n/a (no mapping made) - confirmed via `jq` inspection that no `single_nested`/`list_nested` blocks exist anywhere in the code spec to consider.
 - Validation: `python3 -m json.tool openapi_code_spec/openapi_code_spec_transform_v1.json` visually confirmed the flat attribute list (4 attributes, all scalar) for both `resources[0]` and `datasources[0]`; `make gen-framework-api-v1 TARGET=transform` succeeded on the first attempt with zero framework-generation errors, consistent with there being no mapping-related risk surface at all.
-- Follow-up: **this is the expected/normal outcome whenever a target's only "interesting" field is a schema.ignores'd dynamic-shape attribute (like `attributes` here, or `connectorAttributes` for the still-unimplemented `source` target)** - do not skip running this review step just because a target looks "simple" pre-review; the symbol-collision scan (Workflow step 2a) and the "confirm zero candidates" finding are both still meaningful, reportable outcomes, not a no-op to be silently assumed.
+- Follow-up: this is the expected/normal outcome whenever a target's only "interesting" field is a `schema.ignores`'d dynamic-shape attribute — still run the symbol-collision scan and report "zero candidates" explicitly rather than treating it as a no-op.
 
 - Date: 2026-07-25
 - Task: review/cleanup pass across all agents/prompts

@@ -9,8 +9,8 @@ directory still understand its intent and how it's structured.
 
 Each subdirectory under `test/` is a **self-contained** Terraform
 configuration used to manually exercise the locally-built provider (via
-`make install` + `~/.terraformrc` `dev_overrides`) against a real IdentityNow
-sandbox tenant.
+`make install` + [`~/.terraformrc` `dev_overrides`](https://developer.hashicorp.com/terraform/cli/config/config-file#development-overrides-for-provider-developers))
+against a real IdentityNow sandbox tenant.
 
 ## Convention
 
