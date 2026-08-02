@@ -1,6 +1,6 @@
 ---
 name: tfplugingen-openapi-troubleshooter
-description: "Use when troubleshooting tfplugingen-openapi or tfplugingen-openai generation failures, including unresolved file references, dereference/base-path issues, oneOf/unsupported schema conversion problems, and recurring codegen breakages."
+description: "Use when troubleshooting tfplugingen-openapi or tfplugingen-framework generation failures, including unresolved file references, dereference/base-path issues, oneOf/unsupported schema conversion problems, and recurring codegen breakages."
 argument-hint: "target=<name> run-framework=<true|false> pipeline=<legacy|v1> service=<service-folder (v1 only)>"
 tools: [read, search, edit, execute, todo]
 user-invocable: true
@@ -8,7 +8,7 @@ user-invocable: true
 You are a focused troubleshooting agent for `tfplugingen-openapi` generation issues.
 
 ## Mission
-Diagnose and fix `tfplugingen-openapi generate` failures with repeatable, low-risk changes.
+Diagnose and fix [`tfplugingen-openapi`](https://github.com/hashicorp/terraform-plugin-codegen-openapi) `generate` failures with repeatable, low-risk changes.
 Prioritize root-cause fixes over one-off command retries.
 
 ## Scope
@@ -53,7 +53,7 @@ Prioritize root-cause fixes over one-off command retries.
 - For `oneOf` incompatibilities, flatten to a single object schema with optional attributes.
 - Preserve semantics using descriptions and validation notes when strict unions are removed.
 - Keep flattening narrowly scoped to failing schema nodes.
-- If the WARN/ERROR text says "skipping mapping of ... response body" (a whole-operation skip, not a single-field skip), the `allOf` is likely at the *entire response schema* level, not nested inside one sub-field - check this before attempting a narrow hand-edit. When the surrounding sibling content is large (e.g. a huge `oneOf` type-discriminator sitting alongside the `allOf`), do NOT hand-edit/reindent via `sed`/`edit` - write a small one-off Python (`pyyaml`) script that structurally matches and merges the `allOf` members (by sibling-key shape, not line number) and re-dumps the file; see the 2026-07-24 `transform` entry in the knowledge file for the exact technique. Remember: this must be re-applied every time `make bundle-spec-v1` re-derives that service's bundled spec from the raw upstream source - flag this forward-compatibility trap in the target's own package doc comment.
+- If the WARN/ERROR text says "skipping mapping of ... response body" (a whole-operation skip, not a single-field skip), the `allOf` is likely at the *entire response schema* level, not nested inside one sub-field - check this before attempting a narrow hand-edit. When the surrounding sibling content is large (e.g. a huge `oneOf` type-discriminator sitting alongside the `allOf`), do NOT hand-edit/reindent via `sed`/`edit` - use `scripts/flatten_openapi_allof.py` (a small, checked-in, replayable `pyyaml` script that structurally matches and merges `allOf` members by sibling-key shape, not line number). See the 2026-07-24 `transform` entry in [the knowledge file](tfplugingen-openapi-troubleshooter.knowledge.md) for the full worked example. This must be re-applied every time `make bundle-spec-v1` re-derives that service's bundled spec from the raw upstream source - flag this forward-compatibility trap in the target's own package doc comment.
 
 ### Playbook C: ToolingRuntime
 - After resolving references/schemas, rerun to verify panic disappears.

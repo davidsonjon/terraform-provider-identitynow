@@ -2,8 +2,8 @@
 
 This is a **living catalog** (not a strict append-only journal like the
 paired `.knowledge.md` file) of every upstream defect, gap, or notable
-inconsistency found in `github.com/sailpoint-oss/golang-sdk` while building
-this provider. Each entry's `Status` should be kept current as new evidence
+inconsistency found in [`github.com/sailpoint-oss/golang-sdk`](https://github.com/sailpoint-oss/golang-sdk)
+while building this provider. Each entry's `Status` should be kept current as new evidence
 appears (e.g. a version bump that fixes it, or a filed/resolved upstream
 issue) — do not delete an entry when it's resolved, mark it `Resolved` and
 say how/when. New entries should also get a matching dated entry in
@@ -34,7 +34,7 @@ relevant resource's package doc).
 - **Root cause:** the field should be a plain `string` per the actual API response shape, but the SDK's OpenAPI-codegen'd struct types it as `map[string]interface{}`, causing `encoding/json` unmarshal to fail on real string values.
 - **Workaround (shipped):** `internal/provider/service_desk_integration_v1/sdk_fallback.go` — `decodeServiceDeskIntegrationFallback` re-decodes the raw HTTP response body using locally-defined structs with the field correctly typed as `string`, bypassing the SDK's broken `UnmarshalJSON`. Wired in via `withManagedResourceRefsFallback` at all 4 call sites that decode a `ServiceDeskIntegrationDto` (resource Create/Read/Update, data source Read). Detection is a targeted `err.Error()` substring match (`isManagedResourceRefsTypeBug`) so unrelated errors are never masked.
 - **Filed upstream?** No — user explicitly decided (2026-07-24) not to file a `sailpoint-oss/golang-sdk` GitHub issue. The workaround is this provider's sole remediation.
-- **Revisit trigger:** if a future `golang-sdk` release is confirmed (via direct source inspection, not changelog alone) to fix this typing, `isManagedResourceRefsTypeBug`'s string-match guard will simply stop matching and the fallback path goes dormant harmlessly — safe to leave in place, but worth removing once confirmed fixed to reduce dead code. **UPDATE 2026-08-02: v3 confirmed fixed** — the fallback is now a dead code path on v3 (kept as harmless defensive code, annotated as such in `sdk_fallback.go`). Recommended follow-up: remove the fallback entirely after a live-tenant read of a SDI with populated `managedResourceRefs` confirms v3's native decode works end-to-end.
+- **Revisit trigger:** now a dead code path on v3 (kept as harmless defensive code, annotated as such in `sdk_fallback.go`). Recommended follow-up: remove the fallback entirely after a live-tenant read of a service desk integration with populated `managedResourceRefs` confirms v3's native decode works end-to-end.
 - **Discovered:** 2026-07-24, live-tenant validation of `service_desk_integration_v1` against a real pre-existing object. Full repro documented in that day's knowledge entries.
 
 ### 2. `ServiceDeskIntegrationDto` has no declared `Id` field

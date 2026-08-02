@@ -2,34 +2,31 @@
 
 Append-only-ish catalog (edits to correct a stale entry are fine; don't
 delete a historically-useful entry without a note) of confirmed field shapes
-for `github.com/sailpoint-oss/golang-sdk/v2` structs used by this provider's
-type-linking step (`tfplugingen-openapi-type-reviewer`'s review, applied via
-`scripts/apply_codespec_type_mappings.py`). Exists to replace repeated
+for [`github.com/sailpoint-oss/golang-sdk`](https://github.com/sailpoint-oss/golang-sdk)
+structs used by this provider's type-linking step (`tfplugingen-openapi-type-reviewer`'s
+review, applied via `scripts/apply_codespec_type_mappings.py`). Exists to replace repeated
 `go list -m` + `grep`/`view` derivation of the same struct shapes across
 sessions with a single durable, checked-in source — per the
 [terraform-provider-developer](terraform-provider-developer.agent.md) base
 agent's "prefer generation/config over repeated dynamic derivation"
 principle.
 
-**How to resolve the SDK source location** (never hardcode an absolute
-path — it won't exist on another machine/session):
+**Current: golang-sdk v3 (per-service packages).** Resolve the source location (never
+hardcode an absolute path — it won't exist on another machine/session):
 ```
-go list -m -f '{{.Dir}}' github.com/sailpoint-oss/golang-sdk/v2
+go list -m -f '{{.Dir}}' github.com/sailpoint-oss/golang-sdk/v3
 ```
-All entries below were confirmed against `v2.7.106` unless noted otherwise.
-Re-confirm (`grep -A15 "^type <Name> struct" "$(go list -m -f '{{.Dir}}' ...)/api_beta/model_<snake_name>.go"`)
-after any SDK version bump before trusting a stale entry for a new target.
+Then grep under `<dir>/<service>/model_*.go`. See the "## golang-sdk v3 (per-service
+packages)" section below for confirmed v3 shapes/deltas — start there for any new work.
 
-> **⚠️ 2026-08-02 — provider migrated to golang-sdk v3 (`/v3`, per-service packages).**
-> Every entry ABOVE the "## golang-sdk v3 (per-service packages)" section
-> below describes the **v2 `api_beta`** shapes, retained for historical
-> reference. Under v3, types moved out of the single `api_beta` package into
-> per-service packages (`sources`, `roles`, `entitlements`, `workflows`,
-> `segments`, `access_profiles`, `service_desk_integration`, …), MANY types
-> were renamed, and some field Nullable/pointer shapes changed. See the v3
-> section for the confirmed deltas. Resolve the v3 source with
-> `go list -m -f '{{.Dir}}' github.com/sailpoint-oss/golang-sdk/v3` and grep
-> under `<dir>/<service>/model_*.go`.
+> **⚠️ Everything BELOW the v3 section (i.e. above this note in file order) describes
+> the pre-2026-08-02 `golang-sdk v2` `api_beta` shapes, retained for historical
+> reference only.** Under v3, types moved out of the single `api_beta` package into
+> per-service packages (`sources`, `roles`, `entitlements`, `workflows`, `segments`,
+> `access_profiles`, `service_desk_integration`, …), MANY types were renamed, and some
+> field Nullable/pointer shapes changed — do not use a v2 entry to map a new target's
+> types without cross-checking the v3 deltas section first. To re-confirm a v2 entry
+> against the (now-removed) v2 line: `go list -m -f '{{.Dir}}' github.com/sailpoint-oss/golang-sdk/v2`.
 
 ## Entry Template
 ```
@@ -247,7 +244,7 @@ just moved to its per-service package.
   `ArrayOfArrayInnerAsJsonPatchOperationValue` (returns a value — must `&` it
   into a var since `JsonPatchOperation.Value` is `*JsonPatchOperationValue`).
 - Each service package re-emits its own `JsonPatchOperation`/`JsonPatchOperationValue`/`ArrayInner` (e.g. `roles.JsonPatchOperation`, `access_profiles.JsonPatchOperation`) — a multi-service resource (e.g. `segment_access_v1`) needs a per-package patch helper, not one shared helper.
-- **`segments` has NO JsonPatchOperation type at all**: `segments.SourcesAPIService`... no — `PatchSegmentV1` takes a raw `RequestBody []map[string]interface{}`. Hand-roll a local `segmentJSONPatchOp{Op,Path,Value}` struct with json tags.
+- **`segments` has NO JsonPatchOperation type at all**: `PatchSegmentV1` takes a raw `RequestBody []map[string]interface{}`. Hand-roll a local `segmentJSONPatchOp{Op,Path,Value}` struct with json tags.
 
 ### Source + correlation family (was #102, #109, #116)
 - `Source` moved to `sources.Source`. The `MultiHost*` prefixed leaf types were **renamed to `Source*`**: `MultiHostSourcesAccountCorrelationConfig`→`SourceAccountCorrelationConfig`, `MultiHostSourcesAccountCorrelationRule`→`SourceAccountCorrelationRule`, `MultiHostSourcesManagerCorrelationRule`→`SourceManagerCorrelationRule`, `MultiHostSourcesBeforeProvisioningRule`→`SourceBeforeProvisioningRule`, `MultiHostIntegrationsManagementWorkgroup`→`SourceManagementWorkgroup`, `MultiHostSourcesSchemasInner`→`SourceSchemasInner`, `MultiHostSourcesPasswordPoliciesInner`→`SourcePasswordPoliciesInner`, `MultiHostIntegrationsCluster`→`SourceCluster`, `ManagerCorrelationMapping`→`SourceManagerCorrelationMapping`.
