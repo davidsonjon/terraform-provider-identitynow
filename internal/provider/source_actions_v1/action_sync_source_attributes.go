@@ -31,9 +31,12 @@ func NewSyncSourceAttributesAction() action.Action {
 // task id, and golang-sdk/v3 exposes no separate "get sync job status by id"
 // endpoint for the SourceSyncJob it returns. This action therefore only
 // invokes the call and reports the job id/status the API returns
-// immediately - it does not poll for completion. If a live tenant confirms a
-// polling endpoint exists after all, this should be revisited to match the
-// wait-for-completion behavior of the other two actions.
+// immediately - it does not poll for completion.
+//
+// Confirmed via live testing: the API can return a 2xx response with an
+// empty body (no SourceSyncJob) for some source types/connectors, meaning
+// the sync completed synchronously with no async job to track. This is
+// treated as success, not an error.
 type SyncSourceAttributesAction struct {
 	client *sailpoint.APIClient
 }
@@ -100,11 +103,17 @@ func (a *SyncSourceAttributesAction) Invoke(ctx context.Context, req action.Invo
 		resp.Diagnostics.AddError("Error triggering source attribute synchronization", util.SailpointErrorDetail(err, httpResp))
 		return
 	}
+
+	// Confirmed live: the API can return a 2xx with an empty body (no
+	// SourceSyncJob) when the sync completes synchronously and there is no
+	// async job to track - this is success, not an error.
 	if job == nil {
-		resp.Diagnostics.AddError(
-			"Error triggering source attribute synchronization",
-			fmt.Sprintf("Source %q attribute synchronization did not return a job.", sourceID),
-		)
+		tflog.Info(invokeCtx, "Source attribute synchronization completed synchronously (no job returned)", map[string]interface{}{
+			"source_id": sourceID,
+		})
+		resp.SendProgress(action.InvokeProgressEvent{
+			Message: fmt.Sprintf("Source attribute synchronization for source %s completed (no async job was returned).", sourceID),
+		})
 		return
 	}
 

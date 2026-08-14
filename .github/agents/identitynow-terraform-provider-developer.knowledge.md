@@ -161,11 +161,8 @@ package reference in older guardrails/entries as historical.
   `terraform-provider-developer.agent.md`'s durable guidance.
 - With v3's new `ProvisioningPolicyV2` bindings, lift `source_provisioning_policy_v1`'s v1-only
   composite-key limitation (needs live verification).
-- `source_actions_v1` (`identitynow_aggregate_accounts`/`identitynow_aggregate_entitlements`/
-  `identitynow_sync_source_attributes`) needs Phase B live verification: confirm `disable_optimization`'s
-  accepted string enum values against a real tenant, and confirm whether `SyncAttributesForSourceV1`
-  genuinely has no pollable completion status (or whether a polling endpoint exists that this pipeline
-  missed).
+- `source_actions_v1`: `disable_optimization`'s accepted string enum values still need live verification
+  against a real tenant (not yet confirmed).
 
 ## Chronological Log
 
@@ -844,3 +841,27 @@ kept here to keep this file lean; append new dated entries below using the Entry
   above (no Computed/Default support; before_destroy/after_destroy unsupported in `action_trigger` as of
   Terraform 1.14). New open follow-up: live-verify `disable_optimization`'s accepted string values and
   `SyncAttributesForSourceV1`'s lack of a pollable completion status before treating either as final.
+
+## 2026-08-14: source_actions_v1 - Phase B live verification
+
+- Ran the three new actions against a real sandbox tenant for the first time (`test/source_actions/`,
+  gitignored). `identitynow_aggregate_accounts` and `identitynow_aggregate_entitlements` both invoke,
+  poll, and report task completion correctly end-to-end against a SCIM 2.0 connector source (accounts
+  succeeded; entitlements failed with task status `ERROR` on this particular source - the action
+  correctly surfaced that failure rather than reporting false success, confirming the failure-path
+  handling works as designed).
+- Confirmed live: `SyncAttributesForSourceV1` can return a 2xx HTTP response with an **empty body** (no
+  `SourceSyncJob`) for at least one source/connector type - this is a real, synchronous "no async job to
+  track" success case, not an error. The action previously treated `job == nil` as
+  `resp.Diagnostics.AddError`, which was a bug (a working sync would fail the action). Fixed in
+  `action_sync_source_attributes.go` to treat a nil job as successful synchronous completion and report
+  it via `SendProgress` instead of an error. Re-verified live after the fix: the action now completes
+  cleanly against the same source. This resolves the "does `SyncAttributesForSourceV1` genuinely have no
+  completion signal" open question from 2026-08-03 - it does not, at least not via this SDK/endpoint, and
+  the correct behavior is to treat the empty-body 2xx as success.
+- Also confirmed (from a first attempt against a delimited-file connector source, since replaced by the
+  SCIM source above) that `identitynow_aggregate_accounts` still 400s with `"file" fields must be
+  specified in request.` on file-upload-connector sources even with the `emptyMultipartFile()` workaround
+  - this class of connector genuinely requires a real file upload and cannot be aggregated via this
+  action; not a bug, just an inherent connector-type limitation worth remembering when picking a live
+  test fixture source.
