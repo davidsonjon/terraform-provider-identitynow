@@ -2,6 +2,13 @@
 // trigger-style Terraform resource for SailPoint's entitlement aggregation
 // action endpoint.
 //
+// Deprecated: this package predates Terraform's native actions feature
+// (https://developer.hashicorp.com/terraform/language/invoke-actions), which
+// this resource's null_resource-style replacement trick was working around
+// the absence of. Prefer source_actions_v1's identitynow_aggregate_entitlements
+// action for new configurations; this resource remains for backward
+// compatibility.
+//
 // This target intentionally does not use the repo's OpenAPI codegen pipeline:
 // it has no natural 1:1 REST CRUD object to model. Instead, it behaves more
 // like terraform_data/null_resource for replacement semantics:
@@ -86,8 +93,17 @@ func (r *SourceLoadEntitlementWaitResource) Metadata(ctx context.Context, req re
 
 func (r *SourceLoadEntitlementWaitResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = resourceschema.Schema{
-		Description: "Triggers SailPoint entitlement aggregation for a source and optionally waits for background jobs to complete.",
-		MarkdownDescription: "Triggers SailPoint entitlement aggregation (`load entitlements`) for a source and optionally waits " +
+		DeprecationMessage: "Deprecated: use the identitynow_aggregate_entitlements action instead (see the source_actions_v1 " +
+			"package / docs/actions/aggregate_entitlements.md), which uses Terraform's native actions feature " +
+			"(https://developer.hashicorp.com/terraform/language/invoke-actions) rather than this resource's " +
+			"null_resource-style replacement workaround. This resource is kept for backward compatibility and is not " +
+			"planned for removal on any specific timeline.",
+		Description: "Deprecated: prefer the identitynow_aggregate_entitlements action. Triggers SailPoint entitlement aggregation for a source and optionally waits for background jobs to complete.",
+		MarkdownDescription: "**Deprecated:** prefer the [`identitynow_aggregate_entitlements` action](../actions/aggregate_entitlements.md), " +
+			"which uses Terraform's native [actions feature](https://developer.hashicorp.com/terraform/language/invoke-actions) " +
+			"instead of this resource's `null_resource`-style replacement workaround. This resource remains supported for " +
+			"backward compatibility.\n\n" +
+			"Triggers SailPoint entitlement aggregation (`load entitlements`) for a source and optionally waits " +
 			"for related background jobs to complete. This is a hand-written action resource with `null_resource`-style replacement " +
 			"behavior rather than a CRUD wrapper around a persistent upstream object.",
 		Attributes: map[string]resourceschema.Attribute{

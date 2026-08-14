@@ -110,10 +110,10 @@ tflint:
 	tflint --recursive --config "$(CURDIR)/.tflint.hcl" --chdir examples/
 
 # validate-examples runs `terraform validate` against every
-# examples/{resources,data-sources}/<name>/*.tf snippet, using a freshly
-# built local provider binary via dev_overrides (no registry/network access,
-# no real tenant credentials needed — validate never calls the API). See
-# scripts/validate-examples.sh for details.
+# examples/{resources,data-sources,actions}/<name>/*.tf snippet, using a
+# freshly built local provider binary via dev_overrides (no registry/network
+# access, no real tenant credentials needed — validate never calls the API).
+# See scripts/validate-examples.sh for details.
 validate-examples:
 	./scripts/validate-examples.sh
 

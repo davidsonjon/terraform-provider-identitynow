@@ -116,6 +116,12 @@ package reference in older guardrails/entries as historical.
   never write the server value into state.
 - Use `ImportStateCheck` (not `ImportStateVerify`) for any resource whose `id` intentionally differs
   after import vs. after Create.
+- `action/schema` (Terraform Plugin Framework Actions, `terraform-plugin-framework` v1.19.0+) attributes
+  support only `Required`/`Optional` — `Computed`/`Default` do not exist on that schema type, unlike
+  `resource/schema`. Any attribute needing a default (e.g. a `timeout`) must apply it in Go inside
+  `Invoke()`, not via schema. Also: `action_trigger` lifecycle blocks only support
+  `before_create`/`after_create`/`before_update`/`after_update` — `before_destroy`/`after_destroy` are not
+  supported as of Terraform 1.14.
 
 ### Live / Phase B validation
 - Phase A passing never implies Phase B passing — a live `apply` regularly surfaces bugs invisible to
@@ -155,6 +161,11 @@ package reference in older guardrails/entries as historical.
   `terraform-provider-developer.agent.md`'s durable guidance.
 - With v3's new `ProvisioningPolicyV2` bindings, lift `source_provisioning_policy_v1`'s v1-only
   composite-key limitation (needs live verification).
+- `source_actions_v1` (`identitynow_aggregate_accounts`/`identitynow_aggregate_entitlements`/
+  `identitynow_sync_source_attributes`) needs Phase B live verification: confirm `disable_optimization`'s
+  accepted string enum values against a real tenant, and confirm whether `SyncAttributesForSourceV1`
+  genuinely has no pollable completion status (or whether a polling endpoint exists that this pipeline
+  missed).
 
 ## Chronological Log
 
@@ -789,3 +800,47 @@ kept here to keep this file lean; append new dated entries below using the Entry
   principle ("replay the whole replayable chain, not a subset, and use generated-docs diff as the regression
   tripwire") is worth keeping visible. No change needed to the worktree-`--provider-name` guidance (already
   documented).
+
+## 2026-08-03: source_actions_v1 - Terraform Plugin Framework Actions pipeline (new capability)
+- Date: 2026-08-03
+- Task type: pipeline
+- Target/Scope: new `internal/provider/source_actions_v1` package (`identitynow_aggregate_accounts`,
+  `identitynow_aggregate_entitlements`, `identitynow_sync_source_attributes`), `internal/provider/provider.go`
+  (`Actions()` + `resp.ActionData` wiring), `examples/actions/*`, `docs/actions/*`,
+  `scripts/validate-examples.sh` (extended to also validate `examples/actions/*`), deprecation note added to
+  `source_load_entitlement_wait_v1`.
+- Summary: adopted Terraform's native Actions feature
+  (https://developer.hashicorp.com/terraform/language/invoke-actions, stable Terraform 1.14+) for three
+  imperative/day-2 SailPoint operations that have no natural CRUD resource shape: account aggregation
+  (`ImportAccountsV1`), entitlement aggregation (`ImportEntitlementsV1`), and source attribute sync
+  (`SyncAttributesForSourceV1`). `terraform-plugin-framework` v1.19.0 (already the pinned version) ships the
+  `action` package with no dependency bump needed; `terraform-plugin-codegen-framework` v0.4.1 has no
+  action-generation support, so — like `source_load_entitlement_wait_v1` before it — this is 100%
+  hand-written, not part of the OpenAPI codegen pipeline. `tfplugindocs` v0.25.0 already supports
+  `docs/actions/*.md` generation from `examples/actions/<name>/action.tf`. Ported the polling helpers
+  (`waitForTaskCompletion`, `pollInterval`, `taskCompletionResult`, `normalizedCompletionStatus`,
+  `isSuccessfulCompletionStatus`, the empty-multipart-file workaround) from
+  `source_load_entitlement_wait_v1` into a shared `action_helpers.go`, adding `SendProgress`-based
+  throttled progress reporting (every ~30s) during long polls — a capability the pre-Actions resource
+  couldn't offer. `sync_source_attributes` does not poll: `SyncAttributesForSourceV1`'s `SourceSyncJob`
+  return value carries no task_management-compatible id, and golang-sdk/v3 exposes no separate
+  "get sync job status" endpoint, so this action only reports the immediate job id/status (flagged in code
+  comments as worth revisiting if a live tenant later confirms a polling path exists).
+  `source_load_entitlement_wait_v1` is kept (not removed) for backward compatibility, with a
+  `DeprecationMessage`/docs note pointing at `identitynow_aggregate_entitlements`.
+- Delegated to: none (single primary session).
+- Validation: Phase A only (per this task; no live-testing request from the user yet). `go build ./...` and
+  `go vet ./...` clean. `go test ./...` (including new `source_actions_v1` package: helper-function unit
+  tests plus per-action Metadata/Schema/Configure smoke tests) all pass. `make lint` (golangci-lint) 0 issues
+  (after clearing a stale cache referencing a deleted sibling worktree — unrelated pre-existing environment
+  issue, not caused by this change). `make docs` regenerates cleanly (new `docs/actions/*.md`, updated
+  `docs/index.md` and `docs/resources/source_load_entitlement_wait_v1.md` deprecation notice).
+  `make validate-examples` 56/56 passed (extended script now also covers `examples/actions/*`).
+  `make tflint` clean. Phase B (live `plan`/`apply`/`-invoke`) explicitly NOT run — no sandbox credentials in
+  this worktree and no user confirmation requested yet; this is a pending follow-up before relying on these
+  actions against a real tenant, especially to confirm the `disable_optimization` string-enum values
+  `ImportAccountsV1` expects and whether `sync_source_attributes` genuinely has no completion signal to poll.
+- Guardrail update: added an `action/schema`-specific bullet to "Terraform framework / plan modifiers"
+  above (no Computed/Default support; before_destroy/after_destroy unsupported in `action_trigger` as of
+  Terraform 1.14). New open follow-up: live-verify `disable_optimization`'s accepted string values and
+  `SyncAttributesForSourceV1`'s lack of a pollable completion status before treating either as final.
