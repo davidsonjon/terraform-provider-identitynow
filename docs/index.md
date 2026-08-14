@@ -83,6 +83,9 @@ new per-service `v1` OpenAPI specs (see
 Each target below is developed and validated independently - check its own
 documentation page for known limitations before relying on it.
 
+Actions (listed under Sources below) require
+[Terraform 1.14 or later](https://developer.hashicorp.com/terraform/language/invoke-actions).
+
 ### Access Model Metadata
 
 - [`identitynow_access_model_metadata_attribute_v1` (resource)](resources/access_model_metadata_attribute_v1.md)
@@ -160,9 +163,12 @@ documentation page for known limitations before relying on it.
 ### Sources
 
 - [`identitynow_source_v1` (resource)](resources/source_v1.md)
-- [`identitynow_source_load_entitlement_wait_v1` (resource)](resources/source_load_entitlement_wait_v1.md)
+- [`identitynow_source_load_entitlement_wait_v1` (resource, deprecated)](resources/source_load_entitlement_wait_v1.md)
 - [`identitynow_source_provisioning_policy_v1` (resource)](resources/source_provisioning_policy_v1.md)
 - [`identitynow_source_schema_v1` (resource)](resources/source_schema_v1.md)
+- [`identitynow_aggregate_accounts` (action)](actions/aggregate_accounts.md)
+- [`identitynow_aggregate_entitlements` (action)](actions/aggregate_entitlements.md)
+- [`identitynow_sync_source_attributes` (action)](actions/sync_source_attributes.md)
 - [`identitynow_source_v1` (data source)](data-sources/source_v1.md)
 - [`identitynow_sources_v1` (data source)](data-sources/sources_v1.md)
 - [`identitynow_source_provisioning_policy_v1` (data source)](data-sources/source_provisioning_policy_v1.md)

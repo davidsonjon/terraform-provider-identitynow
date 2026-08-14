@@ -2,10 +2,13 @@
 page_title: "identitynow_source_load_entitlement_wait_v1 Resource - identitynow"
 subcategory: "Sources"
 description: |-
+  Deprecated: prefer the identitynow_aggregate_entitlements action ../actions/aggregate_entitlements.md, which uses Terraform's native actions feature https://developer.hashicorp.com/terraform/language/invoke-actions instead of this resource's null_resource-style replacement workaround. This resource remains supported for backward compatibility.
   Triggers SailPoint entitlement aggregation (load entitlements) for a source and optionally waits for related background jobs to complete. This is a hand-written action resource with null_resource-style replacement behavior rather than a CRUD wrapper around a persistent upstream object.
 ---
 
 # identitynow_source_load_entitlement_wait_v1 (Resource)
+
+**Deprecated:** prefer the [`identitynow_aggregate_entitlements` action](../actions/aggregate_entitlements.md), which uses Terraform's native [actions feature](https://developer.hashicorp.com/terraform/language/invoke-actions) instead of this resource's `null_resource`-style replacement workaround. This resource remains supported for backward compatibility.
 
 Triggers SailPoint entitlement aggregation (`load entitlements`) for a source and optionally waits for related background jobs to complete. This is a hand-written action resource with `null_resource`-style replacement behavior rather than a CRUD wrapper around a persistent upstream object.
 

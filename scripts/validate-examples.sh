@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # validate-examples.sh — runs `terraform validate` against every
-# examples/resources/<name>/resource.tf and examples/data-sources/<name>/data-source.tf
+# examples/resources/<name>/resource.tf, examples/data-sources/<name>/data-source.tf,
+# and examples/actions/<name>/action.tf
 # snippet in this repo.
 #
 # Each example file is a documentation snippet (no `terraform`/`provider` block
@@ -101,6 +102,11 @@ for dir in examples/resources/*/; do
   done
 done
 for dir in examples/data-sources/*/; do
+  for f in "$dir"*.tf; do
+    validate_dir "$dir" "$f"
+  done
+done
+for dir in examples/actions/*/; do
   for f in "$dir"*.tf; do
     validate_dir "$dir" "$f"
   done

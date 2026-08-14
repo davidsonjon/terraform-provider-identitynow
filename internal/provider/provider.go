@@ -7,6 +7,7 @@ import (
 	sailpoint "github.com/sailpoint-oss/golang-sdk/v3"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -28,6 +29,7 @@ import (
 	"terraform-provider-identitynow/internal/provider/segment_v1"
 	"terraform-provider-identitynow/internal/provider/service_desk_integration_v1"
 	"terraform-provider-identitynow/internal/provider/sod_policy_v1"
+	"terraform-provider-identitynow/internal/provider/source_actions_v1"
 	"terraform-provider-identitynow/internal/provider/source_load_entitlement_wait_v1"
 	"terraform-provider-identitynow/internal/provider/source_provisioning_policy_v1"
 	"terraform-provider-identitynow/internal/provider/source_schema_v1"
@@ -36,7 +38,10 @@ import (
 	"terraform-provider-identitynow/internal/provider/workflow_v1"
 )
 
-var _ provider.Provider = (*identitynowProvider)(nil)
+var (
+	_ provider.Provider            = (*identitynowProvider)(nil)
+	_ provider.ProviderWithActions = (*identitynowProvider)(nil)
+)
 
 func New() func() provider.Provider {
 	return func() provider.Provider {
@@ -182,6 +187,7 @@ func (p *identitynowProvider) Configure(ctx context.Context, req provider.Config
 
 	resp.DataSourceData = providerConfig
 	resp.ResourceData = providerConfig
+	resp.ActionData = providerConfig
 }
 
 func (p *identitynowProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -248,5 +254,13 @@ func (p *identitynowProvider) Resources(ctx context.Context) []func() resource.R
 		sources_v1.NewSourceResource,
 		transform_v1.NewTransformResource,
 		workflow_v1.NewWorkflowResource,
+	}
+}
+
+func (p *identitynowProvider) Actions(ctx context.Context) []func() action.Action {
+	return []func() action.Action{
+		source_actions_v1.NewAggregateAccountsAction,
+		source_actions_v1.NewAggregateEntitlementsAction,
+		source_actions_v1.NewSyncSourceAttributesAction,
 	}
 }
